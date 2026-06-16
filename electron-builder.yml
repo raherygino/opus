@@ -1,0 +1,27 @@
+appId: com.gescom.app
+productName: Gescom
+directories:
+  buildResources: build
+  output: release
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-${version}-Setup.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+mac:
+  target:
+    - dmg
+  artifactName: ${productName}-${version}.${ext}
+linux:
+  target:
+    - AppImage
+    - deb
+  artifactName: ${productName}-${version}.${ext}
+publish: null
