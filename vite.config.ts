@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import electron from "vite-plugin-electron";
 import electronRenderer from "vite-plugin-electron-renderer";
 import path from "path";
+import fs from "fs";
 
 export default defineConfig({
   plugins: [
@@ -19,31 +20,20 @@ export default defineConfig({
           },
         },
       },
-      {
-        entry: "electron/preload.ts",
-        onstart(args) {
-          args.reload();
-        },
-        vite: {
-          build: {
-            outDir: "dist-electron",
-            lib: {
-              formats: ["cjs"],
-              entry: "electron/preload.ts",
-              name: "preload",
-              fileName: () => "preload.cjs",
-            },
-            rollupOptions: {
-              external: ["electron"],
-              output: {
-                format: "cjs",
-              },
-            },
-          },
-        },
-      },
     ]),
     electronRenderer(),
+    {
+      name: "copy-preload",
+      closeBundle() {
+        const src = path.resolve(__dirname, "electron/preload.cjs");
+        const dest = path.resolve(__dirname, "dist-electron/preload.cjs");
+        const dir = path.dirname(dest);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.copyFileSync(src, dest);
+      },
+    },
   ],
   resolve: {
     alias: {

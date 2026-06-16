@@ -1,9 +1,12 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { CustomTitleBar } from "@/components/title-bar/custom-title-bar";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Sidebar } from "./sidebar";
 import { StatusBar } from "./status-bar";
+import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 
 export function AppLayout() {
   useKeyboardShortcuts();
@@ -19,7 +22,11 @@ export function AppLayout() {
           style={{ marginLeft: isOpen ? 0 : -width }}
         >
           <div className="h-full p-6">
-            <Outlet />
+            <ErrorBoundary>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </main>
       </div>

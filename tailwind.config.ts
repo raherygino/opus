@@ -128,6 +128,10 @@ const config: Config = {
             opacity: "1",
           },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -137,6 +141,7 @@ const config: Config = {
         "slide-in-from-top": "slide-in-from-top 0.2s ease-out",
         "slide-in-from-bottom": "slide-in-from-bottom 0.2s ease-out",
         "scale-in": "scale-in 0.15s ease-out",
+        shimmer: "shimmer 1.5s ease-in-out infinite",
       },
     },
   },
