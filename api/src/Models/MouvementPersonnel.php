@@ -22,9 +22,8 @@ class MouvementPersonnel
             $params[] = '%' . $filters['type_mouvement'] . '%';
         }
         if (!empty($filters['search'])) {
-            $sql .= ' AND (im LIKE ? OR matricule LIKE ? OR nom LIKE ? OR prenoms LIKE ?)';
+            $sql .= ' AND (im LIKE ? OR nom LIKE ? OR prenoms LIKE ?)';
             $search = '%' . $filters['search'] . '%';
-            $params[] = $search;
             $params[] = $search;
             $params[] = $search;
             $params[] = $search;
@@ -49,15 +48,13 @@ class MouvementPersonnel
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO mouvement_personnel (personnel_id, im, matricule, grade, fonction, service, nom, prenoms, type_mouvement, date_depart, days, date_retour, retour)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO mouvement_personnel (personnel_id, im, grade, service, nom, prenoms, type_mouvement, date_depart, days, date_retour, retour)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             (int) $data['personnel_id'],
             $data['im'],
-            $data['matricule'] ?? null,
             $data['grade'] ?? null,
-            $data['fonction'] ?? null,
             $data['service'] ?? null,
             $data['nom'] ?? null,
             $data['prenoms'] ?? null,
@@ -67,6 +64,7 @@ class MouvementPersonnel
             $data['date_retour'] ?? null,
             $data['retour'] ?? 'Non',
         ]);
+        
         return (int) $db->lastInsertId();
     }
 
@@ -76,7 +74,7 @@ class MouvementPersonnel
         $fields = [];
         $values = [];
 
-        $allowed = ['im', 'matricule', 'grade', 'fonction', 'service', 'nom', 'prenoms', 'type_mouvement', 'date_depart', 'days', 'date_retour', 'retour'];
+        $allowed = ['im', 'grade', 'service', 'nom', 'prenoms', 'type_mouvement', 'date_depart', 'days', 'date_retour', 'retour'];
         foreach ($allowed as $field) {
             if (isset($data[$field])) {
                 $fields[] = "$field = ?";

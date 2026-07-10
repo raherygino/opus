@@ -95,7 +95,7 @@ export function PersonnelDetail() {
               {person.firstname} {person.lastname}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {person.grade} — {person.fonction}
+              {person.grade}{person.affectation ? ` — ${person.affectation}` : ""}
             </p>
           </div>
         </div>
@@ -129,10 +129,10 @@ export function PersonnelDetail() {
               <p className="text-sm text-muted-foreground">{person.grade}</p>
             </div>
             <Badge
-              variant={person.status === "active" ? "default" : "secondary"}
+              variant={person.status === "En service" ? "default" : "secondary"}
               className="mt-1"
             >
-              {person.status === "active" ? "Actif" : "Inactif"}
+              {person.status}
             </Badge>
           </CardContent>
         </Card>
@@ -147,15 +147,10 @@ export function PersonnelDetail() {
             </CardHeader>
             <CardContent className="space-y-3">
               <InfoRow label="IM (Indice Matricule)" value={person.im} />
-              <InfoRow label="Matricule" value={person.matricule} />
               <InfoRow label="Nom" value={person.lastname} />
-              <InfoRow label="Prénom" value={person.firstname} />
-              <InfoRow label="CIN" value={person.cin} />
-              <InfoRow label="Date de naissance" value={person.date_naissance} />
-              <InfoRow label="Lieu de naissance" value={person.lieu_naissance} />
-              <InfoRow label="Adresse" value={person.adresse} />
-              <InfoRow label="Email" value={person.email} />
+              <InfoRow label="Prénoms" value={person.firstname} />
               <InfoRow label="Téléphone" value={person.phone} />
+              <InfoRow label="Adresse" value={person.address} />
             </CardContent>
           </Card>
 
@@ -168,12 +163,7 @@ export function PersonnelDetail() {
             </CardHeader>
             <CardContent className="space-y-3">
               <InfoRow label="Grade" value={person.grade} />
-              <InfoRow label="Fonction" value={person.fonction} />
-              <InfoRow label="Service" value={person.service} />
-              <InfoRow
-                label="Date de prise de service"
-                value={person.date_prise_service}
-              />
+              <InfoRow label="Affectation" value={person.affectation} />
             </CardContent>
           </Card>
 

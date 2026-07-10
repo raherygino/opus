@@ -35,7 +35,7 @@ import gradeData from "@/assets/json/grade.json";
 
 const grades = gradeData.grade.map((g) => g.label);
 
-const services = [
+const affectations = [
   "Service Général (SG)",
   "Police Judiciaire (PJ)",
   "Sédentaire",
@@ -59,20 +59,12 @@ export function PersonnelForm() {
 
   const [form, setForm] = useState({
     im: "",
-    matricule: "",
+    grade: "",
     lastname: "",
     firstname: "",
-    grade: "",
-    fonction: "",
-    service: "",
-    date_prise_service: "",
-    email: "",
+    affectation: "",
     phone: "",
-    adresse: "",
-    date_naissance: "",
-    lieu_naissance: "",
-    cin: "",
-    status: "active" as "active" | "inactive",
+    address: "",
   });
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -92,20 +84,12 @@ export function PersonnelForm() {
       const p = await getPersonnelById(Number(id));
       setForm({
         im: p.im,
-        matricule: p.matricule || "",
+        grade: p.grade,
         lastname: p.lastname,
         firstname: p.firstname,
-        grade: p.grade,
-        fonction: p.fonction,
-        service: p.service || "",
-        date_prise_service: p.date_prise_service || "",
-        email: p.email || "",
+        affectation: p.affectation || "",
         phone: p.phone || "",
-        adresse: p.adresse || "",
-        date_naissance: p.date_naissance || "",
-        lieu_naissance: p.lieu_naissance || "",
-        cin: p.cin || "",
-        status: p.status,
+        address: p.address || "",
       });
 
       if (p.photo) {
@@ -295,7 +279,7 @@ export function PersonnelForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="im">IM (Indice Matricule) *</Label>
                 <Input
@@ -303,14 +287,6 @@ export function PersonnelForm() {
                   value={form.im}
                   onChange={(e) => setForm({ ...form, im: e.target.value })}
                   required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="matricule">Matricule</Label>
-                <Input
-                  id="matricule"
-                  value={form.matricule}
-                  onChange={(e) => setForm({ ...form, matricule: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -324,49 +300,6 @@ export function PersonnelForm() {
                   options={grades.map((g) => ({ value: g, label: g }))}
                   placeholder="Sélectionner un grade"
                   required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-4">
-
-              <div className="space-y-2">
-                <Label htmlFor="fonction">Fonction *</Label>
-                <Input
-                  id="fonction"
-                  value={form.fonction}
-                  onChange={(e) =>
-                    setForm({ ...form, fonction: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="service">Service</Label>
-                <Select
-                  id="service"
-                  value={form.service}
-                  onChange={(e) =>
-                    setForm({ ...form, service: e.target.value })
-                  }
-                  options={services.map((s) => ({ value: s, label: s }))}
-                  placeholder="Sélectionner un service"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date_prise_service">
-                  Date de prise de service
-                </Label>
-                <Input
-                  id="date_prise_service"
-                  type="date"
-                  value={form.date_prise_service}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      date_prise_service: e.target.value,
-                    })
-                  }
                 />
               </div>
             </div>
@@ -384,7 +317,7 @@ export function PersonnelForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="firstname">Prénom *</Label>
+                <Label htmlFor="firstname">Prénoms *</Label>
                 <Input
                   id="firstname"
                   value={form.firstname}
@@ -398,29 +331,17 @@ export function PersonnelForm() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="date_naissance">Date de naissance</Label>
-                <Input
-                  id="date_naissance"
-                  type="date"
-                  value={form.date_naissance}
+                <Label htmlFor="affectation">Affectation</Label>
+                <Select
+                  id="affectation"
+                  value={form.affectation}
                   onChange={(e) =>
-                    setForm({ ...form, date_naissance: e.target.value })
+                    setForm({ ...form, affectation: e.target.value })
                   }
+                  options={affectations.map((a) => ({ value: a, label: a }))}
+                  placeholder="Sélectionner une affectation"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lieu_naissance">Lieu de naissance</Label>
-                <Input
-                  id="lieu_naissance"
-                  value={form.lieu_naissance}
-                  onChange={(e) =>
-                    setForm({ ...form, lieu_naissance: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Téléphone</Label>
                 <Input
@@ -431,58 +352,17 @@ export function PersonnelForm() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm({ ...form, email: e.target.value })
-                  }
-                />
-              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="adresse">Adresse</Label>
+              <Label htmlFor="address">Adresse</Label>
               <Input
-                id="adresse"
-                value={form.adresse}
+                id="address"
+                value={form.address}
                 onChange={(e) =>
-                  setForm({ ...form, adresse: e.target.value })
+                  setForm({ ...form, address: e.target.value })
                 }
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cin">CIN (Numéro national d'identité)</Label>
-                <Input
-                  id="cin"
-                  value={form.cin}
-                  onChange={(e) =>
-                    setForm({ ...form, cin: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Statut</Label>
-                <Select
-                  id="status"
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      status: e.target.value as "active" | "inactive",
-                    })
-                  }
-                  options={[
-                    { value: "active", label: "Actif" },
-                    { value: "inactive", label: "Inactif" },
-                  ]}
-                />
-              </div>
             </div>
 
             <div className="flex items-center gap-3 pt-4">

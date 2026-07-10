@@ -10,8 +10,8 @@ class Notification
     public static function getAll(array $filters = []): array
     {
         $db = Database::getInstance()->getConnection();
-        $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_lastname,
-                       p.firstname AS personnel_firstname, p.grade AS personnel_grade,
+        $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
+                       p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
                        u.username AS created_by_username
                 FROM notifications n
                 LEFT JOIN personnel p ON n.personnel_id = p.id
@@ -42,8 +42,8 @@ class Notification
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_lastname,
-                    p.firstname AS personnel_firstname, p.grade AS personnel_grade,
+            'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
+                    p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
                     u.username AS created_by_username
              FROM notifications n
              LEFT JOIN personnel p ON n.personnel_id = p.id
@@ -60,8 +60,8 @@ class Notification
         $db = Database::getInstance()->getConnection();
 
         if ($roleCode === 'SUPER_ADMIN' || $roleCode === 'STATION_ADMIN') {
-            $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_lastname,
-                           p.firstname AS personnel_firstname, p.grade AS personnel_grade,
+            $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
+                           p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
                            u.username AS created_by_username
                     FROM notifications n
                     LEFT JOIN personnel p ON n.personnel_id = p.id
@@ -69,8 +69,8 @@ class Notification
                     ORDER BY n.created_at DESC';
             $stmt = $db->query($sql);
         } else {
-            $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_lastname,
-                           p.firstname AS personnel_firstname, p.grade AS personnel_grade,
+            $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
+                           p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
                            u.username AS created_by_username
                     FROM notifications n
                     LEFT JOIN personnel p ON n.personnel_id = p.id

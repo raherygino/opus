@@ -54,14 +54,15 @@ const MOUVEMENT_TYPES = [
   "Retraite",
   "Démission",
   "Détachement",
+  "Repos",
+  "Repos médical",
+  "Absent non motivé",
 ];
 
 interface MouvementForm {
   personnel_id: number;
   im: string;
-  matricule: string;
   grade: string;
-  fonction: string;
   service: string;
   nom: string;
   prenoms: string;
@@ -74,9 +75,7 @@ interface MouvementForm {
 const defaultMouvementForm: MouvementForm = {
   personnel_id: 0,
   im: "",
-  matricule: "",
   grade: "",
-  fonction: "",
   service: "",
   nom: "",
   prenoms: "",
@@ -219,10 +218,8 @@ export function PersonnelTabs() {
         setForm({
           personnel_id: person.id,
           im: person.im,
-          matricule: person.matricule || "",
           grade: person.grade,
-          fonction: person.fonction,
-          service: person.service || "",
+          service: person.affectation || "",
           nom: person.lastname,
           prenoms: person.firstname,
           type_mouvement: form.type_mouvement,
@@ -283,6 +280,7 @@ export function PersonnelTabs() {
       resetForm();
       setFormOpen(false);
       loadMouvements();
+      loadPersonnel();
     } catch {
       addNotification("error", "Erreur", "Impossible d'ajouter le mouvement");
     } finally {
@@ -296,6 +294,7 @@ export function PersonnelTabs() {
       await deleteMouvement(id);
       addNotification("success", "Supprimé", "Mouvement supprimé avec succès");
       loadMouvements();
+      loadPersonnel();
     } catch {
       addNotification(
         "error",
@@ -324,6 +323,7 @@ export function PersonnelTabs() {
       addNotification("success", "Retour", "Retour enregistré avec succès");
       setRetourTarget(null);
       loadMouvements();
+      loadPersonnel();
     } catch {
       addNotification(
         "error",
@@ -373,23 +373,22 @@ export function PersonnelTabs() {
 
   const personnelColumns: Column<Personnel>[] = [
     { key: "im", header: "IM", sortable: true },
-    { key: "matricule", header: "Matricule", sortable: true },
     { key: "lastname", header: "Nom", sortable: true },
-    { key: "firstname", header: "Prénom", sortable: true },
+    { key: "firstname", header: "Prénoms", sortable: true },
     { key: "grade", header: "Grade", sortable: true },
-    { key: "fonction", header: "Fonction", sortable: true },
+    { key: "affectation", header: "Affectation", sortable: true },
     {
       key: "status",
       header: "Statut",
       render: (p) => (
         <span
           className={`text-xs px-2 py-0.5 rounded-full ${
-            p.status === "active"
+            p.status === "En service"
               ? "bg-green-500/10 text-green-500"
-              : "bg-muted text-muted-foreground"
+              : "bg-amber-500/10 text-amber-500"
           }`}
         >
-          {p.status === "active" ? "Actif" : "Inactif"}
+          {p.status}
         </span>
       ),
     },
@@ -427,11 +426,9 @@ export function PersonnelTabs() {
 
   const mouvementColumns: Column<Mouvement>[] = [
     { key: "im", header: "IM", sortable: true },
-    { key: "matricule", header: "Matricule", sortable: true },
     { key: "nom", header: "Nom", sortable: true },
     { key: "prenoms", header: "Prénoms", sortable: true },
     { key: "grade", header: "Grade", sortable: true },
-    { key: "fonction", header: "Fonction", sortable: true },
     { key: "service", header: "Service", sortable: true },
     {
       key: "type_mouvement",
@@ -627,16 +624,8 @@ export function PersonnelTabs() {
                       <Input value={form.im} readOnly />
                     </div>
                     <div className="space-y-1">
-                      <Label>Matricule</Label>
-                      <Input value={form.matricule} readOnly />
-                    </div>
-                    <div className="space-y-1">
                       <Label>Grade</Label>
                       <Input value={form.grade} readOnly />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Fonction</Label>
-                      <Input value={form.fonction} readOnly />
                     </div>
                     <div className="space-y-1">
                       <Label>Service</Label>
@@ -787,7 +776,7 @@ export function PersonnelTabs() {
                 keyExtractor={(m) => m.id}
                 loading={loadingMouvements}
                 searchable
-                searchPlaceholder="Rechercher par IM, matricule, nom..."
+                searchPlaceholder="Rechercher par IM, nom..."
                 onRowClick={(m) => openDetailDialog(m)}
               />
             </CardContent>
@@ -855,9 +844,7 @@ export function PersonnelTabs() {
 
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="text-sm"><span className="text-muted-foreground">IM :</span> {detailTarget.im}</div>
-              <div className="text-sm"><span className="text-muted-foreground">Matricule :</span> {detailTarget.matricule || "—"}</div>
               <div className="text-sm"><span className="text-muted-foreground">Grade :</span> {detailTarget.grade || "—"}</div>
-              <div className="text-sm"><span className="text-muted-foreground">Fonction :</span> {detailTarget.fonction || "—"}</div>
               <div className="text-sm"><span className="text-muted-foreground">Service :</span> {detailTarget.service || "—"}</div>
               <div className="text-sm"><span className="text-muted-foreground">Type :</span> {detailTarget.type_mouvement}</div>
               <div className="text-sm"><span className="text-muted-foreground">Compté du :</span> {detailTarget.date_depart || "—"}</div>

@@ -8,8 +8,8 @@ INSERT INTO `roles` (`code`, `name`, `description`) VALUES
 -- ============================================
 -- Seed: Personnel (only admin user)
 -- ============================================
-INSERT INTO `personnel` (`im`, `matricule`, `lastname`, `firstname`, `grade`, `fonction`, `service`, `email`, `phone`) VALUES
-('000000', '', 'Admin', 'System', 'Commissaire de Police', 'Super Administrator', 'Administration', 'admin@opus.test', '+221 77 000 00 01');
+INSERT INTO `personnel` (`im`, `grade`, `lastname`, `firstname`, `affectation`, `phone`) VALUES
+('000000', 'Commissaire de Police', 'Admin', 'System', 'Sédentaire', '+221 77 000 00 01');
 
 -- ============================================
 -- Seed: Super Admin User (password = "admin123")

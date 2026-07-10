@@ -89,8 +89,8 @@ export function UsersList() {
   const columns: Column<User>[] = [
     { key: "username", header: "Nom d'utilisateur", sortable: true },
     { key: "lastname", header: "Nom", sortable: true },
-    { key: "firstname", header: "Prénom", sortable: true },
-    { key: "im", header: "Matricule", sortable: true },
+    { key: "firstname", header: "Prénoms", sortable: true },
+    { key: "im", header: "IM", sortable: true },
     {
       key: "role_name",
       header: "Rôle",

@@ -12,9 +12,17 @@ class User
         $db = Database::getInstance()->getConnection();
         $sql = 'SELECT u.id, u.username, u.is_active, u.last_login, u.created_at,
                        r.code AS role_code, r.name AS role_name,
-                       p.im, p.lastname, p.firstname, p.grade, p.fonction,
-                       p.service, p.email AS personnel_email, p.phone, p.photo,
-                       p.adresse, p.date_naissance, p.lieu_naissance, p.cin
+                       p.im, p.lastname, p.firstname, p.grade,
+                       p.affectation, p.phone, p.photo, p.address,
+                       COALESCE(
+                           (SELECT mp.type_mouvement
+                            FROM mouvement_personnel mp
+                            WHERE mp.personnel_id = p.id
+                              AND mp.retour = "Non"
+                            ORDER BY mp.created_at DESC
+                            LIMIT 1),
+                           "En service"
+                       ) AS personnel_status
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
                 JOIN personnel p ON u.personnel_id = p.id
@@ -27,10 +35,17 @@ class User
     {
         $db = Database::getInstance()->getConnection();
         $sql = 'SELECT u.*, r.code AS role_code, r.name AS role_name,
-                       p.im, p.lastname, p.firstname, p.grade, p.fonction,
-                       p.service, p.email AS personnel_email, p.phone, p.photo,
-                       p.adresse, p.date_naissance, p.lieu_naissance, p.cin,
-                       p.date_prise_service, p.status AS personnel_status
+                       p.im, p.lastname, p.firstname, p.grade,
+                       p.affectation, p.phone, p.photo, p.address,
+                       COALESCE(
+                           (SELECT mp.type_mouvement
+                            FROM mouvement_personnel mp
+                            WHERE mp.personnel_id = p.id
+                              AND mp.retour = "Non"
+                            ORDER BY mp.created_at DESC
+                            LIMIT 1),
+                           "En service"
+                       ) AS personnel_status
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
                 JOIN personnel p ON u.personnel_id = p.id
@@ -45,10 +60,17 @@ class User
     {
         $db = Database::getInstance()->getConnection();
         $sql = 'SELECT u.*, r.code AS role_code, r.name AS role_name,
-                       p.im, p.lastname, p.firstname, p.grade, p.fonction,
-                       p.service, p.email AS personnel_email, p.phone, p.photo,
-                       p.adresse, p.date_naissance, p.lieu_naissance, p.cin,
-                       p.date_prise_service, p.status AS personnel_status
+                       p.im, p.lastname, p.firstname, p.grade,
+                       p.affectation, p.phone, p.photo, p.address,
+                       COALESCE(
+                           (SELECT mp.type_mouvement
+                            FROM mouvement_personnel mp
+                            WHERE mp.personnel_id = p.id
+                              AND mp.retour = "Non"
+                            ORDER BY mp.created_at DESC
+                            LIMIT 1),
+                           "En service"
+                       ) AS personnel_status
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
                 JOIN personnel p ON u.personnel_id = p.id

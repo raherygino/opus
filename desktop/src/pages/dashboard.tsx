@@ -155,9 +155,9 @@ export function Dashboard() {
             <CardContent className="grid gap-4 sm:grid-cols-2">
               {[
                 { label: "Nom d'utilisateur", value: user?.username },
-                { label: "Matricule (IM)", value: user?.im },
+                { label: "IM", value: user?.im },
                 { label: "Grade", value: user?.grade },
-                { label: "Fonction", value: user?.fonction },
+                { label: "Affectation", value: user?.affectation },
                 { label: "Rôle système", value: user?.role_name },
                 { label: "Dernière connexion", value: user?.last_login ? new Date(user.last_login).toLocaleString("fr-FR") : "Première connexion" },
               ].map((info) => (

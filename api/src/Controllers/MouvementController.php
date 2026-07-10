@@ -62,10 +62,8 @@ class MouvementController
         }
 
         $data['im'] = $person['im'];
-        $data['matricule'] = $data['matricule'] ?? $person['matricule'];
         $data['grade'] = $data['grade'] ?? $person['grade'];
-        $data['fonction'] = $data['fonction'] ?? $person['fonction'];
-        $data['service'] = $data['service'] ?? $person['service'];
+        $data['service'] = $data['service'] ?? $person['affectation'];
         $data['nom'] = $data['nom'] ?? $person['lastname'];
         $data['prenoms'] = $data['prenoms'] ?? $person['firstname'];
 
@@ -89,6 +87,24 @@ class MouvementController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notification ---
+        $creatorId = $authUser['sub'] ?? null;
+        $admins = \App\Models\Notification::getAdminUsers();
+        foreach ($admins as $admin) {
+            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
+                continue;
+            }
+            \App\Models\Notification::create([
+                'title' => 'Nouveau mouvement',
+                'message' => "Mouvement de type '{$mouvement['type_mouvement']}' enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}).",
+                'type' => 'info',
+                'service' => $mouvement['service'] ?? 'System',
+                'user_id' => $admin['id'],
+                'personnel_id' => $mouvement['personnel_id'],
+                'created_by' => $creatorId,
+            ]);
+        }
 
         Response::created($mouvement, 'Mouvement created successfully');
     }
@@ -162,6 +178,24 @@ class MouvementController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notification ---
+        $creatorId = $authUser['sub'] ?? null;
+        $admins = \App\Models\Notification::getAdminUsers();
+        foreach ($admins as $admin) {
+            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
+                continue;
+            }
+            \App\Models\Notification::create([
+                'title' => 'Retour de mouvement',
+                'message' => "Retour enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}) — Type: {$mouvement['type_mouvement']}.",
+                'type' => 'info',
+                'service' => $mouvement['service'] ?? 'System',
+                'user_id' => $admin['id'],
+                'personnel_id' => $mouvement['personnel_id'],
+                'created_by' => $creatorId,
+            ]);
+        }
 
         Response::success($mouvement, 'Retour enregistré');
     }

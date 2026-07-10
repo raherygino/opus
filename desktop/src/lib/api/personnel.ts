@@ -27,8 +27,9 @@ export async function getPersonnelById(id: number): Promise<Personnel> {
 }
 
 export async function createPersonnel(
-  personnel: Omit<Personnel, "id" | "created_at" | "updated_at" | "photo"> & {
+  personnel: Omit<Personnel, "id" | "created_at" | "updated_at" | "photo" | "signature" | "status"> & {
     photo?: string;
+    signature?: string;
   },
 ): Promise<Personnel> {
   const { data } = await apiClient.post<ApiResponse<Personnel>>(
@@ -131,4 +132,27 @@ export async function uploadPersonnelPhoto(
 export function getPersonnelPhotoUrl(personnelId: number): string {
   const baseUrl = import.meta.env.VITE_API_URL || "/api";
   return `${baseUrl}/personnel/${personnelId}/photo`;
+}
+
+// ========================
+// Signature API
+// ========================
+
+export async function uploadPersonnelSignature(
+  personnelId: number,
+  signature: File,
+): Promise<Personnel> {
+  const formData = new FormData();
+  formData.append("signature", signature);
+  const { data } = await apiClient.post<ApiResponse<Personnel>>(
+    `/personnel/${personnelId}/signature`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return data.data;
+}
+
+export function getPersonnelSignatureUrl(personnelId: number): string {
+  const baseUrl = import.meta.env.VITE_API_URL || "/api";
+  return `${baseUrl}/personnel/${personnelId}/signature`;
 }

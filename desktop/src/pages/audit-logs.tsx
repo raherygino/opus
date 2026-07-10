@@ -323,7 +323,7 @@ export function AuditLogPage() {
         head: [["Date", "Utilisateur", "Action", "Module", "Description", "IP"]],
         body: logs.map((log) => [
           new Date(log.created_at).toLocaleString("fr-FR"),
-          `${log.firstname || ""} ${log.lastname || ""}`.trim() || log.username || "—",
+          `${log.prenoms || ""} ${log.nom || ""}`.trim() || log.username || "—",
           ACTION_LABELS[log.action] || log.action,
           MODULE_LABELS[log.module] || log.module,
           log.description || "—",
@@ -379,7 +379,7 @@ export function AuditLogPage() {
         head: [["Champ", "Valeur"]],
         body: [
           ["Date", new Date(log.created_at).toLocaleString("fr-FR")],
-          ["Utilisateur", `${log.firstname || ""} ${log.lastname || ""}`.trim() || log.username || "—"],
+          ["Utilisateur", `${log.prenoms || ""} ${log.nom || ""}`.trim() || log.username || "—"],
           ["Nom d'utilisateur", log.username || "—"],
           ["Action", ACTION_LABELS[log.action] || log.action],
           ["Module", MODULE_LABELS[log.module] || log.module],
@@ -488,7 +488,7 @@ export function AuditLogPage() {
       render: (log) => (
         <div className="flex flex-col">
           <span className="text-sm font-medium">
-            {log.firstname} {log.lastname}
+            {log.prenoms} {log.nom}
           </span>
           <span className="text-xs text-muted-foreground">@{log.username || "—"}</span>
         </div>
@@ -720,7 +720,7 @@ export function AuditLogPage() {
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Utilisateur</p>
                     <p className="text-sm mt-1">
-                      {selectedLog.firstname} {selectedLog.lastname}{" "}
+                      {selectedLog.prenoms} {selectedLog.nom}{" "}
                       <span className="text-muted-foreground">@{selectedLog.username}</span>
                     </p>
                   </div>

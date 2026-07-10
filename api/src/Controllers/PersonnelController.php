@@ -14,7 +14,7 @@ class PersonnelController
 {
     /**
      * GET /api/personnel
-     * GET /api/personnel?status=active&search=diop
+     * GET /api/personnel?search=diop
      */
     public function index(array $params): void
     {
@@ -24,6 +24,9 @@ class PersonnelController
         }
         if (isset($_GET['grade'])) {
             $filters['grade'] = $_GET['grade'];
+        }
+        if (isset($_GET['affectation'])) {
+            $filters['affectation'] = $_GET['affectation'];
         }
         if (isset($_GET['search'])) {
             $filters['search'] = $_GET['search'];
@@ -103,7 +106,7 @@ class PersonnelController
                     'title' => "Nouveau personnel ajouté",
                     'message' => "{$personnelName} (IM: {$person['im']}) a été ajouté par un administrateur.",
                     'type' => 'info',
-                    'service' => self::serviceToCode($person['service'] ?? ''),
+                    'service' => self::affectationToCode($person['affectation'] ?? ''),
                     'user_id' => $admin['id'],
                     'personnel_id' => $id,
                     'created_by' => $creatorId,
@@ -117,7 +120,7 @@ class PersonnelController
                     'title' => "Nouveau personnel en attente de validation",
                     'message' => "{$personnelName} (IM: {$person['im']}) a été ajouté et nécessite votre attention.",
                     'type' => 'warning',
-                    'service' => self::serviceToCode($person['service'] ?? ''),
+                    'service' => self::affectationToCode($person['affectation'] ?? ''),
                     'user_id' => $admin['id'],
                     'personnel_id' => $id,
                     'created_by' => $creatorId,
@@ -202,6 +205,14 @@ class PersonnelController
             }
         }
 
+        // Delete signature file from disk
+        if (!empty($person['signature'])) {
+            $sigPath = rtrim($config['upload_dir'], '/') . '/personnel/signatures/' . $person['signature'];
+            if (file_exists($sigPath)) {
+                unlink($sigPath);
+            }
+        }
+
         Personnel::delete($id);
 
         // --- Audit log ---
@@ -220,15 +231,15 @@ class PersonnelController
         Response::success(null, 'Personnel deleted successfully');
     }
 
-    private static function serviceToCode(string $service): string
+    private static function affectationToCode(string $affectation): string
     {
-        if (stripos($service, 'PJ') !== false) {
+        if (stripos($affectation, 'PJ') !== false || stripos($affectation, 'Police Judiciaire') !== false) {
             return 'PJ';
         }
-        if (stripos($service, 'SG') !== false) {
+        if (stripos($affectation, 'SG') !== false || stripos($affectation, 'Service Général') !== false) {
             return 'SG';
         }
-        if (stripos($service, 'Sédentaire') !== false || stripos($service, 'Sedentaire') !== false) {
+        if (stripos($affectation, 'Sédentaire') !== false || stripos($affectation, 'Sedentaire') !== false) {
             return 'Sedentaire';
         }
         return 'System';
@@ -298,6 +309,69 @@ class PersonnelController
     }
 
     /**
+     * POST /api/personnel/{id}/signature
+     * Multipart: signature (file)
+     */
+    public function uploadSignature(array $params): void
+    {
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person) {
+            Response::notFound('Personnel not found');
+        }
+
+        if (!isset($_FILES['signature']) || $_FILES['signature']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('Signature file is required', 422, ['signature' => 'Le fichier signature est requis']);
+        }
+
+        $config = require __DIR__ . '/../../config/app.php';
+        $uploadDir = rtrim($config['upload_dir'], '/') . '/personnel/signatures';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $uploadedFile = $_FILES['signature'];
+        $extension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        if (!in_array($extension, $allowedExtensions)) {
+            Response::error('Invalid file type', 422, ['signature' => 'Seuls les formats JPG, PNG, GIF et WebP sont autorisés']);
+        }
+
+        // Delete old signature if exists
+        if (!empty($person['signature'])) {
+            $oldPath = $uploadDir . '/' . $person['signature'];
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
+        }
+
+        $storedName = 'sig_' . $id . '_' . uniqid() . '.' . $extension;
+        $destPath = $uploadDir . '/' . $storedName;
+
+        if (!move_uploaded_file($uploadedFile['tmp_name'], $destPath)) {
+            Response::error('Failed to save signature', 500);
+        }
+
+        Personnel::update($id, ['signature' => $storedName]);
+        $person = Personnel::getById($id);
+
+        // --- Audit log ---
+        $authUser = AuthController::getAuthenticatedUser();
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'signature_upload',
+            'module' => 'personnel',
+            'entity_id' => $id,
+            'description' => "Signature mise à jour pour le personnel '{$person['firstname']} {$person['lastname']}' (ID: {$id})",
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        Response::success($person, 'Signature uploaded successfully');
+    }
+
+    /**
      * GET /api/personnel/{id}/photo
      * Serve the personnel photo file
      */
@@ -314,6 +388,42 @@ class PersonnelController
 
         if (!file_exists($filePath)) {
             Response::notFound('Photo file not found on disk');
+        }
+
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+        $mime = $mimeTypes[$extension] ?? 'image/jpeg';
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: max-age=86400');
+        readfile($filePath);
+        exit;
+    }
+
+    /**
+     * GET /api/personnel/{id}/signature
+     * Serve the personnel signature file
+     */
+    public function serveSignature(array $params): void
+    {
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person || empty($person['signature'])) {
+            Response::notFound('Signature not found');
+        }
+
+        $config = require __DIR__ . '/../../config/app.php';
+        $filePath = rtrim($config['upload_dir'], '/') . '/personnel/signatures/' . $person['signature'];
+
+        if (!file_exists($filePath)) {
+            Response::notFound('Signature file not found on disk');
         }
 
         $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));

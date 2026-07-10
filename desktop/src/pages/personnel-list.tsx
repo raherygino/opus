@@ -56,21 +56,20 @@ export function PersonnelList() {
 
   const columns: Column<Personnel>[] = [
     { key: "im", header: "IM", sortable: true },
-    { key: "matricule", header: "Matricule", sortable: true },
     { key: "lastname", header: "Nom", sortable: true },
-    { key: "firstname", header: "Prénom", sortable: true },
+    { key: "firstname", header: "Prénoms", sortable: true },
     { key: "grade", header: "Grade", sortable: true },
-    { key: "fonction", header: "Fonction", sortable: true },
+    { key: "affectation", header: "Affectation", sortable: true },
     {
       key: "status",
       header: "Statut",
       render: (p) => (
         <span className={`text-xs px-2 py-0.5 rounded-full ${
-          p.status === "active"
+          p.status === "En service"
             ? "bg-green-500/10 text-green-500"
-            : "bg-muted text-muted-foreground"
+            : "bg-amber-500/10 text-amber-500"
         }`}>
-          {p.status === "active" ? "Actif" : "Inactif"}
+          {p.status}
         </span>
       ),
     },

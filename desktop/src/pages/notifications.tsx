@@ -170,12 +170,12 @@ export function NotificationsPage() {
                   <Clock className="h-3 w-3" />
                   {formatTimeAgo(n.created_at)}
                 </span>
-                {n.personnel_lastname && (
+                {n.personnel_nom && (
                   <button
                     className="text-xs text-primary hover:underline"
                     onClick={() => navigate(`/personnel/${n.personnel_id}`)}
                   >
-                    {n.personnel_firstname} {n.personnel_lastname} ({n.personnel_im})
+                    {n.personnel_prenoms} {n.personnel_nom} ({n.personnel_im})
                   </button>
                 )}
                 {n.created_by_username && (

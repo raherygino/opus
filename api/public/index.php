@@ -53,6 +53,12 @@ $router->post('/api/personnel/{id}/photo',     [PersonnelController::class, 'upl
 $router->get('/api/personnel/{id}/photo',      [PersonnelController::class, 'servePhoto']);
 
 // ========================
+// Personnel Signature Routes
+// ========================
+$router->post('/api/personnel/{id}/signature', [PersonnelController::class, 'uploadSignature']);
+$router->get('/api/personnel/{id}/signature',  [PersonnelController::class, 'serveSignature']);
+
+// ========================
 // Personnel Attachment Routes
 // ========================
 $router->get('/api/personnel/{id}/attachments',                       [PersonnelAttachmentController::class, 'index']);

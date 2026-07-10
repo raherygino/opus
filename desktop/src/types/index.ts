@@ -16,16 +16,11 @@ export interface User {
   lastname: string;
   firstname: string;
   grade: string;
-  fonction: string;
-  service: string | null;
-  personnel_email: string | null;
+  affectation: string | null;
   phone: string | null;
   photo: string | null;
-  adresse: string | null;
-  date_naissance: string | null;
-  lieu_naissance: string | null;
-  cin: string | null;
-  date_prise_service: string | null;
+  signature: string | null;
+  address: string | null;
   personnel_status: string | null;
   permissions?: RolePermission[];
 }
@@ -61,21 +56,15 @@ export interface Division {
 export interface Personnel {
   id: number;
   im: string;
-  matricule: string | null;
+  grade: string;
   lastname: string;
   firstname: string;
-  grade: string;
-  fonction: string;
-  service: string | null;
-  date_prise_service: string | null;
-  email: string | null;
+  affectation: string | null;
   phone: string | null;
-  adresse: string | null;
-  date_naissance: string | null;
-  lieu_naissance: string | null;
-  cin: string | null;
+  address: string | null;
   photo: string | null;
-  status: "active" | "inactive";
+  signature: string | null;
+  status: string;
   created_at: string;
   updated_at: string;
 }
@@ -99,9 +88,7 @@ export interface Mouvement {
   id: number;
   personnel_id: number;
   im: string;
-  matricule: string | null;
   grade: string | null;
-  fonction: string | null;
   service: string | null;
   nom: string | null;
   prenoms: string | null;
@@ -279,8 +266,8 @@ export interface AppNotification {
   created_at: string;
   updated_at: string;
   personnel_im?: string | null;
-  personnel_lastname?: string | null;
-  personnel_firstname?: string | null;
+  personnel_nom?: string | null;
+  personnel_prenoms?: string | null;
   personnel_grade?: string | null;
   created_by_username?: string | null;
 }
@@ -301,8 +288,8 @@ export interface AuditLog {
   user_agent: string | null;
   created_at: string;
   username?: string | null;
-  firstname?: string | null;
-  lastname?: string | null;
+  prenoms?: string | null;
+  nom?: string | null;
 }
 
 export interface AuditLogFilters {

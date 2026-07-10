@@ -10,26 +10,38 @@ class Personnel
     public static function getAll(array $filters = []): array
     {
         $db = Database::getInstance()->getConnection();
-        $sql = 'SELECT * FROM personnel WHERE 1=1';
+        $sql = 'SELECT p.*,
+                       COALESCE(
+                           (SELECT mp.type_mouvement
+                            FROM mouvement_personnel mp
+                            WHERE mp.personnel_id = p.id
+                              AND mp.retour = "Non"
+                            ORDER BY mp.created_at DESC
+                            LIMIT 1),
+                           "En service"
+                       ) AS status
+                FROM personnel p WHERE 1=1';
         $params = [];
 
         if (!empty($filters['status'])) {
-            $sql .= ' AND status = ?';
-            $params[] = $filters['status'];
+            if ($filters['status'] === 'active' || $filters['status'] === 'En service') {
+                $sql .= ' AND NOT EXISTS (SELECT 1 FROM mouvement_personnel mp WHERE mp.personnel_id = p.id AND mp.retour = "Non")';
+            } else {
+                $sql .= ' AND EXISTS (SELECT 1 FROM mouvement_personnel mp WHERE mp.personnel_id = p.id AND mp.retour = "Non" AND mp.type_mouvement = ?)';
+                $params[] = $filters['status'];
+            }
         }
         if (!empty($filters['grade'])) {
             $sql .= ' AND grade LIKE ?';
             $params[] = '%' . $filters['grade'] . '%';
         }
-        if (!empty($filters['service'])) {
-            $sql .= ' AND service LIKE ?';
-            $params[] = '%' . $filters['service'] . '%';
+        if (!empty($filters['affectation'])) {
+            $sql .= ' AND affectation LIKE ?';
+            $params[] = '%' . $filters['affectation'] . '%';
         }
         if (!empty($filters['search'])) {
-            $sql .= ' AND (lastname LIKE ? OR firstname LIKE ? OR im LIKE ? OR matricule LIKE ? OR cin LIKE ?)';
+            $sql .= ' AND (lastname LIKE ? OR firstname LIKE ? OR im LIKE ?)';
             $search = '%' . $filters['search'] . '%';
-            $params[] = $search;
-            $params[] = $search;
             $params[] = $search;
             $params[] = $search;
             $params[] = $search;
@@ -44,7 +56,19 @@ class Personnel
     public static function getById(int $id): ?array
     {
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare('SELECT * FROM personnel WHERE id = ?');
+        $stmt = $db->prepare(
+            'SELECT p.*,
+                    COALESCE(
+                        (SELECT mp.type_mouvement
+                         FROM mouvement_personnel mp
+                         WHERE mp.personnel_id = p.id
+                           AND mp.retour = "Non"
+                         ORDER BY mp.created_at DESC
+                         LIMIT 1),
+                        "En service"
+                    ) AS status
+             FROM personnel p WHERE p.id = ?'
+        );
         $stmt->execute([$id]);
         $person = $stmt->fetch();
         return $person ?: null;
@@ -53,7 +77,19 @@ class Personnel
     public static function getByIM(string $im): ?array
     {
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare('SELECT * FROM personnel WHERE im = ?');
+        $stmt = $db->prepare(
+            'SELECT p.*,
+                    COALESCE(
+                        (SELECT mp.type_mouvement
+                         FROM mouvement_personnel mp
+                         WHERE mp.personnel_id = p.id
+                           AND mp.retour = "Non"
+                         ORDER BY mp.created_at DESC
+                         LIMIT 1),
+                        "En service"
+                    ) AS status
+             FROM personnel p WHERE p.im = ?'
+        );
         $stmt->execute([$im]);
         $person = $stmt->fetch();
         return $person ?: null;
@@ -73,27 +109,21 @@ class Personnel
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO personnel (im, matricule, lastname, firstname, grade, fonction, service, date_prise_service, email, phone, adresse, date_naissance, lieu_naissance, cin, photo, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO personnel (im, grade, lastname, firstname, affectation, phone, address, photo, signature)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['im'],
-            $data['matricule'] ?? null,
+            $data['grade'],
             $data['lastname'],
             $data['firstname'],
-            $data['grade'],
-            $data['fonction'],
-            $data['service'] ?? null,
-            $data['date_prise_service'] ?? null,
-            $data['email'] ?? null,
+            $data['affectation'] ?? null,
             $data['phone'] ?? null,
-            $data['adresse'] ?? null,
-            $data['date_naissance'] ?? null,
-            $data['lieu_naissance'] ?? null,
-            $data['cin'] ?? null,
+            $data['address'] ?? null,
             $data['photo'] ?? null,
-            $data['status'] ?? 'active',
+            $data['signature'] ?? null,
         ]);
+        
         return (int) $db->lastInsertId();
     }
 
@@ -103,7 +133,7 @@ class Personnel
         $fields = [];
         $values = [];
 
-        $allowed = ['im', 'matricule', 'lastname', 'firstname', 'grade', 'fonction', 'service', 'date_prise_service', 'email', 'phone', 'adresse', 'date_naissance', 'lieu_naissance', 'cin', 'photo', 'status'];
+        $allowed = ['im', 'grade', 'lastname', 'firstname', 'affectation', 'phone', 'address', 'photo', 'signature'];
         foreach ($allowed as $field) {
             if (isset($data[$field])) {
                 $fields[] = "$field = ?";

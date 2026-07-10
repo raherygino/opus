@@ -11,11 +11,11 @@ class PersonnelValidator
         $errors = [];
 
         if (empty($data['lastname'])) {
-            $errors['lastname'] = 'Lastname is required';
+            $errors['lastname'] = 'Nom is required';
         }
 
         if (empty($data['firstname'])) {
-            $errors['firstname'] = 'Firstname is required';
+            $errors['firstname'] = 'Prénoms is required';
         }
 
         if (empty($data['im'])) {
@@ -29,18 +29,6 @@ class PersonnelValidator
 
         if (empty($data['grade'])) {
             $errors['grade'] = 'Grade is required';
-        }
-
-        if (empty($data['fonction'])) {
-            $errors['fonction'] = 'Fonction is required';
-        }
-
-        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Invalid email format';
-        }
-
-        if (!empty($data['status']) && !in_array($data['status'], ['active', 'inactive'])) {
-            $errors['status'] = 'Status must be active or inactive';
         }
 
         return $errors;

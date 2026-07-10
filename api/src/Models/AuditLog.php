@@ -31,7 +31,7 @@ class AuditLog
     public static function getAll(array $filters = []): array
     {
         $db = Database::getInstance()->getConnection();
-        $sql = 'SELECT a.*, u.username, p.firstname, p.lastname
+        $sql = 'SELECT a.*, u.username, p.firstname AS prenoms, p.lastname AS nom
                 FROM audit_logs a
                 LEFT JOIN users u ON a.user_id = u.id
                 LEFT JOIN personnel p ON u.personnel_id = p.id
@@ -76,7 +76,7 @@ class AuditLog
     public static function getById(int $id): ?array
     {
         $db = Database::getInstance()->getConnection();
-        $sql = 'SELECT a.*, u.username, p.firstname, p.lastname
+        $sql = 'SELECT a.*, u.username, p.firstname AS prenoms, p.lastname AS nom
                 FROM audit_logs a
                 LEFT JOIN users u ON a.user_id = u.id
                 LEFT JOIN personnel p ON u.personnel_id = p.id

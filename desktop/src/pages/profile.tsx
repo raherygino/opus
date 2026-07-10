@@ -22,11 +22,9 @@ import {
   Camera,
   Loader2,
   Save,
-  Mail,
   Phone,
   Briefcase,
   Building2,
-  Calendar,
   MapPin,
   Pencil,
 } from "lucide-react";
@@ -202,26 +200,14 @@ export function ProfilePage() {
                   <p className="text-sm font-medium">{user.lastname}</p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Prénom</Label>
+                  <Label className="text-xs text-muted-foreground">Prénoms</Label>
                   <p className="text-sm font-medium">{user.firstname}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Matricule</Label>
+                  <Label className="text-xs text-muted-foreground">IM</Label>
                   <p className="text-sm font-medium">{user.im}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">CIN</Label>
-                  <p className="text-sm font-medium">{user.cin || "—"}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Mail className="h-3 w-3" /> Email
-                  </Label>
-                  <p className="text-sm font-medium">{user.personnel_email || "—"}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
@@ -230,23 +216,11 @@ export function ProfilePage() {
                   <p className="text-sm font-medium">{user.phone || "—"}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Date de naissance
-                  </Label>
-                  <p className="text-sm font-medium">{user.date_naissance || "—"}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> Lieu de naissance
-                  </Label>
-                  <p className="text-sm font-medium">{user.lieu_naissance || "—"}</p>
-                </div>
-              </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Adresse</Label>
-                <p className="text-sm font-medium">{user.adresse || "—"}</p>
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> Adresse
+                </Label>
+                <p className="text-sm font-medium">{user.address || "—"}</p>
               </div>
             </CardContent>
           </Card>
@@ -266,18 +240,10 @@ export function ProfilePage() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Building2 className="h-3 w-3" /> Service
+                    <Building2 className="h-3 w-3" /> Affectation
                   </Label>
-                  <p className="text-sm font-medium">{user.service || "—"}</p>
+                  <p className="text-sm font-medium">{user.affectation || "—"}</p>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Fonction</Label>
-                <p className="text-sm font-medium">{user.fonction}</p>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Date de prise de service</Label>
-                <p className="text-sm font-medium">{user.date_prise_service || "—"}</p>
               </div>
             </CardContent>
           </Card>
