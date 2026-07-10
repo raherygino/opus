@@ -2,6 +2,10 @@
 
 A cross-platform **Police Station Management System** with a desktop application, mobile Android app, and a REST API backend.
 
+## Screenshots
+
+![Desktop](screenshots/01.png)
+
 | Platform | Technology |
 |----------|-----------|
 | **Desktop** | Electron + React 18 + Vite 6 + TypeScript |
