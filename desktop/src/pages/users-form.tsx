@@ -4,27 +4,14 @@ import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
 import { getUserById, createUser, updateUser } from "@/lib/api/users";
 import { getAvailablePersonnel } from "@/lib/api/personnel";
+import { getRoleList } from "@/lib/api/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Loader2, Shield, Eye, EyeOff } from "lucide-react";
-import type { Personnel } from "@/types";
-
-const ROLES: { id: number; code: string; name: string }[] = [
-  { id: 1, code: "SUPER_ADMIN", name: "Super Administrator" },
-  { id: 2, code: "CHIEF", name: "Police Chief" },
-  { id: 3, code: "STATION_ADMIN", name: "Station Administrator" },
-  { id: 4, code: "HEAD_SG", name: "Head of Service (SG)" },
-  { id: 5, code: "HEAD_SED", name: "Head of Service (Sédentaire)" },
-  { id: 6, code: "HEAD_PJ", name: "Head of Service (PJ)" },
-  { id: 7, code: "INVESTIGATOR", name: "Investigator" },
-  { id: 8, code: "OFFICER", name: "Officer" },
-  { id: 9, code: "RECEPTION", name: "Reception Officer" },
-  { id: 10, code: "CLERK", name: "Records Clerk" },
-  { id: 11, code: "CUSTODY", name: "Custody Officer" },
-];
+import type { Personnel, Role } from "@/types";
 
 export function UserForm() {
   const { id } = useParams();
@@ -41,6 +28,7 @@ export function UserForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [availablePersonnel, setAvailablePersonnel] = useState<Personnel[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -52,6 +40,8 @@ export function UserForm() {
   async function loadData() {
     setLoading(true);
     try {
+      const [roleList] = await Promise.all([getRoleList()]);
+      setRoles(roleList);
       if (!isEdit) {
         const avail = await getAvailablePersonnel();
         setAvailablePersonnel(avail);
@@ -203,7 +193,7 @@ export function UserForm() {
                 id="role_id"
                 value={form.role_id}
                 onChange={(e) => setForm({ ...form, role_id: e.target.value })}
-                options={ROLES.map((r) => ({ value: String(r.id), label: r.name }))}
+                options={roles.map((r) => ({ value: String(r.id), label: r.name }))}
                 placeholder="Sélectionner un rôle"
                 required
               />

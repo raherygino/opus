@@ -2,25 +2,54 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
-import { getPersonnelById, createPersonnel, updatePersonnel } from "@/lib/api/personnel";
+import {
+  getPersonnelById,
+  createPersonnel,
+  updatePersonnel,
+  getPersonnelAttachments,
+  createPersonnelAttachment,
+  updatePersonnelAttachmentTitle,
+  deletePersonnelAttachment,
+  getAttachmentDownloadUrl,
+  uploadPersonnelPhoto,
+  getPersonnelPhotoUrl,
+} from "@/lib/api/personnel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Save, Loader2, UserPlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  UserPlus,
+  Paperclip,
+  Trash2,
+  Download,
+  Plus,
+  Camera,
+} from "lucide-react";
+import type { PersonnelAttachment } from "@/types";
+import gradeData from "@/assets/json/grade.json";
 
-const grades = [
-  "Commissaire Divisionnaire",
-  "Commissaire",
-  "Commissaire Adjoint",
-  "Lieutenant",
-  "Brigadier-Chef",
-  "Brigadier",
-  "Garde de la Paix",
-  "Secrétaire Administratif",
-  "Agent Spécialisé",
+const grades = gradeData.grade.map((g) => g.label);
+
+const services = [
+  "Service Général (SG)",
+  "Police Judiciaire (PJ)",
+  "Sédentaire",
+  "Unité Spéciale",
+  "Administration",
 ];
+
+interface AttachmentItem {
+  id?: number;
+  title: string;
+  file?: File;
+  existingFile?: string;
+  _delete?: boolean;
+}
 
 export function PersonnelForm() {
   const { id } = useParams();
@@ -28,25 +57,26 @@ export function PersonnelForm() {
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
 
-  const [form, setForm] = useState<{
-    im: string;
-    lastname: string;
-    firstname: string;
-    grade: string;
-    fonction: string;
-    email: string;
-    phone: string;
-    status: "active" | "inactive";
-  }>({
+  const [form, setForm] = useState({
     im: "",
+    matricule: "",
     lastname: "",
     firstname: "",
     grade: "",
     fonction: "",
+    service: "",
+    date_prise_service: "",
     email: "",
     phone: "",
-    status: "active",
+    adresse: "",
+    date_naissance: "",
+    lieu_naissance: "",
+    cin: "",
+    status: "active" as "active" | "inactive",
   });
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -54,7 +84,6 @@ export function PersonnelForm() {
     if (isEdit) {
       loadPersonnel();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function loadPersonnel() {
@@ -63,14 +92,34 @@ export function PersonnelForm() {
       const p = await getPersonnelById(Number(id));
       setForm({
         im: p.im,
+        matricule: p.matricule || "",
         lastname: p.lastname,
         firstname: p.firstname,
         grade: p.grade,
         fonction: p.fonction,
+        service: p.service || "",
+        date_prise_service: p.date_prise_service || "",
         email: p.email || "",
         phone: p.phone || "",
+        adresse: p.adresse || "",
+        date_naissance: p.date_naissance || "",
+        lieu_naissance: p.lieu_naissance || "",
+        cin: p.cin || "",
         status: p.status,
       });
+
+      if (p.photo) {
+        setPhotoPreview(getPersonnelPhotoUrl(p.id));
+      }
+
+      const atts = await getPersonnelAttachments(Number(id));
+      setAttachments(
+        atts.map((a: PersonnelAttachment) => ({
+          id: a.id,
+          title: a.title,
+          existingFile: a.original_filename,
+        })),
+      );
     } catch {
       addNotification("error", "Erreur", "Personnel introuvable");
       navigate("/personnel");
@@ -79,22 +128,95 @@ export function PersonnelForm() {
     }
   }
 
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  }
+
+  function addAttachment() {
+    setAttachments((prev) => [...prev, { title: "", file: undefined }]);
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments((prev) => {
+      const updated = [...prev];
+      if (updated[index].id) {
+        updated[index] = { ...updated[index], _delete: true };
+      } else {
+        updated.splice(index, 1);
+      }
+      return updated;
+    });
+  }
+
+  function updateAttachment(index: number, data: Partial<AttachmentItem>) {
+    setAttachments((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], ...data };
+      return updated;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+
     try {
+      let personnelId: number;
+
       if (isEdit) {
-        await updatePersonnel(Number(id), form);
-        addNotification("success", "Modifié", "Personnel mis à jour avec succès");
+        personnelId = Number(id);
+        await updatePersonnel(personnelId, form);
       } else {
-        await createPersonnel(form);
-        addNotification("success", "Créé", "Personnel créé avec succès");
+        const created = await createPersonnel(form);
+        personnelId = created.id;
       }
+
+      for (const a of attachments.filter((x) => x._delete && x.id)) {
+        await deletePersonnelAttachment(personnelId, a.id!);
+      }
+
+      if (photoFile) {
+        await uploadPersonnelPhoto(personnelId, photoFile);
+      }
+
+      for (const a of attachments.filter((x) => !x._delete)) {
+        if (a.id) {
+          if (a.file) {
+            await deletePersonnelAttachment(personnelId, a.id);
+            await createPersonnelAttachment(personnelId, a.title, a.file);
+          } else if (a.title) {
+            await updatePersonnelAttachmentTitle(personnelId, a.id, a.title);
+          }
+        } else if (a.file) {
+          await createPersonnelAttachment(personnelId, a.title, a.file);
+        }
+      }
+
+      addNotification(
+        "success",
+        isEdit ? "Modifié" : "Créé",
+        isEdit
+          ? "Personnel mis à jour avec succès"
+          : "Personnel créé avec succès",
+      );
       navigate("/personnel");
     } catch (err: unknown) {
-      const msg = err && typeof err === "object" && "response" in err
-        ? (err as { response: { data: { message: string; errors?: Record<string, string> } } }).response?.data?.message || "Erreur lors de l'enregistrement"
-        : "Erreur lors de l'enregistrement";
+      let msg = "Erreur lors de l'enregistrement";
+      if (err && typeof err === "object" && "response" in err) {
+        const resp = (err as { response: { data: { message: string; errors?: Record<string, string> } } }).response;
+        if (resp?.data?.errors) {
+          const fieldErrors = Object.entries(resp.data.errors)
+            .map(([field, error]) => `${field}: ${error}`)
+            .join(", ");
+          msg = fieldErrors;
+        } else if (resp?.data?.message) {
+          msg = resp.data.message;
+        }
+      }
       addNotification("error", "Erreur", msg);
     } finally {
       setSaving(false);
@@ -110,9 +232,17 @@ export function PersonnelForm() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto max-w-2xl space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="mx-auto max-w-3xl space-y-6"
+    >
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/personnel")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/personnel")}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -120,7 +250,9 @@ export function PersonnelForm() {
             {isEdit ? "Modifier le personnel" : "Nouveau personnel"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {isEdit ? "Modifier les informations de l'agent" : "Enregistrer un nouvel agent"}
+            {isEdit
+              ? "Modifier les informations de l'agent"
+              : "Enregistrer un nouvel agent"}
           </p>
         </div>
       </div>
@@ -134,20 +266,107 @@ export function PersonnelForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-start gap-6 mb-4">
+              <div className="flex flex-col items-center gap-2 shrink-0">
+                <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt="Photo"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Camera className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <Label
+                  htmlFor="photo-upload"
+                  className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+                >
+                  {photoPreview ? "Changer" : "Ajouter une photo"}
+                </Label>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="im">Matricule (IM) *</Label>
-                <Input id="im" value={form.im} onChange={(e) => setForm({ ...form, im: e.target.value })} required />
+                <Label htmlFor="im">IM (Indice Matricule) *</Label>
+                <Input
+                  id="im"
+                  value={form.im}
+                  onChange={(e) => setForm({ ...form, im: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="matricule">Matricule</Label>
+                <Input
+                  id="matricule"
+                  value={form.matricule}
+                  onChange={(e) => setForm({ ...form, matricule: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="grade">Grade *</Label>
                 <Select
                   id="grade"
                   value={form.grade}
-                  onChange={(e) => setForm({ ...form, grade: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, grade: e.target.value })
+                  }
                   options={grades.map((g) => ({ value: g, label: g }))}
                   placeholder="Sélectionner un grade"
                   required
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+
+              <div className="space-y-2">
+                <Label htmlFor="fonction">Fonction *</Label>
+                <Input
+                  id="fonction"
+                  value={form.fonction}
+                  onChange={(e) =>
+                    setForm({ ...form, fonction: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="service">Service</Label>
+                <Select
+                  id="service"
+                  value={form.service}
+                  onChange={(e) =>
+                    setForm({ ...form, service: e.target.value })
+                  }
+                  options={services.map((s) => ({ value: s, label: s }))}
+                  placeholder="Sélectionner un service"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date_prise_service">
+                  Date de prise de service
+                </Label>
+                <Input
+                  id="date_prise_service"
+                  type="date"
+                  value={form.date_prise_service}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      date_prise_service: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -155,53 +374,211 @@ export function PersonnelForm() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="lastname">Nom *</Label>
-                <Input id="lastname" value={form.lastname} onChange={(e) => setForm({ ...form, lastname: e.target.value })} required />
+                <Input
+                  id="lastname"
+                  value={form.lastname}
+                  onChange={(e) =>
+                    setForm({ ...form, lastname: e.target.value })
+                  }
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="firstname">Prénom *</Label>
-                <Input id="firstname" value={form.firstname} onChange={(e) => setForm({ ...form, firstname: e.target.value })} required />
+                <Input
+                  id="firstname"
+                  value={form.firstname}
+                  onChange={(e) =>
+                    setForm({ ...form, firstname: e.target.value })
+                  }
+                  required
+                />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fonction">Fonction *</Label>
-              <Input id="fonction" value={form.fonction} onChange={(e) => setForm({ ...form, fonction: e.target.value })} required />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <Label htmlFor="date_naissance">Date de naissance</Label>
+                <Input
+                  id="date_naissance"
+                  type="date"
+                  value={form.date_naissance}
+                  onChange={(e) =>
+                    setForm({ ...form, date_naissance: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="lieu_naissance">Lieu de naissance</Label>
+                <Input
+                  id="lieu_naissance"
+                  value={form.lieu_naissance}
+                  onChange={(e) =>
+                    setForm({ ...form, lieu_naissance: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="phone">Téléphone</Label>
-                <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                <Input
+                  id="phone"
+                  value={form.phone}
+                  onChange={(e) =>
+                    setForm({ ...form, phone: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) =>
+                    setForm({ ...form, email: e.target.value })
+                  }
+                />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                id="status"
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as "active" | "inactive" })}
-                options={[
-                  { value: "active", label: "Actif" },
-                  { value: "inactive", label: "Inactif" },
-                ]}
+              <Label htmlFor="adresse">Adresse</Label>
+              <Input
+                id="adresse"
+                value={form.adresse}
+                onChange={(e) =>
+                  setForm({ ...form, adresse: e.target.value })
+                }
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cin">CIN (Numéro national d'identité)</Label>
+                <Input
+                  id="cin"
+                  value={form.cin}
+                  onChange={(e) =>
+                    setForm({ ...form, cin: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Statut</Label>
+                <Select
+                  id="status"
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      status: e.target.value as "active" | "inactive",
+                    })
+                  }
+                  options={[
+                    { value: "active", label: "Actif" },
+                    { value: "inactive", label: "Inactif" },
+                  ]}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-3 pt-4">
               <Button type="submit" className="gap-2" disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {saving ? "Enregistrement..." : "Enregistrer"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => navigate("/personnel")}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/personnel")}
+              >
                 Annuler
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Paperclip className="h-4 w-4" />
+            Pièces jointes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {attachments.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Aucune pièce jointe
+            </p>
+          )}
+
+          {attachments.map((att, index) =>
+            att._delete ? null : (
+              <div
+                key={index}
+                className="flex items-center gap-3 rounded-lg border border-border p-3"
+              >
+                <div className="flex-1 space-y-1">
+                  <Input
+                    placeholder="Titre de la pièce jointe"
+                    value={att.title}
+                    onChange={(e) =>
+                      updateAttachment(index, { title: e.target.value })
+                    }
+                    className="h-8 text-sm"
+                  />
+                  {att.id && att.existingFile && id && (
+                    <a
+                      href={getAttachmentDownloadUrl(Number(id), att.id)}
+                      download
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    >
+                      <Download className="h-3 w-3" />
+                      {att.existingFile}
+                    </a>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="file"
+                    className="w-40 h-8 text-xs"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) updateAttachment(index, { file });
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => removeAttachment(index)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ),
+          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={addAttachment}
+          >
+            <Plus className="h-4 w-4" />
+            Ajouter une pièce jointe
+          </Button>
         </CardContent>
       </Card>
     </motion.div>

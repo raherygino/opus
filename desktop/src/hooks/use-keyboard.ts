@@ -5,7 +5,7 @@ import { useSidebarStore } from "@/stores/sidebar-store";
 
 export function useKeyboardShortcuts() {
   const { toggle: toggleCommand } = useCommandStore();
-  const { toggleTheme } = useThemeStore();
+  const { cycleTheme } = useThemeStore();
   const { toggle: toggleSidebar } = useSidebarStore();
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function useKeyboardShortcuts() {
 
       if (mod && e.shiftKey && e.key === "L") {
         e.preventDefault();
-        toggleTheme();
+        cycleTheme();
       }
 
       if (e.key === "Escape") {
@@ -38,5 +38,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleCommand, toggleSidebar, toggleTheme]);
+  }, [toggleCommand, cycleTheme, toggleSidebar]);
 }

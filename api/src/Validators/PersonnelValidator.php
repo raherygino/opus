@@ -22,7 +22,7 @@ class PersonnelValidator
             $errors['im'] = 'IM (Matricule) is required';
         } else {
             $existing = Personnel::getByIM($data['im']);
-            if ($existing && (!$excludeId || $existing['id'] !== $excludeId)) {
+            if ($existing && (!$excludeId || (int) $existing['id'] !== $excludeId)) {
                 $errors['im'] = 'This IM already exists';
             }
         }

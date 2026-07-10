@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import logoSrc from "@/assets/img/logo-opus.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -29,12 +30,12 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="flex flex-col items-center gap-6"
       >
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
-          <span className="text-2xl font-bold text-primary-foreground">O</span>
+        <div className="flex items-center justify-center overflow-hidden">
+          <img src={logoSrc} alt="OPUS" className="h-full w-full object-contain p-2" />
         </div>
         <div className="flex flex-col items-center gap-1">
           <h1 className="text-xl font-semibold tracking-tight">OPUS</h1>
-          <p className="text-xs text-muted-foreground">Opérations Policières Unifiées</p>
+          <p className="text-xs text-muted-foreground">Opérations Policières Unifiées et Structurées</p>
         </div>
         <motion.div
           initial={{ width: 0 }}

@@ -17,6 +17,17 @@ export interface User {
   firstname: string;
   grade: string;
   fonction: string;
+  service: string | null;
+  personnel_email: string | null;
+  phone: string | null;
+  photo: string | null;
+  adresse: string | null;
+  date_naissance: string | null;
+  lieu_naissance: string | null;
+  cin: string | null;
+  date_prise_service: string | null;
+  personnel_status: string | null;
+  permissions?: RolePermission[];
 }
 
 export type RoleCode =
@@ -50,14 +61,67 @@ export interface Division {
 export interface Personnel {
   id: number;
   im: string;
+  matricule: string | null;
   lastname: string;
   firstname: string;
   grade: string;
   fonction: string;
+  service: string | null;
+  date_prise_service: string | null;
   email: string | null;
   phone: string | null;
+  adresse: string | null;
+  date_naissance: string | null;
+  lieu_naissance: string | null;
+  cin: string | null;
   photo: string | null;
   status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PersonnelAttachment {
+  id: number;
+  personnel_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
+// Mouvement Types
+// ========================
+export interface Mouvement {
+  id: number;
+  personnel_id: number;
+  im: string;
+  matricule: string | null;
+  grade: string | null;
+  fonction: string | null;
+  service: string | null;
+  nom: string | null;
+  prenoms: string | null;
+  type_mouvement: string;
+  date_depart: string | null;
+  days: number | null;
+  date_retour: string | null;
+  retour: "Oui" | "Non";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MouvementAttachment {
+  id: number;
+  mouvement_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +134,18 @@ export interface Role {
   code: string;
   name: string;
   description: string | null;
+  permissions?: RolePermission[];
+}
+
+export interface RolePermission {
+  id: number;
+  role_id: number;
+  module: string;
+  can_view: number;
+  can_create: number;
+  can_edit: number;
+  can_delete: number;
+  can_export: number;
 }
 
 // ========================
@@ -131,6 +207,51 @@ export interface Command {
 }
 
 export type Theme = "dark" | "light";
+export type BuiltInThemeId = "dark" | "light" | "high-contrast" | "ondark" | "matrix" | "monokai" | "clean-light" | "warm-light";
+export type ThemeId = BuiltInThemeId | `custom-${string}`;
+
+export interface ThemeInfo {
+  id: ThemeId;
+  name: string;
+  type: "light" | "dark";
+  colors: Record<string, string>;
+}
+
+export interface CustomTheme {
+  id: `custom-${string}`;
+  name: string;
+  type: "light" | "dark";
+  colors: Record<string, string>;
+}
+
+export const COLOR_TOKENS: { key: string; label: string; category: string }[] = [
+  { key: "--background", label: "Background", category: "Base" },
+  { key: "--foreground", label: "Foreground", category: "Base" },
+  { key: "--card", label: "Card", category: "Surface" },
+  { key: "--card-foreground", label: "Card Foreground", category: "Surface" },
+  { key: "--popover", label: "Popover", category: "Surface" },
+  { key: "--popover-foreground", label: "Popover Foreground", category: "Surface" },
+  { key: "--primary", label: "Primary", category: "Accent" },
+  { key: "--primary-foreground", label: "Primary Foreground", category: "Accent" },
+  { key: "--secondary", label: "Secondary", category: "Accent" },
+  { key: "--secondary-foreground", label: "Secondary Foreground", category: "Accent" },
+  { key: "--accent", label: "Accent", category: "Accent" },
+  { key: "--accent-foreground", label: "Accent Foreground", category: "Accent" },
+  { key: "--muted", label: "Muted", category: "Surface" },
+  { key: "--muted-foreground", label: "Muted Foreground", category: "Surface" },
+  { key: "--border", label: "Border", category: "Base" },
+  { key: "--input", label: "Input", category: "Base" },
+  { key: "--ring", label: "Focus Ring", category: "Accent" },
+  { key: "--sidebar", label: "Sidebar", category: "Layout" },
+  { key: "--sidebar-foreground", label: "Sidebar Foreground", category: "Layout" },
+  { key: "--sidebar-border", label: "Sidebar Border", category: "Layout" },
+  { key: "--sidebar-accent", label: "Sidebar Accent", category: "Layout" },
+  { key: "--sidebar-accent-foreground", label: "Sidebar Accent Foreground", category: "Layout" },
+  { key: "--titlebar", label: "Title Bar", category: "Layout" },
+  { key: "--titlebar-foreground", label: "Title Bar Foreground", category: "Layout" },
+  { key: "--statusbar", label: "Status Bar", category: "Layout" },
+  { key: "--statusbar-foreground", label: "Status Bar Foreground", category: "Layout" },
+];
 
 export type NotificationType = "success" | "error" | "info" | "warning";
 
@@ -142,8 +263,59 @@ export interface Notification {
   duration?: number;
 }
 
+// ========================
+// App Notification Types (server-side persistent notifications)
+// ========================
+export interface AppNotification {
+  id: number;
+  title: string;
+  message: string | null;
+  type: NotificationType;
+  service: string;
+  user_id: number | null;
+  personnel_id: number | null;
+  created_by: number | null;
+  is_read: number;
+  created_at: string;
+  updated_at: string;
+  personnel_im?: string | null;
+  personnel_lastname?: string | null;
+  personnel_firstname?: string | null;
+  personnel_grade?: string | null;
+  created_by_username?: string | null;
+}
+
+// ========================
+// Audit Log Types
+// ========================
+export interface AuditLog {
+  id: number;
+  user_id: number | null;
+  action: string;
+  module: string;
+  entity_id: number | null;
+  description: string | null;
+  old_values: string | null;
+  new_values: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+  username?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+}
+
+export interface AuditLogFilters {
+  action?: string;
+  module?: string;
+  user_id?: string;
+  search?: string;
+  date_from?: string;
+  date_to?: string;
+}
+
 export interface AppSettings {
-  theme: Theme;
+  theme: ThemeId;
   sidebarOpen: boolean;
   sidebarWidth: number;
   fontSize: number;

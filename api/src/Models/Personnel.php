@@ -21,9 +21,15 @@ class Personnel
             $sql .= ' AND grade LIKE ?';
             $params[] = '%' . $filters['grade'] . '%';
         }
+        if (!empty($filters['service'])) {
+            $sql .= ' AND service LIKE ?';
+            $params[] = '%' . $filters['service'] . '%';
+        }
         if (!empty($filters['search'])) {
-            $sql .= ' AND (lastname LIKE ? OR firstname LIKE ? OR im LIKE ?)';
+            $sql .= ' AND (lastname LIKE ? OR firstname LIKE ? OR im LIKE ? OR matricule LIKE ? OR cin LIKE ?)';
             $search = '%' . $filters['search'] . '%';
+            $params[] = $search;
+            $params[] = $search;
             $params[] = $search;
             $params[] = $search;
             $params[] = $search;
@@ -67,17 +73,24 @@ class Personnel
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO personnel (im, lastname, firstname, grade, fonction, email, phone, photo, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO personnel (im, matricule, lastname, firstname, grade, fonction, service, date_prise_service, email, phone, adresse, date_naissance, lieu_naissance, cin, photo, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['im'],
+            $data['matricule'] ?? null,
             $data['lastname'],
             $data['firstname'],
             $data['grade'],
             $data['fonction'],
+            $data['service'] ?? null,
+            $data['date_prise_service'] ?? null,
             $data['email'] ?? null,
             $data['phone'] ?? null,
+            $data['adresse'] ?? null,
+            $data['date_naissance'] ?? null,
+            $data['lieu_naissance'] ?? null,
+            $data['cin'] ?? null,
             $data['photo'] ?? null,
             $data['status'] ?? 'active',
         ]);
@@ -90,7 +103,7 @@ class Personnel
         $fields = [];
         $values = [];
 
-        $allowed = ['im', 'lastname', 'firstname', 'grade', 'fonction', 'email', 'phone', 'photo', 'status'];
+        $allowed = ['im', 'matricule', 'lastname', 'firstname', 'grade', 'fonction', 'service', 'date_prise_service', 'email', 'phone', 'adresse', 'date_naissance', 'lieu_naissance', 'cin', 'photo', 'status'];
         foreach ($allowed as $field) {
             if (isset($data[$field])) {
                 $fields[] = "$field = ?";

@@ -58,6 +58,16 @@ const config: Config = {
           foreground: "hsl(var(--command-foreground))",
           border: "hsl(var(--command-border))",
         },
+        titlebar: {
+          DEFAULT: "hsl(var(--titlebar))",
+          foreground: "hsl(var(--titlebar-foreground))",
+          border: "hsl(var(--titlebar-border))",
+        },
+        statusbar: {
+          DEFAULT: "hsl(var(--statusbar))",
+          foreground: "hsl(var(--statusbar-foreground))",
+          border: "hsl(var(--statusbar-border))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

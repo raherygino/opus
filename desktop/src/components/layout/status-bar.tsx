@@ -1,5 +1,6 @@
 import { useThemeStore } from "@/stores/theme-store";
 import { useNotificationStore } from "@/stores/notification-store";
+import { getTheme } from "@/themes";
 import { cn } from "@/lib/utils";
 import {
   Circle,
@@ -12,6 +13,8 @@ import {
 export function StatusBar() {
   const { theme } = useThemeStore();
   const { notifications } = useNotificationStore();
+
+  const themeDef = getTheme(theme);
 
   return (
     <footer className="flex h-6 items-center justify-between border-t border-border bg-muted/50 px-4 text-[11px] text-muted-foreground select-none">
@@ -43,10 +46,10 @@ export function StatusBar() {
           <div
             className={cn(
               "h-2 w-2 rounded-full",
-              theme === "dark" ? "bg-purple-400" : "bg-amber-400",
+              themeDef.type === "dark" ? "bg-purple-400" : "bg-amber-400",
             )}
           />
-          <span className="capitalize">{theme}</span>
+          <span>{themeDef.name}</span>
         </div>
         {notifications.length > 0 && (
           <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-medium text-primary">

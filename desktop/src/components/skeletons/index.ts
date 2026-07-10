@@ -9,3 +9,4 @@ export { FormSkeleton, FormGroupSkeleton } from "./form-skeleton";
 export { ActivityPanelSkeleton, NotificationSkeleton } from "./panel-skeleton";
 export { StatusBarSkeleton } from "./status-bar-skeleton";
 export { NotesSkeleton } from "./notes-skeleton";
+export { MapSkeleton } from "./map-skeleton";

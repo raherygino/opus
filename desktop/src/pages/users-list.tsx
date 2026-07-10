@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
-import { getUserList, deleteUser } from "@/lib/api/users";
+import { getUserList, deleteUser, updateUser } from "@/lib/api/users";
+import { getRoleList } from "@/lib/api/roles";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Shield, Circle } from "lucide-react";
-import type { User } from "@/types";
+import { Select } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Plus, Pencil, Trash2, Shield, Circle, Loader2 } from "lucide-react";
+import type { User, Role } from "@/types";
 
 const roleColors: Record<string, string> = {
   SUPER_ADMIN: "text-red-500",
@@ -26,37 +29,60 @@ const roleColors: Record<string, string> = {
 
 export function UsersList() {
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [changingRole, setChangingRole] = useState<number | null>(null);
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const { addNotification } = useNotificationStore();
   const isSuperAdmin = currentUser?.role_code === "SUPER_ADMIN";
 
   useEffect(() => {
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadData();
   }, []);
 
-  async function loadUsers() {
+  async function loadData() {
     setLoading(true);
     try {
-      const data = await getUserList();
-      setUsers(data);
+      const [usersData, rolesData] = await Promise.all([
+        getUserList(),
+        getRoleList(),
+      ]);
+      setUsers(usersData);
+      setRoles(rolesData);
     } catch {
-      addNotification("error", "Erreur", "Impossible de charger la liste des utilisateurs");
+      addNotification("error", "Erreur", "Impossible de charger les données");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) return;
+    setDeleting(true);
     try {
       await deleteUser(id);
       addNotification("success", "Supprimé", "Utilisateur supprimé avec succès");
-      loadUsers();
+      loadData();
     } catch {
       addNotification("error", "Erreur", "Impossible de supprimer cet utilisateur");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
+  async function handleRoleChange(userId: number, roleId: string) {
+    setChangingRole(userId);
+    try {
+      await updateUser(userId, { role_id: Number(roleId) });
+      addNotification("success", "Rôle modifié", "Le rôle de l'utilisateur a été mis à jour");
+      loadData();
+    } catch {
+      addNotification("error", "Erreur", "Impossible de modifier le rôle");
+    } finally {
+      setChangingRole(null);
     }
   }
 
@@ -70,10 +96,26 @@ export function UsersList() {
       header: "Rôle",
       sortable: true,
       render: (u) => (
-        <span className={`inline-flex items-center gap-1.5 text-sm ${roleColors[u.role_code] || ""}`}>
-          <Circle className="h-2 w-2 fill-current" />
-          {u.role_name}
-        </span>
+        <div className="flex items-center gap-2">
+          {isSuperAdmin && u.id !== currentUser?.id ? (
+            <div className="relative">
+              <Select
+                value={String(u.role_id)}
+                onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                options={roles.map((r) => ({ value: String(r.id), label: r.name }))}
+                disabled={changingRole === u.id}
+              />
+              {changingRole === u.id && (
+                <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin" />
+              )}
+            </div>
+          ) : (
+            <span className={`inline-flex items-center gap-1.5 text-sm ${roleColors[u.role_code] || ""}`}>
+              <Circle className="h-2 w-2 fill-current" />
+              {u.role_name}
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -107,8 +149,8 @@ export function UsersList() {
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/users/${u.id}/edit`)}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          {isSuperAdmin && (
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(u.id)}>
+          {isSuperAdmin && u.id !== currentUser?.id && (
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteTarget(u)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
@@ -151,6 +193,17 @@ export function UsersList() {
           />
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Supprimer l'utilisateur"
+        message={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${deleteTarget?.username}" ?`}
+        confirmLabel="Supprimer"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </motion.div>
   );
 }

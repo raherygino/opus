@@ -1,0 +1,85 @@
+{
+    "grade": [
+        {
+            "abr": "EAP",
+            "label": "Elève Agent de Police"
+        },
+        {
+            "abr": "EIP",
+            "label": "Elève Inspecteur de Police"
+        },
+        {
+            "abr": "EOP",
+            "label": "Elève Officier de Police"
+        },
+        {
+            "abr": "ECP",
+            "label": "Elève Commissaire de Police"
+        },
+        {
+            "abr": "APS",
+            "label": "Agent de Police Stagiaire"
+        },
+        {
+            "abr": "AP",
+            "label": "Agent de Police"
+        },
+        {
+            "abr": "SBP",
+            "label": "Sous-Brigadier de Police"
+        },
+        {
+            "abr": "BP",
+            "label": "Brigadier de Police"
+        },
+        {
+            "abr": "BCP",
+            "label": "Brigadier Chef de Police"
+        },
+        {
+            "abr": "IP",
+            "label": "Inspecteur de Police"
+        },
+        {
+            "abr": "IPP",
+            "label": "Inspecteur Principale de Police"
+        },
+        {
+            "abr": "IPPCE",
+            "label": "Inspecteur Principale de Police de Classe Exceptionnelle"
+        },
+        {
+            "abr": "OP",
+            "label": "Officier de Police"
+        },
+        {
+            "abr": "OPP",
+            "label": "Officier Principale de Police"
+        },
+        
+        {
+            "abr": "OPPCE",
+            "label": "Officier Principale de Police de Classe Exceptionnelle"
+        },
+        {
+            "abr": "CP",
+            "label": "Commissaire de Police"
+        },
+        {
+            "abr": "CPP",
+            "label": "Commissaire Principale de Police"
+        },
+        {
+            "abr": "CDP",
+            "label": "Commissaire Divisionaire de Police"
+        },
+        {
+            "abr": "CGP",
+            "label": "Contrôle Général de Police"
+        },
+        {
+            "abr": "IGP",
+            "label": "Inspecteur Général de Police"
+        }
+    ]
+}

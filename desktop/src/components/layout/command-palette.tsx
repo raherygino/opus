@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCommandStore } from "@/stores/command-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { useSidebarStore } from "@/stores/sidebar-store";
+import { themes } from "@/themes";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
@@ -15,6 +16,8 @@ import {
   PanelLeft,
   Command,
   ArrowRight,
+  Palette,
+  Map as MapIcon,
 } from "lucide-react";
 
 interface CommandItem {
@@ -29,7 +32,7 @@ interface CommandItem {
 export function CommandPalette() {
   const navigate = useNavigate();
   const { isOpen, close } = useCommandStore();
-  const { theme, toggleTheme } = useThemeStore();
+  const { cycleTheme } = useThemeStore();
   const { toggle: toggleSidebar } = useSidebarStore();
 
   const [query, setQuery] = useState("");
@@ -60,6 +63,17 @@ export function CommandPalette() {
       },
     },
     {
+      id: "go-cartographie",
+      label: "Go to Cartographie",
+      description: "Navigate to the cartography page",
+      shortcut: "G C",
+      icon: MapIcon,
+      action: () => {
+        navigate("/cartographie");
+        close();
+      },
+    },
+    {
       id: "go-settings",
       label: "Open Settings",
       description: "Navigate to the settings page",
@@ -71,13 +85,13 @@ export function CommandPalette() {
       },
     },
     {
-      id: "toggle-theme",
-      label: `Switch to ${theme === "dark" ? "Light" : "Dark"} Theme`,
-      description: "Toggle between dark and light mode",
+      id: "cycle-theme",
+      label: "Cycle Theme",
+      description: "Switch to the next available theme",
       shortcut: "⇧L",
-      icon: theme === "dark" ? Sun : Moon,
+      icon: Palette,
       action: () => {
-        toggleTheme();
+        cycleTheme();
         close();
       },
     },
@@ -94,13 +108,26 @@ export function CommandPalette() {
     },
   ];
 
+  const themeCommands: CommandItem[] = themes.map((t) => ({
+    id: `theme-${t.id}`,
+    label: `Theme: ${t.name}`,
+    description: `Switch to the ${t.name} theme`,
+    icon: t.type === "dark" ? Moon : Sun,
+    action: () => {
+      useThemeStore.getState().setTheme(t.id);
+      close();
+    },
+  }));
+
+  const allCommands = [...commands, ...themeCommands];
+
   const filteredCommands = query
-    ? commands.filter(
+    ? allCommands.filter(
         (cmd) =>
           cmd.label.toLowerCase().includes(query.toLowerCase()) ||
           cmd.description?.toLowerCase().includes(query.toLowerCase()),
       )
-    : commands;
+    : allCommands;
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -140,7 +167,7 @@ export function CommandPalette() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
+      className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh]"
       data-command-palette
     >
       <div

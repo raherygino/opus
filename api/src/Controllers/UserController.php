@@ -4,15 +4,28 @@ namespace App\Controllers;
 
 use App\Helpers\Response;
 use App\Models\User;
+use App\Models\AuditLog;
 use App\Validators\UserValidator;
 
 class UserController
 {
+    private static function requireAdmin(): void
+    {
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized();
+        }
+        if ($authUser['role_code'] !== 'SUPER_ADMIN') {
+            Response::forbidden('Seul un Super Administrateur peut gérer les utilisateurs');
+        }
+    }
+
     /**
      * GET /api/users
      */
     public function index(array $params): void
     {
+        self::requireAdmin();
         $users = User::getAll();
         Response::success($users);
     }
@@ -22,6 +35,7 @@ class UserController
      */
     public function show(array $params): void
     {
+        self::requireAdmin();
         $user = User::getById((int) $params['id']);
         if (!$user) {
             Response::notFound('User not found');
@@ -38,6 +52,7 @@ class UserController
      */
     public function store(array $params): void
     {
+        self::requireAdmin();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = UserValidator::validateCreate($data);
@@ -49,6 +64,19 @@ class UserController
         $user = User::getById($id);
         unset($user['password_hash']);
 
+        // --- Audit log ---
+        $authUser = AuthController::getAuthenticatedUser();
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'create',
+            'module' => 'users',
+            'entity_id' => $id,
+            'description' => "Création de l'utilisateur '{$user['username']}' (Rôle: {$user['role_name']})",
+            'new_values' => $user,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
         Response::created($user, 'User created successfully');
     }
 
@@ -57,6 +85,7 @@ class UserController
      */
     public function update(array $params): void
     {
+        self::requireAdmin();
         $id = (int) $params['id'];
         $user = User::getById($id);
         if (!$user) {
@@ -70,9 +99,25 @@ class UserController
             Response::error('Validation failed', 422, $errors);
         }
 
+        $oldUser = $user;
         User::update($id, $data);
         $user = User::getById($id);
         unset($user['password_hash']);
+        unset($oldUser['password_hash']);
+
+        // --- Audit log ---
+        $authUser = AuthController::getAuthenticatedUser();
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'update',
+            'module' => 'users',
+            'entity_id' => $id,
+            'description' => "Modification de l'utilisateur '{$user['username']}'",
+            'old_values' => $oldUser,
+            'new_values' => $user,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
 
         Response::success($user, 'User updated successfully');
     }
@@ -82,6 +127,7 @@ class UserController
      */
     public function destroy(array $params): void
     {
+        self::requireAdmin();
         $id = (int) $params['id'];
         $user = User::getById($id);
         if (!$user) {
@@ -89,6 +135,20 @@ class UserController
         }
 
         User::delete($id);
+
+        // --- Audit log ---
+        $authUser = AuthController::getAuthenticatedUser();
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'delete',
+            'module' => 'users',
+            'entity_id' => $id,
+            'description' => "Suppression de l'utilisateur '{$user['username']}'",
+            'old_values' => ['username' => $user['username'], 'role_name' => $user['role_name']],
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
         Response::success(null, 'User deleted successfully');
     }
 }

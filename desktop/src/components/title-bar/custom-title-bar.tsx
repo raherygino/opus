@@ -4,6 +4,7 @@ import { useWindowStore } from "@/stores/window-store";
 import { useCommandStore } from "@/stores/command-store";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useThemeStore } from "@/stores/theme-store";
+import { getTheme } from "@/themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -20,10 +21,12 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
+  Map as MapIcon,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "Cartographie", path: "/cartographie", icon: MapIcon },
   { label: "Notes", path: "/notes", icon: FileText },
   { label: "Settings", path: "/settings", icon: Settings },
 ];
@@ -35,7 +38,7 @@ export function CustomTitleBar() {
     useWindowStore();
   const { open: openCommand } = useCommandStore();
   const { isOpen, toggle } = useSidebarStore();
-  const { theme, toggleTheme } = useThemeStore();
+  const { theme, cycleTheme } = useThemeStore();
 
   const isMac = platform === "darwin";
 
@@ -125,8 +128,8 @@ export function CustomTitleBar() {
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center no-drag px-4">
-        <div className="relative w-full max-w-sm">
+      <div className="flex flex-1 items-center justify-center px-4">
+        <div className="relative w-full max-w-sm  no-drag">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search or run command..."
@@ -151,16 +154,16 @@ export function CustomTitleBar() {
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={toggleTheme}
+              onClick={cycleTheme}
             >
-              {theme === "dark" ? (
+              {getTheme(theme).type === "dark" ? (
                 <Sun className="h-4 w-4" />
               ) : (
                 <Moon className="h-4 w-4" />
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Toggle theme</TooltipContent>
+          <TooltipContent side="bottom">Cycle theme ({getTheme(theme).name})</TooltipContent>
         </Tooltip>
       </div>
 
