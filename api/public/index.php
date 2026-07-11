@@ -13,6 +13,7 @@ use App\Middleware\CorsMiddleware;
 use App\Router;
 use App\Controllers\AuthController;
 use App\Controllers\MouvementController;
+use App\Controllers\ComportementController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -85,6 +86,15 @@ $router->post('/api/mouvements/{id}/attachments',                      [Mouvemen
 $router->put('/api/mouvements/{id}/attachments/{attachId}',            [MouvementAttachmentController::class, 'update']);
 $router->delete('/api/mouvements/{id}/attachments/{attachId}',         [MouvementAttachmentController::class, 'destroy']);
 $router->get('/api/mouvements/{id}/attachments/{attachId}/download',   [MouvementAttachmentController::class, 'download']);
+
+// ========================
+// Comportement Routes
+// ========================
+$router->get('/api/comportements',           [ComportementController::class, 'index']);
+$router->get('/api/comportements/{id}',      [ComportementController::class, 'show']);
+$router->post('/api/comportements',          [ComportementController::class, 'store']);
+$router->put('/api/comportements/{id}',      [ComportementController::class, 'update']);
+$router->delete('/api/comportements/{id}',   [ComportementController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

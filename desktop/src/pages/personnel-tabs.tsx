@@ -19,25 +19,28 @@ import {
   Users,
   Pencil,
   Trash2,
-  Search,
   Loader2,
   Undo2,
   Paperclip,
   X,
   Download,
 } from "lucide-react";
-import type { Personnel, Mouvement, MouvementAttachment } from "@/types";
+import type { Personnel, Mouvement, MouvementAttachment, Comportement } from "@/types";
 import {
   getMouvementList,
   createMouvement,
   updateMouvement,
   deleteMouvement,
-  getPersonnelByIm,
   getMouvementAttachments,
   createMouvementAttachment,
   deleteMouvementAttachment,
   getMouvementAttachmentDownloadUrl,
 } from "@/lib/api/mouvement";
+import {
+  getComportementList,
+  createComportement,
+  deleteComportement,
+} from "@/lib/api/comportement";
 
 interface PendingFile {
   file: File;
@@ -103,7 +106,9 @@ export function PersonnelTabs() {
   const [loadingMouvements, setLoadingMouvements] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(defaultMouvementForm);
-  const [searchIm, setSearchIm] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [autocompleteResults, setAutocompleteResults] = useState<Personnel[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [searchingPersonnel, setSearchingPersonnel] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -118,9 +123,34 @@ export function PersonnelTabs() {
   const [mouvAttachments, setMouvAttachments] = useState<MouvementAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
 
+  // Comportement tab
+  const [comportements, setComportements] = useState<Comportement[]>([]);
+  const [loadingComportements, setLoadingComportements] = useState(true);
+  const [comportFormOpen, setComportFormOpen] = useState(false);
+  const [comportForm, setComportForm] = useState({
+    personnel_id: 0,
+    im: "",
+    grade: "",
+    service: "",
+    nom: "",
+    prenoms: "",
+    type: "" as "" | "Positive" | "Negative",
+    date_comportement: "",
+    motif: "",
+    decision: "",
+  });
+  const [comportSearchName, setComportSearchName] = useState("");
+  const [comportAutocomplete, setComportAutocomplete] = useState<Personnel[]>([]);
+  const [showComportAutocomplete, setShowComportAutocomplete] = useState(false);
+  const [savingComport, setSavingComport] = useState(false);
+  const [deleteComportTarget, setDeleteComportTarget] = useState<Comportement | null>(null);
+  const [deletingComport, setDeletingComport] = useState(false);
+  const [comportDetailTarget, setComportDetailTarget] = useState<Comportement | null>(null);
+
   useEffect(() => {
     loadPersonnel();
     loadMouvements();
+    loadComportements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -156,6 +186,22 @@ export function PersonnelTabs() {
     }
   }
 
+  async function loadComportements() {
+    setLoadingComportements(true);
+    try {
+      const data = await getComportementList();
+      setComportements(data);
+    } catch {
+      addNotification(
+        "error",
+        "Erreur",
+        "Impossible de charger les comportements",
+      );
+    } finally {
+      setLoadingComportements(false);
+    }
+  }
+
   async function handleDeletePersonnel(id: number) {
     setDeleting(true);
     try {
@@ -176,7 +222,9 @@ export function PersonnelTabs() {
 
   function resetForm() {
     setForm(defaultMouvementForm);
-    setSearchIm("");
+    setSearchName("");
+    setAutocompleteResults([]);
+    setShowAutocomplete(false);
     setSearchingPersonnel(false);
     setPendingFiles([]);
   }
@@ -209,37 +257,45 @@ export function PersonnelTabs() {
     });
   }
 
-  async function handleSearchIm() {
-    if (!searchIm.trim()) return;
-    setSearchingPersonnel(true);
-    try {
-      const person = await getPersonnelByIm(searchIm.trim());
-      if (person) {
-        setForm({
-          personnel_id: person.id,
-          im: person.im,
-          grade: person.grade,
-          service: person.affectation || "",
-          nom: person.lastname,
-          prenoms: person.firstname,
-          type_mouvement: form.type_mouvement,
-          date_depart: "",
-          days: "",
-          date_retour: "",
-        });
-        addNotification(
-          "info",
-          "Trouvé",
-          `${person.firstname} ${person.lastname}`,
-        );
-      } else {
-        addNotification("warning", "Non trouvé", "Aucun personnel avec cet IM");
-      }
-    } catch {
-      addNotification("error", "Erreur", "Erreur lors de la recherche");
-    } finally {
-      setSearchingPersonnel(false);
+  function handleSearchName(value: string) {
+    setSearchName(value);
+    if (value.trim().length < 1) {
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
+      return;
     }
+    const query = value.toLowerCase().trim();
+    const results = personnel.filter(
+      (p) =>
+        p.lastname.toLowerCase().includes(query) ||
+        p.firstname.toLowerCase().includes(query) ||
+        `${p.firstname} ${p.lastname}`.toLowerCase().includes(query) ||
+        p.im.toLowerCase().includes(query),
+    );
+    setAutocompleteResults(results);
+    setShowAutocomplete(true);
+  }
+
+  function selectPersonnel(person: Personnel) {
+    setForm({
+      personnel_id: person.id,
+      im: person.im,
+      grade: person.grade,
+      service: person.affectation || "",
+      nom: person.lastname,
+      prenoms: person.firstname,
+      type_mouvement: form.type_mouvement,
+      date_depart: "",
+      days: "",
+      date_retour: "",
+    });
+    setSearchName(`${person.firstname} ${person.lastname}`);
+    setShowAutocomplete(false);
+    addNotification(
+      "info",
+      "Trouvé",
+      `${person.firstname} ${person.lastname} (IM: ${person.im})`,
+    );
   }
 
   function addPendingFile(file: File, title: string) {
@@ -252,7 +308,7 @@ export function PersonnelTabs() {
 
   async function handleSaveMouvement() {
     if (!form.personnel_id) {
-      addNotification("error", "Erreur", "Recherchez d'abord un IM");
+      addNotification("error", "Erreur", "Recherchez d'abord un personnel");
       return;
     }
     if (!form.type_mouvement) {
@@ -332,6 +388,108 @@ export function PersonnelTabs() {
       );
     } finally {
       setSavingRetour(false);
+    }
+  }
+
+  // --- Comportement handlers ---
+
+  function resetComportForm() {
+    setComportForm({
+      personnel_id: 0,
+      im: "",
+      grade: "",
+      service: "",
+      nom: "",
+      prenoms: "",
+      type: "",
+      date_comportement: "",
+      motif: "",
+      decision: "",
+    });
+    setComportSearchName("");
+    setComportAutocomplete([]);
+    setShowComportAutocomplete(false);
+  }
+
+  function handleComportSearchName(value: string) {
+    setComportSearchName(value);
+    if (value.trim().length < 1) {
+      setComportAutocomplete([]);
+      setShowComportAutocomplete(false);
+      return;
+    }
+    const query = value.toLowerCase().trim();
+    const results = personnel.filter(
+      (p) =>
+        p.lastname.toLowerCase().includes(query) ||
+        p.firstname.toLowerCase().includes(query) ||
+        `${p.firstname} ${p.lastname}`.toLowerCase().includes(query) ||
+        p.im.toLowerCase().includes(query),
+    );
+    setComportAutocomplete(results);
+    setShowComportAutocomplete(true);
+  }
+
+  function selectComportPersonnel(person: Personnel) {
+    setComportForm((prev) => ({
+      ...prev,
+      personnel_id: person.id,
+      im: person.im,
+      grade: person.grade,
+      service: person.affectation || "",
+      nom: person.lastname,
+      prenoms: person.firstname,
+    }));
+    setComportSearchName(`${person.firstname} ${person.lastname}`);
+    setShowComportAutocomplete(false);
+  }
+
+  async function handleSaveComportement() {
+    if (!comportForm.personnel_id) {
+      addNotification("error", "Erreur", "Recherchez d'abord un personnel");
+      return;
+    }
+    if (!comportForm.type) {
+      addNotification("error", "Erreur", "Sélectionnez un type");
+      return;
+    }
+    if (!comportForm.date_comportement) {
+      addNotification("error", "Erreur", "La date est requise");
+      return;
+    }
+    if (!comportForm.motif.trim()) {
+      addNotification("error", "Erreur", "Le motif est requis");
+      return;
+    }
+    setSavingComport(true);
+    try {
+      await createComportement({
+        ...comportForm,
+        type: comportForm.type as "Positive" | "Negative",
+        decision: comportForm.decision || null,
+      });
+      addNotification("success", "Ajouté", "Comportement enregistré avec succès");
+      resetComportForm();
+      setComportFormOpen(false);
+      loadComportements();
+    } catch {
+      addNotification("error", "Erreur", "Impossible d'ajouter le comportement");
+    } finally {
+      setSavingComport(false);
+    }
+  }
+
+  async function handleDeleteComportement(id: number) {
+    setDeletingComport(true);
+    try {
+      await deleteComportement(id);
+      addNotification("success", "Supprimé", "Comportement supprimé avec succès");
+      loadComportements();
+    } catch {
+      addNotification("error", "Erreur", "Impossible de supprimer ce comportement");
+    } finally {
+      setDeletingComport(false);
+      setDeleteComportTarget(null);
     }
   }
 
@@ -590,33 +748,42 @@ export function PersonnelTabs() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-end gap-2">
-                    <div className="flex-1 space-y-1">
-                      <Label htmlFor="search-im">Rechercher par IM</Label>
-                      <div className="flex gap-2">
+                  <div className="space-y-1">
+                      <Label htmlFor="search-name">Rechercher par nom ou prénoms</Label>
+                      <div className="relative">
                         <Input
-                          id="search-im"
-                          value={searchIm}
-                          onChange={(e) => setSearchIm(e.target.value)}
-                          placeholder="Saisir l'IM..."
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleSearchIm();
-                          }}
+                          id="search-name"
+                          value={searchName}
+                          onChange={(e) => handleSearchName(e.target.value)}
+                          placeholder="Saisir le nom ou prénoms..."
+                          onFocus={() => searchName && setShowAutocomplete(true)}
+                          onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
                         />
-                        <Button
-                          variant="secondary"
-                          onClick={handleSearchIm}
-                          disabled={searchingPersonnel || !searchIm.trim()}
-                        >
-                          {searchingPersonnel ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Search className="h-4 w-4" />
-                          )}
-                        </Button>
+                        {searchingPersonnel && (
+                          <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                        {showAutocomplete && autocompleteResults.length > 0 && (
+                          <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border border-border bg-popover shadow-md">
+                            {autocompleteResults.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onMouseDown={() => selectPersonnel(p)}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                              >
+                                <span className="font-medium">{p.firstname} {p.lastname}</span>
+                                <span className="text-xs text-muted-foreground">— {p.im}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {showAutocomplete && autocompleteResults.length === 0 && searchName.trim() && (
+                          <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md px-3 py-2 text-sm text-muted-foreground">
+                            Aucun personnel trouvé
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -786,8 +953,86 @@ export function PersonnelTabs() {
         {/* TAB: Comportement */}
         <TabsContent value="comportement">
           <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <p>Module Comportement - à venir</p>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Liste des comportements</CardTitle>
+                {canCreate && (
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      resetComportForm();
+                      setComportFormOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Nouveau comportement
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={[
+                  { key: "im", header: "IM", sortable: true },
+                  { key: "nom", header: "Last Name", sortable: true },
+                  { key: "prenoms", header: "First Name", sortable: true },
+                  { key: "grade", header: "Grade", sortable: true },
+                  {
+                    key: "type",
+                    header: "Type",
+                    sortable: true,
+                    render: (c) => (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${
+                          c.type === "Positive"
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-red-500/10 text-red-500"
+                        }`}
+                      >
+                        {c.type}
+                      </span>
+                    ),
+                  },
+                  { key: "date_comportement", header: "Date", sortable: true },
+                  {
+                    key: "actions",
+                    header: "Actions",
+                    className: "w-[100px]",
+                    render: (c) => (
+                      <div
+                        className="flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setComportDetailTarget(c)}
+                        >
+                          <Users className="h-3.5 w-3.5" />
+                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => setDeleteComportTarget(c)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    ),
+                  },
+                ] as Column<Comportement>[]}
+                data={comportements}
+                keyExtractor={(c) => c.id}
+                loading={loadingComportements}
+                searchable
+                searchPlaceholder="Search by IM, name, motif..."
+                onRowClick={(c) => setComportDetailTarget(c)}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -949,6 +1194,246 @@ export function PersonnelTabs() {
                 {savingRetour ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 Confirmer le retour
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comportement form dialog */}
+      {comportFormOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => !savingComport && setComportFormOpen(false)}
+        >
+          <div className="fixed inset-0 bg-black/60" />
+          <div
+            className="relative z-50 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-base font-semibold">Nouveau comportement</p>
+                <p className="text-sm text-muted-foreground">
+                  Enregistrer un comportement
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => {
+                  resetComportForm();
+                  setComportFormOpen(false);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="comport-search">Rechercher par nom ou prénoms</Label>
+                <div className="relative">
+                  <Input
+                    id="comport-search"
+                    value={comportSearchName}
+                    onChange={(e) => handleComportSearchName(e.target.value)}
+                    placeholder="Saisir le nom ou prénoms..."
+                    onFocus={() => comportSearchName && setShowComportAutocomplete(true)}
+                    onBlur={() => setTimeout(() => setShowComportAutocomplete(false), 200)}
+                  />
+                  {showComportAutocomplete && comportAutocomplete.length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-md border border-border bg-popover shadow-md">
+                      {comportAutocomplete.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onMouseDown={() => selectComportPersonnel(p)}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                        >
+                          <span className="font-medium">{p.firstname} {p.lastname}</span>
+                          <span className="text-xs text-muted-foreground">— {p.im}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {showComportAutocomplete && comportAutocomplete.length === 0 && comportSearchName.trim() && (
+                    <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md px-3 py-2 text-sm text-muted-foreground">
+                      Aucun personnel trouvé
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>IM</Label>
+                  <Input value={comportForm.im} readOnly />
+                </div>
+                <div className="space-y-1">
+                  <Label>Grade</Label>
+                  <Input value={comportForm.grade} readOnly />
+                </div>
+                <div className="space-y-1">
+                  <Label>Service</Label>
+                  <Input value={comportForm.service} readOnly />
+                </div>
+                <div className="space-y-1">
+                  <Label>Nom</Label>
+                  <Input value={comportForm.nom} readOnly />
+                </div>
+                <div className="space-y-1">
+                  <Label>Prénoms</Label>
+                  <Input value={comportForm.prenoms} readOnly />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="comport-type">Type</Label>
+                  <select
+                    id="comport-type"
+                    value={comportForm.type}
+                    onChange={(e) =>
+                      setComportForm({ ...comportForm, type: e.target.value as "Positive" | "Negative" })
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="Positive">Positive</option>
+                    <option value="Negative">Negative</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="comport-date">Date</Label>
+                  <Input
+                    id="comport-date"
+                    type="date"
+                    value={comportForm.date_comportement}
+                    onChange={(e) =>
+                      setComportForm({ ...comportForm, date_comportement: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="comport-motif">Motif</Label>
+                <textarea
+                  id="comport-motif"
+                  value={comportForm.motif}
+                  onChange={(e) =>
+                    setComportForm({ ...comportForm, motif: e.target.value })
+                  }
+                  rows={3}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Décrire le motif..."
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="comport-decision">Décision de la hiérarchie</Label>
+                <textarea
+                  id="comport-decision"
+                  value={comportForm.decision}
+                  onChange={(e) =>
+                    setComportForm({ ...comportForm, decision: e.target.value })
+                  }
+                  rows={2}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Décision prise par la hiérarchie..."
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    resetComportForm();
+                    setComportFormOpen(false);
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveComportement}
+                  disabled={savingComport}
+                  className="gap-2"
+                >
+                  {savingComport ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete comportement confirm */}
+      <ConfirmDialog
+        open={deleteComportTarget !== null}
+        title="Supprimer le comportement"
+        message={`Êtes-vous sûr de vouloir supprimer ce comportement de ${deleteComportTarget?.nom} ${deleteComportTarget?.prenoms} ?`}
+        confirmLabel="Supprimer"
+        variant="destructive"
+        loading={deletingComport}
+        onConfirm={() =>
+          deleteComportTarget && handleDeleteComportement(deleteComportTarget.id)
+        }
+        onCancel={() => setDeleteComportTarget(null)}
+      />
+
+      {/* Detail comportement dialog */}
+      {comportDetailTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setComportDetailTarget(null)}
+        >
+          <div className="fixed inset-0 bg-black/60" />
+          <div
+            className="relative z-50 w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-base font-semibold">Détail du comportement</p>
+                <p className="text-sm text-muted-foreground">
+                  {comportDetailTarget.nom} {comportDetailTarget.prenoms}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setComportDetailTarget(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-sm"><span className="text-muted-foreground">IM :</span> {comportDetailTarget.im}</div>
+                <div className="text-sm"><span className="text-muted-foreground">Grade :</span> {comportDetailTarget.grade || "—"}</div>
+                <div className="text-sm"><span className="text-muted-foreground">Service :</span> {comportDetailTarget.service || "—"}</div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Type :</span>{" "}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${comportDetailTarget.type === "Positive" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                    {comportDetailTarget.type}
+                  </span>
+                </div>
+                <div className="text-sm"><span className="text-muted-foreground">Date :</span> {comportDetailTarget.date_comportement}</div>
+              </div>
+
+              <Separator className="my-2" />
+
+              <div>
+                <p className="text-sm font-semibold mb-1">Motif</p>
+                <p className="text-sm text-muted-foreground">{comportDetailTarget.motif}</p>
+              </div>
+
+              {comportDetailTarget.decision && (
+                <div>
+                  <p className="text-sm font-semibold mb-1">Décision de la hiérarchie</p>
+                  <p className="text-sm text-muted-foreground">{comportDetailTarget.decision}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

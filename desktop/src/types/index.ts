@@ -114,6 +114,25 @@ export interface MouvementAttachment {
 }
 
 // ========================
+// Comportement Types
+// ========================
+export interface Comportement {
+  id: number;
+  personnel_id: number;
+  im: string;
+  grade: string | null;
+  service: string | null;
+  nom: string | null;
+  prenoms: string | null;
+  type: "Positive" | "Negative";
+  date_comportement: string;
+  motif: string;
+  decision: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Role Types
 // ========================
 export interface Role {
