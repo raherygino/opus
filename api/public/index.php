@@ -36,6 +36,7 @@ $router->post('/api/auth/refresh',  [AuthController::class, 'refresh']);
 $router->get('/api/auth/me',        [AuthController::class, 'me']);
 $router->put('/api/auth/password',  [AuthController::class, 'password']);
 $router->post('/api/auth/photo',    [AuthController::class, 'uploadPhoto']);
+$router->delete('/api/auth/photo',    [AuthController::class, 'deletePhoto']);
 
 // ========================
 // Personnel Routes
@@ -51,6 +52,7 @@ $router->delete('/api/personnel/{id}',      [PersonnelController::class, 'destro
 // Personnel Photo Routes
 // ========================
 $router->post('/api/personnel/{id}/photo',     [PersonnelController::class, 'uploadPhoto']);
+$router->delete('/api/personnel/{id}/photo',    [PersonnelController::class, 'deletePhoto']);
 $router->get('/api/personnel/{id}/photo',      [PersonnelController::class, 'servePhoto']);
 $router->get('/api/personnel/{id}/thumbnail',  [PersonnelController::class, 'serveThumbnail']);
 

@@ -135,7 +135,7 @@ class Personnel
 
         $allowed = ['im', 'grade', 'lastname', 'firstname', 'affectation', 'phone', 'address', 'photo', 'thumbnail', 'signature', 'signature_svg'];
         foreach ($allowed as $field) {
-            if (isset($data[$field])) {
+            if (array_key_exists($field, $data)) {
                 $fields[] = "$field = ?";
                 $values[] = $data[$field];
             }

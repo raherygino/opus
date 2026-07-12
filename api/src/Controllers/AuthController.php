@@ -277,6 +277,65 @@ class AuthController
     }
 
     /**
+     * DELETE /api/auth/photo
+     */
+    public function deletePhoto(array $params): void
+    {
+        $authUser = self::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized();
+        }
+
+        $user = User::getById($authUser['sub']);
+        if (!$user) {
+            Response::notFound('User not found');
+        }
+
+        $personnelId = (int) $user['personnel_id'];
+        $person = Personnel::getById($personnelId);
+        if (!$person) {
+            Response::notFound('Personnel record not found');
+        }
+
+        if (empty($person['photo'])) {
+            Response::error('No photo to delete', 422);
+        }
+
+        $config = require __DIR__ . '/../../config/app.php';
+        $uploadDir = rtrim($config['upload_dir'], '/') . '/personnel/photos';
+
+        // Delete photo file
+        $photoPath = $uploadDir . '/' . $person['photo'];
+        if (file_exists($photoPath)) {
+            unlink($photoPath);
+        }
+
+        // Delete thumbnail file if exists
+        if (!empty($person['thumbnail'])) {
+            $thumbPath = $uploadDir . '/' . $person['thumbnail'];
+            if (file_exists($thumbPath)) {
+                unlink($thumbPath);
+            }
+        }
+
+        Personnel::update($personnelId, ['photo' => null, 'thumbnail' => null]);
+
+        AuditLog::create([
+            'user_id' => $authUser['sub'],
+            'action' => 'photo_delete',
+            'module' => 'auth',
+            'entity_id' => $personnelId,
+            'description' => "Photo de profil supprimée pour le personnel ID {$personnelId}",
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        $updatedUser = User::getById($user['id']);
+        unset($updatedUser['password_hash']);
+        Response::success($updatedUser, 'Photo deleted successfully');
+    }
+
+    /**
      * Get authenticated user from JWT in Authorization header
      */
     public static function getAuthenticatedUser(): ?array

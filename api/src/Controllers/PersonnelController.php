@@ -330,6 +330,59 @@ class PersonnelController
     }
 
     /**
+     * DELETE /api/personnel/{id}/photo
+     */
+    public function deletePhoto(array $params): void
+    {
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized();
+        }
+
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person) {
+            Response::notFound('Personnel not found');
+        }
+
+        if (empty($person['photo'])) {
+            Response::error('No photo to delete', 422);
+        }
+
+        $config = require __DIR__ . '/../../config/app.php';
+        $uploadDir = rtrim($config['upload_dir'], '/') . '/personnel/photos';
+
+        // Delete photo file
+        $photoPath = $uploadDir . '/' . $person['photo'];
+        if (file_exists($photoPath)) {
+            unlink($photoPath);
+        }
+
+        // Delete thumbnail file if exists
+        if (!empty($person['thumbnail'])) {
+            $thumbPath = $uploadDir . '/' . $person['thumbnail'];
+            if (file_exists($thumbPath)) {
+                unlink($thumbPath);
+            }
+        }
+
+        Personnel::update($id, ['photo' => null, 'thumbnail' => null]);
+
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'photo_delete',
+            'module' => 'personnel',
+            'entity_id' => $id,
+            'description' => "Photo supprimée pour le personnel '{$person['firstname']} {$person['lastname']}' (ID: {$id})",
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        $person = Personnel::getById($id);
+        Response::success($person, 'Photo deleted successfully');
+    }
+
+    /**
      * GET /api/personnel/{id}/thumbnail
      */
     public function serveThumbnail(array $params): void
