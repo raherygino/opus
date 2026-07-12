@@ -47,6 +47,9 @@ cameraX = "1.4.2"
 # Kotlinx Serialization
 kotlinxSerialization = "1.7.3"
 
+# Coil (Image Loading)
+coil = "2.7.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -104,6 +107,9 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# Coil
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

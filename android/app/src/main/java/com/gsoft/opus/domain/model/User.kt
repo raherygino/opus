@@ -8,7 +8,12 @@ data class User(
     val roleName: String?,
     val personnelId: Int?,
     val isActive: Boolean,
-    val permissions: List<Permission>
+    val permissions: List<Permission>,
+    val firstName: String?,
+    val lastName: String?,
+    val photo: String?,
+    val grade: String?,
+    val affectation: String?
 )
 
 data class Permission(

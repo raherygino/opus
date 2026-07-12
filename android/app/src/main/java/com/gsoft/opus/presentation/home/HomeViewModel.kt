@@ -14,6 +14,12 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val username: String = "",
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val personnelId: Int? = null,
+    val photo: String? = null,
+    val roleName: String? = null,
+    val grade: String? = null,
     val isLoading: Boolean = false
 )
 
@@ -33,9 +39,16 @@ class HomeViewModel @Inject constructor(
     private fun loadUser() {
         viewModelScope.launch {
             val result = getCurrentUserUseCase()
+            val user = result.getOrNull()
             _state.update {
                 it.copy(
-                    username = result.getOrNull()?.username ?: "User",
+                    username = user?.username ?: "User",
+                    firstName = user?.firstName,
+                    lastName = user?.lastName,
+                    personnelId = user?.personnelId,
+                    photo = user?.photo,
+                    roleName = user?.roleName,
+                    grade = user?.grade,
                     isLoading = false
                 )
             }

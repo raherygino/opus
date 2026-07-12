@@ -11,7 +11,12 @@ data class UserDto(
     @SerializedName("personnel_id") val personnelId: Int? = null,
     @SerializedName("is_active") val isActive: Int? = null,
     @SerializedName("last_login") val lastLogin: String? = null,
-    @SerializedName("permissions") val permissions: List<PermissionDto>? = null
+    @SerializedName("permissions") val permissions: List<PermissionDto>? = null,
+    @SerializedName("firstname") val firstname: String? = null,
+    @SerializedName("lastname") val lastname: String? = null,
+    @SerializedName("photo") val photo: String? = null,
+    @SerializedName("grade") val grade: String? = null,
+    @SerializedName("affectation") val affectation: String? = null
 )
 
 data class PermissionDto(

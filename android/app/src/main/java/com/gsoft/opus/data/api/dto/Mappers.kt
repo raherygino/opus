@@ -12,7 +12,12 @@ fun UserDto.toDomain(): User = User(
     roleName = roleName,
     personnelId = personnelId,
     isActive = (isActive ?: 1) == 1,
-    permissions = permissions?.map { it.toDomain() } ?: emptyList()
+    permissions = permissions?.map { it.toDomain() } ?: emptyList(),
+    firstName = firstname,
+    lastName = lastname,
+    photo = photo,
+    grade = grade,
+    affectation = affectation
 )
 
 fun PermissionDto.toDomain(): Permission = Permission(

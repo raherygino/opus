@@ -419,7 +419,11 @@ fun MainScreen(onLogout: () -> Unit) {
                 items = drawerItems,
                 selectedId = selectedDrawerId,
                 username = homeState.username,
-                subtitle = null,
+                firstName = homeState.firstName,
+                lastName = homeState.lastName,
+                personnelId = homeState.personnelId,
+                photo = homeState.photo,
+                role = homeState.roleName ?: homeState.grade,
                 progress = progress,
                 onItemClick = { item ->
                     val route = drawerRouteMap[item.id]

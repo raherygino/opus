@@ -89,6 +89,9 @@ dependencies {
     // Kotlinx Serialization (for WebSocket JSON messages)
     implementation(libs.kotlinx.serialization.json)
 
+    // Coil (Image Loading)
+    implementation(libs.coil.compose)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

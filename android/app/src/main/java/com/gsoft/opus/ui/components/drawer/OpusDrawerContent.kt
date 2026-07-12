@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -48,12 +49,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.gsoft.opus.R
+import com.gsoft.opus.core.Constants
 import com.gsoft.opus.ui.components.ContextMenuItem
 import com.gsoft.opus.ui.components.OpusDialog
 
@@ -73,8 +77,14 @@ private const val StaggerWindow = 0.45f
  *
  * @param items       navigation entries (reuses the [ContextMenuItem] model).
  * @param selectedId  id of the currently selected entry, or null.
- * @param username    display name shown in the header.
- * @param subtitle    optional secondary line (role / email).
+ * @param username    login username (used as fallback for the avatar letter).
+ * @param firstName   user's first name (used for the avatar letter fallback).
+ * @param lastName    user's last name (displayed as the primary text).
+ * @param personnelId id of the Personnel record; used to build the authenticated
+ *                    photo URL (`/api/personnel/{id}/photo`), mirroring desktop.
+ * @param photo       profile picture filename from the Personnel record, used as a
+ *                    cache-busting query param; or null when no photo is set.
+ * @param role        user's role or grade (displayed as secondary text).
  * @param progress    live drawer open fraction for stagger animations.
  * @param onItemClick invoked for leaf items.
  * @param onLogout    invoked when the logout row is tapped.
@@ -85,7 +95,11 @@ fun OpusDrawerContent(
     items: List<ContextMenuItem>,
     selectedId: String?,
     username: String,
-    subtitle: String?,
+    firstName: String?,
+    lastName: String?,
+    personnelId: Int?,
+    photo: String?,
+    role: String?,
     progress: () -> Float,
     onItemClick: (ContextMenuItem) -> Unit,
     onLogout: () -> Unit,
@@ -101,7 +115,14 @@ fun OpusDrawerContent(
             .navigationBarsPadding()
             .padding(horizontal = 16.dp)
     ) {
-        DrawerHeader(username = username, subtitle = subtitle)
+        DrawerHeader(
+            username = username,
+            firstName = firstName,
+            lastName = lastName,
+            personnelId = personnelId,
+            photo = photo,
+            role = role
+        )
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -185,47 +206,97 @@ private fun StaggeredEntry(
 }
 
 @Composable
-private fun DrawerHeader(username: String, subtitle: String?) {
-    Row(
+private fun DrawerHeader(
+    username: String,
+    firstName: String?,
+    lastName: String?,
+    personnelId: Int?,
+    photo: String?,
+    role: String?
+) {
+    val displayName = firstName?.takeIf { it.isNotBlank() } ?: username
+    val avatarLetter = firstName?.firstOrNull()?.uppercaseChar()
+        ?: username.firstOrNull()?.uppercaseChar()
+        ?: '?'
+
+    // Build the authenticated photo URL the same way the desktop app does:
+    //   /api/personnel/{id}/photo?v={filename}
+    // The `?v=` cache-buster mirrors desktop so a freshly uploaded photo is
+    // fetched instead of being served from Coil's disk cache. We only build
+    // the URL when both a personnel id and a photo filename are present.
+    val fullPhotoUrl = personnelId?.let { id ->
+        photo?.takeIf { it.isNotBlank() }?.let { filename ->
+            "${Constants.BASE_URL}${Constants.API_PREFIX}/personnel/$id/photo?v=$filename"
+        }
+    }
+
+    // Track load failures so we can fall back to the letter avatar instead of
+    // leaving an empty circle when the request errors (e.g. offline / 404).
+    var photoLoadFailed by remember(fullPhotoUrl) { mutableStateOf(false) }
+
+    OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp, horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant
+        )
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(ProfileSize)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = username.take(1).uppercase().ifEmpty { "?" },
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+            if (fullPhotoUrl != null && !photoLoadFailed) {
+                AsyncImage(
+                    model = fullPhotoUrl,
+                    contentDescription = "Profile photo",
+                    modifier = Modifier
+                        .size(ProfileSize)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                    onError = { photoLoadFailed = true }
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(ProfileSize)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = avatarLetter.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
 
-        Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
-            Text(
-                text = username,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (!subtitle.isNullOrBlank()) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = displayName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (!role.isNullOrBlank()) {
+                    Text(
+                        text = role,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
