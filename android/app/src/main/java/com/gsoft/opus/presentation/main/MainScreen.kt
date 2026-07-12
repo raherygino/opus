@@ -40,12 +40,13 @@ import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -55,6 +56,7 @@ import com.gsoft.opus.navigation.BottomNavItem
 import com.gsoft.opus.navigation.MainRoutes
 import com.gsoft.opus.presentation.contextmenu.ContextMenuItemScreens
 import com.gsoft.opus.presentation.dashboard.DashboardScreen
+import com.gsoft.opus.presentation.home.HomeViewModel
 import com.gsoft.opus.presentation.notifications.NotificationsScreen
 import com.gsoft.opus.presentation.profile.ProfileScreen
 import com.gsoft.opus.presentation.settings.SettingsScreen
@@ -64,14 +66,18 @@ import com.gsoft.opus.presentation.photo.PhotoCaptureScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.ContextMenuItem
 import com.gsoft.opus.ui.components.OpusBottomNavBar
-import com.gsoft.opus.ui.components.OpusContextMenu
+import com.gsoft.opus.ui.components.drawer.OpusAnimatedDrawer
+import com.gsoft.opus.ui.components.drawer.OpusDrawerContent
+import com.gsoft.opus.ui.components.drawer.rememberOpusDrawerState
+import kotlinx.coroutines.launch
 
 /**
  * Main shell of the application displayed after authentication.
  *
  * Hosts the bottom navigation bar, an inner [NavHost] with the
  * Dashboard / Notifications / Settings / Profile destinations, and a
- * Chrome-inspired context menu anchored to the bottom-right FAB.
+ * premium animated navigation drawer: the blue drawer stays fixed on
+ * the left while the whole content transforms into a floating card.
  */
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
@@ -79,9 +85,20 @@ fun MainScreen(onLogout: () -> Unit) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    var menuExpanded by rememberSaveable { mutableStateOf(false) }
+    val drawerState = rememberOpusDrawerState()
+    val scope = rememberCoroutineScope()
 
-    val contextMenuItems = listOf(
+    val homeViewModel: HomeViewModel = hiltViewModel()
+    val homeState by homeViewModel.state.collectAsState()
+
+    val context = LocalContext.current
+    val appVersion = remember {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "1.0.0"
+    }
+
+    val drawerItems = listOf(
         // ── Sédentaire ──
         ContextMenuItem(id = "section_sedentaire", title = "Sédentaire", isSectionHeader = true),
         ContextMenuItem(
@@ -339,7 +356,7 @@ fun MainScreen(onLogout: () -> Unit) {
         )
     )
 
-    val contextMenuRouteMap = remember {
+    val drawerRouteMap = remember {
         mapOf(
             "sed_dashboard" to MainRoutes.SedDashboard.route,
             "sed_correspondance" to MainRoutes.Correspondance.route,
@@ -384,20 +401,44 @@ fun MainScreen(onLogout: () -> Unit) {
         )
     }
 
+    val routeToDrawerId = remember(drawerRouteMap) {
+        drawerRouteMap.entries.associate { (id, route) -> route to id }
+    }
+    val selectedDrawerId = routeToDrawerId[currentRoute]
+
     val bottomNavRoutes = remember {
         BottomNavItem.items.map { it.route }.toSet()
     }
 
     val bottomNavSelectedRoute = if (currentRoute in bottomNavRoutes) currentRoute else null
 
-    OpusContextMenu(
-        expanded = menuExpanded,
-        onDismiss = { menuExpanded = false },
-        items = contextMenuItems,
-        onItemClick = { item ->
-            contextMenuRouteMap[item.id]?.let { route ->
-                navController.navigateToContextMenuItem(route)
-            }
+    OpusAnimatedDrawer(
+        state = drawerState,
+        drawerContent = { progress ->
+            OpusDrawerContent(
+                items = drawerItems,
+                selectedId = selectedDrawerId,
+                username = homeState.username,
+                subtitle = null,
+                progress = progress,
+                onItemClick = { item ->
+                    val route = drawerRouteMap[item.id]
+                    scope.launch {
+                        // Close first, then navigate once the animation finished
+                        // to avoid any jank or flicker during the transition.
+                        drawerState.close()
+                        route?.let { navController.navigateToDrawerItem(it) }
+                    }
+                },
+                onLogout = {
+                    scope.launch {
+                        drawerState.close()
+                        homeViewModel.logout()
+                        onLogout()
+                    }
+                },
+                appVersion = appVersion
+            )
         }
     ) {
         Scaffold(
@@ -409,8 +450,12 @@ fun MainScreen(onLogout: () -> Unit) {
                     onItemSelected = { item ->
                         navController.navigateToTab(item.route)
                     },
-                    fabExpanded = menuExpanded,
-                    onFabClick = { menuExpanded = !menuExpanded },
+                    fabExpanded = drawerState.isOpen,
+                    onFabClick = {
+                        scope.launch {
+                            if (drawerState.isOpen) drawerState.close() else drawerState.open()
+                        }
+                    },
                     modifier = Modifier.navigationBarsPadding()
                 )
             }
@@ -623,10 +668,10 @@ private fun NavHostController.navigateToTab(route: String) {
 }
 
 /**
- * Navigates to a context menu item destination, popping the back stack up to
- * the start destination so menu and bottom nav items share a clean stack.
+ * Navigates to a drawer item destination, popping the back stack up to
+ * the start destination so drawer and bottom nav items share a clean stack.
  */
-private fun NavHostController.navigateToContextMenuItem(route: String) {
+private fun NavHostController.navigateToDrawerItem(route: String) {
     navigate(route) {
         popUpTo(graph.startDestinationId) {
             saveState = true

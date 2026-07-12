@@ -120,24 +120,7 @@ fun LoginScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(88.dp)
-                                .shadow(
-                                    elevation = 12.dp,
-                                    shape = RoundedCornerShape(24.dp),
-                                    ambientColor = BrandPrimary.copy(alpha = 0.3f)
-                                )
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(BrandPrimary, BrandSecondary)
-                                    ),
-                                    shape = RoundedCornerShape(24.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            OpusLogo(size = 56.dp)
-                        }
+                        OpusLogo(size = 120.dp)
 
                         Spacer(modifier = Modifier.height(20.dp))
 
@@ -264,7 +247,11 @@ private fun LoginCard(
                 text = stringResource(R.string.login_button),
                 onClick = onLogin,
                 isLoading = state.isLoading,
-                enabled = !state.isLoading
+                enabled = !state.isLoading,
+                gradientColors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.primary
+                )
             )
         }
     }

@@ -3,11 +3,11 @@ package com.gsoft.opus.ui.components
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * Data model for a context menu entry.
+ * Data model for a navigation drawer entry.
  *
  * Designed to be extensible: future enhancements such as [badgeCount],
  * nested actions, or enabled/disabled states can be added without
- * changing the [OpusContextMenu] composable signature.
+ * changing the drawer composable signatures.
  *
  * @param id              unique identifier for this menu item.
  * @param title           primary label displayed to the user.

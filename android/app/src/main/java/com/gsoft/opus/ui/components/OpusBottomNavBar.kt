@@ -28,7 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -65,7 +65,7 @@ private val IndicatorPadding = 6.dp
  *
  * A rounded pill container hosts the regular navigation items with an animated
  * primary-colored selection indicator that slides between items, while a
- * detached circular FAB ("More") floats at the trailing edge.
+ * detached circular FAB (drawer toggle) floats at the leading edge.
  *
  * @param items          navigation entries rendered inside the pill.
  * @param selectedRoute  route of the currently selected destination (or null).
@@ -89,18 +89,18 @@ fun OpusBottomNavBar(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        MoreFab(
+            expanded = fabExpanded,
+            onClick = onFabClick
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
         NavPill(
             items = items,
             selectedRoute = selectedRoute,
             onItemSelected = onItemSelected,
             modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        MoreFab(
-            expanded = fabExpanded,
-            onClick = onFabClick
         )
     }
 }
@@ -307,9 +307,9 @@ private fun MoreFab(
         label = "fab_elevation"
     )
 
-    // Rotation: 45deg when open (turns + into x), bounce back on close.
+    // Rotation: half-turn when the drawer opens, bounce back on close.
     val rotation by animateFloatAsState(
-        targetValue = if (expanded) 45f else 0f,
+        targetValue = if (expanded) 180f else 0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
@@ -342,7 +342,7 @@ private fun MoreFab(
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
-                imageVector = Icons.Filled.Add,
+                imageVector = Icons.Filled.Menu,
                 contentDescription = stringResource(R.string.nav_more),
                 tint = if (expanded) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
