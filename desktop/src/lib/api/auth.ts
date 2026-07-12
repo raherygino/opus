@@ -50,3 +50,8 @@ export async function uploadProfilePhoto(photo: File, thumbnail?: File): Promise
   );
   return data.data;
 }
+
+export async function deleteProfilePhoto(): Promise<User> {
+  const { data } = await apiClient.delete<ApiResponse<User>>("/auth/photo");
+  return data.data;
+}

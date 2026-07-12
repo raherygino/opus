@@ -15,8 +15,10 @@ import {
   getPersonnelPhotoUrl,
   generateThumbnail,
   cropFileToSquare,
+  deletePersonnelPhoto,
 } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +35,7 @@ import {
   Plus,
   Camera,
   Smartphone,
+  User as UserIcon,
 } from "lucide-react";
 import type { PersonnelAttachment } from "@/types";
 import gradeData from "@/assets/json/grade.json";
@@ -76,6 +79,8 @@ export function PersonnelForm() {
   const [photoPadOpen, setPhotoPadOpen] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [hasServerPhoto, setHasServerPhoto] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -102,6 +107,7 @@ export function PersonnelForm() {
 
       if (p.photo) {
         setPhotoPreview(getPersonnelPhotoUrl(p.id));
+        setHasServerPhoto(true);
       }
 
       const atts = await getPersonnelAttachments(Number(id));
@@ -196,6 +202,22 @@ export function PersonnelForm() {
       setPhotoPadOpen(false);
     }
   }, [isEdit, id, addNotification]);
+
+  async function handleDeletePhoto() {
+    if (!isEdit) return;
+    setPhotoUploading(true);
+    try {
+      const updated = await deletePersonnelPhoto(Number(id));
+      setPhotoPreview(null);
+      setPhotoFile(null);
+      setHasServerPhoto(false);
+      addNotification("success", "Photo", "Photo supprimée avec succès");
+    } catch {
+      addNotification("error", "Erreur", "Impossible de supprimer la photo");
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -323,7 +345,7 @@ export function PersonnelForm() {
                         )}
                       </>
                     ) : (
-                      <Camera className="h-8 w-8 text-muted-foreground" />
+                      <UserIcon className="h-8 w-8 text-muted-foreground" />
                     )}
                   </div>
                   <div className="relative">
@@ -355,6 +377,16 @@ export function PersonnelForm() {
                             <Smartphone className="h-4 w-4" />
                             Prendre une photo
                           </button>
+                          {isEdit && hasServerPhoto && (
+                            <button
+                              type="button"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left text-destructive"
+                              onClick={() => { setPhotoMenuOpen(false); setConfirmDeleteOpen(true); }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Supprimer la photo
+                            </button>
+                          )}
                         </div>
                       </>
                     )}
@@ -551,6 +583,15 @@ export function PersonnelForm() {
           </Button>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Supprimer la photo"
+        message="Êtes-vous sûr de vouloir supprimer cette photo ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        onConfirm={() => { setConfirmDeleteOpen(false); handleDeletePhoto(); }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
 
       <PhotoCaptureDialog
         open={photoPadOpen}

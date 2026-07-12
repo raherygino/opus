@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
-import { changePassword, uploadProfilePhoto } from "@/lib/api/auth";
+import { changePassword, uploadProfilePhoto, deleteProfilePhoto } from "@/lib/api/auth";
 import { getPersonnelPhotoUrl, cropFileToSquare, generateThumbnail } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ import {
   Pencil,
   Smartphone,
   X,
+  Trash2,
 } from "lucide-react";
 
 export function ProfilePage() {
@@ -44,6 +46,7 @@ export function ProfilePage() {
   const [photoPadOpen, setPhotoPadOpen] = useState(false);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [photoKey, setPhotoKey] = useState(0);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // Password form
   const [passwordForm, setPasswordForm] = useState({
@@ -55,7 +58,7 @@ export function ProfilePage() {
   if (!user) return null;
 
   const photoUrl = user.photo
-    ? `${getPersonnelPhotoUrl(user.personnel_id)}?v=${photoKey}`
+    ? `${getPersonnelPhotoUrl(user.personnel_id)}?v=${user.photo}`
     : null;
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -78,22 +81,44 @@ export function ProfilePage() {
   }
 
   async function handlePhotoComplete(photoData: string) {
-    const [meta, base64] = photoData.split(",");
-    const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
-    const byteChars = atob(base64);
-    const byteNumbers = new Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      byteNumbers[i] = byteChars.charCodeAt(i);
+    setUploading(true);
+    try {
+      const [meta, base64] = photoData.split(",");
+      const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
+      const byteChars = atob(base64);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) {
+        byteNumbers[i] = byteChars.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const file = new File([blob], "photo.jpg", { type: mimeType });
+      const thumb = await generateThumbnail(file);
+      const updatedUser = await uploadProfilePhoto(file, thumb);
+      setUser(updatedUser);
+      setPhotoKey(k => k + 1);
+      addNotification("success", "Photo", "Photo de profil mise à jour");
+      setPhotoPadOpen(false);
+    } catch {
+      addNotification("error", "Erreur", "Impossible d'enregistrer la photo");
+      throw new Error("Failed to save photo");
+    } finally {
+      setUploading(false);
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: mimeType });
-    const file = new File([blob], "photo.jpg", { type: mimeType });
-    const thumb = await generateThumbnail(file);
-    const updatedUser = await uploadProfilePhoto(file, thumb);
-    setUser(updatedUser);
-    setPhotoKey(k => k + 1);
-    addNotification("success", "Photo", "Photo de profil mise à jour");
-    setPhotoPadOpen(false);
+  }
+
+  async function handleDeletePhoto() {
+    setUploading(true);
+    try {
+      const updatedUser = await deleteProfilePhoto();
+      setUser(updatedUser);
+      setPhotoKey(k => k + 1);
+      addNotification("success", "Photo", "Photo de profil supprimée");
+    } catch {
+      addNotification("error", "Erreur", "Impossible de supprimer la photo");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -183,7 +208,7 @@ export function ProfilePage() {
                     )}
                   </button>
                 ) : (
-                  <Camera className="h-10 w-10 text-muted-foreground" />
+                  <User className="h-10 w-10 text-muted-foreground" />
                 )}
               </div>
               <div className="absolute -bottom-1 -right-1">
@@ -219,6 +244,16 @@ export function ProfilePage() {
                         <Smartphone className="h-4 w-4" />
                         Prendre une photo
                       </button>
+                      {user.photo && (
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left text-destructive"
+                          onClick={() => { setPhotoMenuOpen(false); setConfirmDeleteOpen(true); }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer la photo
+                        </button>
+                      )}
                     </div>
                   </>
                 )}
@@ -390,6 +425,15 @@ export function ProfilePage() {
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Supprimer la photo"
+        message="Êtes-vous sûr de vouloir supprimer votre photo de profil ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        onConfirm={() => { setConfirmDeleteOpen(false); handleDeletePhoto(); }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
 
       <PhotoCaptureDialog
         open={photoPadOpen}

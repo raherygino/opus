@@ -222,3 +222,12 @@ export async function savePersonnelSignatureSvg(
   );
   return data.data;
 }
+
+export async function deletePersonnelPhoto(
+  personnelId: number,
+): Promise<Personnel> {
+  const { data } = await apiClient.delete<ApiResponse<Personnel>>(
+    `/personnel/${personnelId}/photo`,
+  );
+  return data.data;
+}

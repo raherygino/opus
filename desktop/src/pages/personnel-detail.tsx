@@ -28,6 +28,7 @@ import {
   PenTool,
   Smartphone,
   X,
+  Trash2,
 } from "lucide-react";
 import type { Personnel, PersonnelAttachment, Mouvement, Comportement } from "@/types";
 import jsPDF from "jspdf";
@@ -37,8 +38,9 @@ import logoCsp from "@/assets/img/logo-csp.png";
 import logoOpus from "@/assets/img/logo-opus.png";
 import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
 import { useSignaturePadStore, strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
-import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail, cropFileToSquare } from "@/lib/api/personnel";
+import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail, cropFileToSquare, deletePersonnelPhoto } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
@@ -68,6 +70,7 @@ export function PersonnelDetail() {
   const [photoKey, setPhotoKey] = useState(0);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -105,7 +108,7 @@ export function PersonnelDetail() {
 
   if (!person) return null;
 
-  const photoUrl = person.photo ? getPersonnelPhotoUrl(person.id) + "?v=" + photoKey : null;
+  const photoUrl = person.photo ? getPersonnelPhotoUrl(person.id) + "?v=" + person.photo : null;
 
   return (
     <motion.div
@@ -172,7 +175,7 @@ export function PersonnelDetail() {
                   )}
                 </button>
               ) : (
-                <Camera className="h-10 w-10 text-muted-foreground" />
+                <UserIcon className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
             <div className="text-center">
@@ -214,9 +217,19 @@ export function PersonnelDetail() {
                       onClick={() => { setPhotoPadOpen(true); setPhotoMenuOpen(false); }}
                     >
                       <Smartphone className="h-4 w-4" />
-                      Prendre une photo
-                    </button>
-                  </div>
+                        Prendre une photo
+                      </button>
+                      {person.photo && (
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left text-destructive"
+                          onClick={() => { setPhotoMenuOpen(false); setConfirmDeleteOpen(true); }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer la photo
+                        </button>
+                      )}
+                    </div>
                 </>
               )}
               <input
@@ -452,6 +465,15 @@ export function PersonnelDetail() {
         onSignatureComplete={handleSignatureComplete}
       />
 
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Supprimer la photo"
+        message="Êtes-vous sûr de vouloir supprimer cette photo ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        onConfirm={() => { setConfirmDeleteOpen(false); handleDeletePhoto(); }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
+
       <PhotoCaptureDialog
         open={photoPadOpen}
         onClose={() => setPhotoPadOpen(false)}
@@ -553,6 +575,21 @@ export function PersonnelDetail() {
     } finally {
       setPhotoUploading(false);
       e.target.value = "";
+    }
+  }
+
+  async function handleDeletePhoto() {
+    if (!person) return;
+    setPhotoUploading(true);
+    try {
+      const updated = await deletePersonnelPhoto(person.id);
+      addNotification("success", "Photo", "Photo supprimée avec succès");
+      setPerson(updated);
+      setPhotoKey((k) => k + 1);
+    } catch {
+      addNotification("error", "Erreur", "Impossible de supprimer la photo");
+    } finally {
+      setPhotoUploading(false);
     }
   }
 

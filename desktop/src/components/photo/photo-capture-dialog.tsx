@@ -161,6 +161,7 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
       setStarting(true);
       setPhotoReceived(false);
       photoReceivedRef.current = false;
+      setSaving(false);
       startSession().finally(() => setStarting(false));
     }
   }, [open]);
@@ -183,6 +184,7 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
           break;
         case "photo-received":
           setPhotoData(event.photoData);
+          setSaving(false);
           photoReceivedRef.current = true;
           setPhotoReceived(true);
           break;
@@ -228,6 +230,7 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
     setStarting(true);
     setPhotoReceived(false);
     photoReceivedRef.current = false;
+    setSaving(false);
     setPhotoData(null);
     destroySession().then(() => {
       startSession().finally(() => setStarting(false));
@@ -461,7 +464,7 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
                 <RefreshCw className="h-3 w-3" />
                 Nouvelle session
               </Button>
-              {photoReceived && (
+              {photoData && (
                 <Button onClick={handleSave} size="sm" className="gap-1" disabled={saving}>
                   {saving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
