@@ -229,6 +229,12 @@ class AuthController
                 unlink($oldPath);
             }
         }
+        if (!empty($person['thumbnail'])) {
+            $oldThumbPath = $uploadDir . '/' . $person['thumbnail'];
+            if (file_exists($oldThumbPath)) {
+                unlink($oldThumbPath);
+            }
+        }
 
         $storedName = 'photo_' . $personnelId . '_' . uniqid() . '.' . $extension;
         $destPath = $uploadDir . '/' . $storedName;
@@ -237,7 +243,21 @@ class AuthController
             Response::error('Failed to save photo', 500);
         }
 
-        Personnel::update($personnelId, ['photo' => $storedName]);
+        $updateData = ['photo' => $storedName];
+
+        // Handle optional thumbnail upload
+        if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
+            $thumbExt = strtolower(pathinfo($_FILES['thumbnail']['name'], PATHINFO_EXTENSION));
+            if (in_array($thumbExt, $allowedExtensions)) {
+                $thumbName = 'thumb_' . $personnelId . '_' . uniqid() . '.' . $thumbExt;
+                $thumbDest = $uploadDir . '/' . $thumbName;
+                if (move_uploaded_file($_FILES['thumbnail']['tmp_name'], $thumbDest)) {
+                    $updateData['thumbnail'] = $thumbName;
+                }
+            }
+        }
+
+        Personnel::update($personnelId, $updateData);
 
         // --- Audit log ---
         AuditLog::create([

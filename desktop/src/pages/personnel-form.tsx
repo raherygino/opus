@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -75,6 +75,8 @@ export function PersonnelForm() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoPadOpen, setPhotoPadOpen] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -120,15 +122,20 @@ export function PersonnelForm() {
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      setPhotoUploading(true);
-      try {
-        const square = await cropFileToSquare(file);
-        setPhotoFile(square);
-        setPhotoPreview(URL.createObjectURL(square));
-      } finally {
-        setPhotoUploading(false);
-      }
+    if (!file) return;
+    const rawUrl = URL.createObjectURL(file);
+    setPhotoPreview(rawUrl);
+    setPhotoUploading(true);
+    try {
+      const square = await cropFileToSquare(file);
+      URL.revokeObjectURL(rawUrl);
+      setPhotoFile(square);
+      setPhotoPreview(URL.createObjectURL(square));
+    } catch {
+      setPhotoPreview(null);
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = "";
     }
   }
 
@@ -201,7 +208,7 @@ export function PersonnelForm() {
         personnelId = Number(id);
         await updatePersonnel(personnelId, form);
       } else {
-        const created = await createPersonnel(form);
+        const created = await createPersonnel({ ...form, thumbnail: null });
         personnelId = created.id;
       }
 
@@ -302,41 +309,63 @@ export function PersonnelForm() {
               <div className="flex items-start gap-6 mb-4">
                 <div className="flex flex-col items-center gap-2 shrink-0">
                   <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                    {photoUploading ? (
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    ) : photoPreview ? (
-                      <img
-                        src={photoPreview}
-                        alt="Photo"
-                        className="h-full w-full object-cover"
-                      />
+                    {photoPreview ? (
+                      <>
+                        <img
+                          src={photoPreview}
+                          alt="Photo"
+                          className="h-full w-full object-cover"
+                        />
+                        {photoUploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="h-6 w-6 animate-spin text-white" />
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <Camera className="h-8 w-8 text-muted-foreground" />
                     )}
                   </div>
-                  <Label
-                    htmlFor="photo-upload"
-                    className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
-                  >
-                    {photoPreview ? "Changer" : "Ajouter une photo"}
-                  </Label>
-                  <input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    className="hidden"
-                    onChange={handlePhotoChange}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1 text-xs h-7"
-                    onClick={() => setPhotoPadOpen(true)}
-                  >
-                    <Smartphone className="h-3 w-3" />
-                    Prendre une photo
-                  </Button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setPhotoMenuOpen(!photoMenuOpen)}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    >
+                      <Camera className="h-3 w-3" />
+                      {photoPreview ? "Changer" : "Ajouter une photo"}
+                    </button>
+                    {photoMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setPhotoMenuOpen(false)} />
+                        <div className="absolute left-0 top-full mt-1 z-40 min-w-44 rounded-lg border border-border bg-card py-1 shadow-lg">
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                            onClick={() => { fileInputRef.current?.click(); setPhotoMenuOpen(false); }}
+                          >
+                            <Camera className="h-4 w-4" />
+                            Importer une photo
+                          </button>
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                            onClick={() => { setPhotoPadOpen(true); setPhotoMenuOpen(false); }}
+                          >
+                            <Smartphone className="h-4 w-4" />
+                            Prendre une photo
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      className="hidden"
+                      onChange={handlePhotoChange}
+                    />
+                  </div>
                 </div>
               </div>
 

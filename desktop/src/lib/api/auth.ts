@@ -37,9 +37,12 @@ export async function changePassword(
   });
 }
 
-export async function uploadProfilePhoto(photo: File): Promise<User> {
+export async function uploadProfilePhoto(photo: File, thumbnail?: File): Promise<User> {
   const formData = new FormData();
   formData.append("photo", photo);
+  if (thumbnail) {
+    formData.append("thumbnail", thumbnail);
+  }
   const { data } = await apiClient.post<ApiResponse<User>>(
     "/auth/photo",
     formData,

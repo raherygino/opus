@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
 import {
   getPersonnelById,
@@ -27,6 +27,7 @@ import {
   Award,
   PenTool,
   Smartphone,
+  X,
 } from "lucide-react";
 import type { Personnel, PersonnelAttachment, Mouvement, Comportement } from "@/types";
 import jsPDF from "jspdf";
@@ -36,7 +37,7 @@ import logoCsp from "@/assets/img/logo-csp.png";
 import logoOpus from "@/assets/img/logo-opus.png";
 import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
 import { useSignaturePadStore, strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
-import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail } from "@/lib/api/personnel";
+import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail, cropFileToSquare } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
@@ -63,7 +64,11 @@ export function PersonnelDetail() {
   const [loading, setLoading] = useState(true);
   const [sigPadOpen, setSigPadOpen] = useState(false);
   const [photoPadOpen, setPhotoPadOpen] = useState(false);
+  const [photoViewOpen, setPhotoViewOpen] = useState(false);
   const [photoKey, setPhotoKey] = useState(0);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadData();
@@ -150,11 +155,22 @@ export function PersonnelDetail() {
           <CardContent className="pt-6 flex flex-col items-center gap-3">
             <div className="h-32 w-32 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
               {photoUrl ? (
-                <img
-                  src={photoUrl}
-                  alt={`${person.firstname} ${person.lastname}`}
-                  className="h-full w-full object-cover"
-                />
+                <button
+                  type="button"
+                  className="h-full w-full cursor-pointer relative"
+                  onClick={() => setPhotoViewOpen(true)}
+                >
+                  <img
+                    src={photoUrl}
+                    alt={`${person.firstname} ${person.lastname}`}
+                    className="h-full w-full object-cover"
+                  />
+                  {photoUploading && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-white" />
+                    </div>
+                  )}
+                </button>
               ) : (
                 <Camera className="h-10 w-10 text-muted-foreground" />
               )}
@@ -171,15 +187,46 @@ export function PersonnelDetail() {
             >
               {person.status}
             </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 mt-2"
-              onClick={() => setPhotoPadOpen(true)}
-            >
-              <Smartphone className="h-4 w-4" />
-              {person.photo ? "Remplacer la photo" : "Prendre une photo"}
-            </Button>
+            <div className="relative mt-2">
+              <button
+                type="button"
+                onClick={() => setPhotoMenuOpen(!photoMenuOpen)}
+                className="inline-flex items-center gap-2 h-8 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-muted"
+              >
+                <Camera className="h-4 w-4" />
+                {person.photo ? "Remplacer la photo" : "Ajouter une photo"}
+              </button>
+              {photoMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setPhotoMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-40 min-w-44 rounded-lg border border-border bg-card py-1 shadow-lg">
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                      onClick={() => { fileInputRef.current?.click(); setPhotoMenuOpen(false); }}
+                    >
+                      <Camera className="h-4 w-4" />
+                      Importer une photo
+                    </button>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                      onClick={() => { setPhotoPadOpen(true); setPhotoMenuOpen(false); }}
+                    >
+                      <Smartphone className="h-4 w-4" />
+                      Prendre une photo
+                    </button>
+                  </div>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -410,6 +457,42 @@ export function PersonnelDetail() {
         onClose={() => setPhotoPadOpen(false)}
         onPhotoComplete={handlePhotoComplete}
       />
+
+      <AnimatePresence>
+        {photoViewOpen && photoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            onClick={() => setPhotoViewOpen(false)}
+          >
+            <div className="fixed inset-0 bg-black/80" />
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 260 }}
+              className="relative z-10 max-w-[90vw] max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="absolute -top-3 -right-3 z-20 h-8 w-8 rounded-full bg-background border border-border flex items-center justify-center shadow-lg hover:bg-muted"
+                onClick={() => setPhotoViewOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <img
+                src={photoUrl}
+                alt={`${person!.firstname} ${person!.lastname}`}
+                className="max-w-[90vw] max-h-[90vh] rounded-lg object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 
@@ -428,6 +511,7 @@ export function PersonnelDetail() {
 
   async function handlePhotoComplete(photoData: string) {
     if (!person) return;
+    setPhotoUploading(true);
     try {
       const [meta, base64] = photoData.split(",");
       const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
@@ -448,6 +532,27 @@ export function PersonnelDetail() {
     } catch {
       addNotification("error", "Erreur", "Impossible d'enregistrer la photo");
       throw new Error("Failed to save photo");
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !person) return;
+    setPhotoUploading(true);
+    try {
+      const square = await cropFileToSquare(file);
+      const thumb = await generateThumbnail(square);
+      const updated = await uploadPersonnelPhoto(person.id, square, thumb);
+      addNotification("success", "Photo", "Photo enregistrée avec succès");
+      setPerson(updated);
+      setPhotoKey((k) => k + 1);
+    } catch {
+      addNotification("error", "Erreur", "Impossible d'enregistrer la photo");
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = "";
     }
   }
 

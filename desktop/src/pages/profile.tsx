@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { changePassword, uploadProfilePhoto } from "@/lib/api/auth";
-import { getPersonnelPhotoUrl } from "@/lib/api/personnel";
+import { getPersonnelPhotoUrl, cropFileToSquare, generateThumbnail } from "@/lib/api/personnel";
+import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,8 @@ import {
   Building2,
   MapPin,
   Pencil,
+  Smartphone,
+  X,
 } from "lucide-react";
 
 export function ProfilePage() {
@@ -37,6 +40,10 @@ export function ProfilePage() {
 
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [photoViewOpen, setPhotoViewOpen] = useState(false);
+  const [photoPadOpen, setPhotoPadOpen] = useState(false);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [photoKey, setPhotoKey] = useState(0);
 
   // Password form
   const [passwordForm, setPasswordForm] = useState({
@@ -48,23 +55,45 @@ export function ProfilePage() {
   if (!user) return null;
 
   const photoUrl = user.photo
-    ? getPersonnelPhotoUrl(user.personnel_id)
+    ? `${getPersonnelPhotoUrl(user.personnel_id)}?v=${photoKey}`
     : null;
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     try {
-      const updatedUser = await uploadProfilePhoto(file);
+      const square = await cropFileToSquare(file);
+      const thumb = await generateThumbnail(square);
+      const updatedUser = await uploadProfilePhoto(square, thumb);
       setUser(updatedUser);
+      setPhotoKey(k => k + 1);
       addNotification("success", "Photo", "Photo de profil mise à jour");
     } catch {
       addNotification("error", "Erreur", "Impossible de mettre à jour la photo");
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
+  }
+
+  async function handlePhotoComplete(photoData: string) {
+    const [meta, base64] = photoData.split(",");
+    const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    const file = new File([blob], "photo.jpg", { type: mimeType });
+    const thumb = await generateThumbnail(file);
+    const updatedUser = await uploadProfilePhoto(file, thumb);
+    setUser(updatedUser);
+    setPhotoKey(k => k + 1);
+    addNotification("success", "Photo", "Photo de profil mise à jour");
+    setPhotoPadOpen(false);
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -137,27 +166,63 @@ export function ProfilePage() {
             <div className="relative">
               <div className="h-28 w-28 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
                 {photoUrl ? (
-                  <img
-                    src={photoUrl}
-                    alt="Photo de profil"
-                    className="h-full w-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    className="h-full w-full cursor-pointer relative"
+                    onClick={() => setPhotoViewOpen(true)}
+                  >
+                    <img
+                      src={photoUrl}
+                      alt="Photo de profil"
+                      className="h-full w-full object-cover"
+                    />
+                    {uploading && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                      </div>
+                    )}
+                  </button>
                 ) : (
                   <Camera className="h-10 w-10 text-muted-foreground" />
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
-              >
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Camera className="h-4 w-4" />
+              <div className="absolute -bottom-1 -right-1">
+                <button
+                  type="button"
+                  onClick={() => setPhotoMenuOpen(!photoMenuOpen)}
+                  disabled={uploading}
+                  className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Camera className="h-3.5 w-3.5" />
+                  )}
+                </button>
+                {photoMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setPhotoMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-40 min-w-44 rounded-lg border border-border bg-card py-1 shadow-lg">
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                        onClick={() => { fileInputRef.current?.click(); setPhotoMenuOpen(false); }}
+                      >
+                        <Camera className="h-4 w-4" />
+                        Importer une photo
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                        onClick={() => { setPhotoPadOpen(true); setPhotoMenuOpen(false); }}
+                      >
+                        <Smartphone className="h-4 w-4" />
+                        Prendre une photo
+                      </button>
+                    </div>
+                  </>
                 )}
-              </button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -325,6 +390,48 @@ export function ProfilePage() {
           </Card>
         </div>
       </div>
+
+      <PhotoCaptureDialog
+        open={photoPadOpen}
+        onClose={() => setPhotoPadOpen(false)}
+        onPhotoComplete={handlePhotoComplete}
+      />
+
+      <AnimatePresence>
+        {photoViewOpen && photoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            onClick={() => setPhotoViewOpen(false)}
+          >
+            <div className="fixed inset-0 bg-black/80" />
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 260 }}
+              className="relative z-10 max-w-[90vw] max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="absolute -top-3 -right-3 z-20 h-8 w-8 rounded-full bg-background border border-border flex items-center justify-center shadow-lg hover:bg-muted"
+                onClick={() => setPhotoViewOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <img
+                src={photoUrl}
+                alt="Photo de profil"
+                className="max-w-[90vw] max-h-[90vh] rounded-lg object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
