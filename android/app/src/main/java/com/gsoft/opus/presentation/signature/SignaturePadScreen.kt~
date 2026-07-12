@@ -1,0 +1,384 @@
+package com.gsoft.opus.presentation.signature
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke as DrawStroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.gsoft.opus.data.signature.QrPayload
+import com.gsoft.opus.data.signature.Stroke
+import com.gsoft.opus.data.signature.StrokePoint
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SignaturePadScreen(
+    qrPayload: QrPayload? = null,
+    pairingIp: String? = null,
+    pairingPort: Int? = null,
+    pairingCode: String? = null,
+    onNavigateBack: () -> Unit,
+    viewModel: SignaturePadViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Connect when screen opens
+    androidx.compose.runtime.LaunchedEffect(qrPayload, pairingIp, pairingCode) {
+        if (qrPayload != null) {
+            viewModel.connectByQrPayload(qrPayload)
+        } else if (pairingIp != null && pairingPort != null && pairingCode != null) {
+            viewModel.connectByPairingCode(pairingIp, pairingPort, pairingCode)
+        }
+    }
+
+    // Navigate back when finished
+    androidx.compose.runtime.LaunchedEffect(uiState.isFinished) {
+        if (uiState.isFinished) {
+            kotlinx.coroutines.delay(1500)
+            onNavigateBack()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Signature") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        viewModel.cancelSignature()
+                        onNavigateBack()
+                    }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
+            )
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // Connection status
+            ConnectionStatusBar(
+                isConnected = uiState.isConnected,
+                isConnecting = uiState.isConnecting,
+                desktopIp = uiState.desktopIp,
+                errorMessage = uiState.errorMessage,
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (uiState.isFinished) {
+                // Finished state
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(64.dp),
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Signature envoyée",
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                    }
+                }
+            } else if (!uiState.isConnected && !uiState.isConnecting) {
+                // Error / disconnected state
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Connexion échouée",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedButton(onClick = onNavigateBack) {
+                            Text("Retour")
+                        }
+                    }
+                }
+            } else if (uiState.isConnecting) {
+                // Connecting state
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Connexion en cours...",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            } else {
+                // Signature drawing canvas — draws locally in real-time
+                SignatureDrawingCanvas(
+                    strokes = uiState.strokes,
+                    onStartStroke = { x, y -> viewModel.startStroke(x, y) },
+                    onMoveStroke = { x, y -> viewModel.moveStroke(x, y) },
+                    onEndStroke = { x, y -> viewModel.endStroke(x, y) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Action buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    OutlinedButton(
+                        onClick = { viewModel.clearSignature() },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Filled.Clear, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Effacer")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = { viewModel.undoStroke() },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Filled.Undo, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Annuler")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.cancelSignature()
+                            onNavigateBack()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Annuler")
+                    }
+                    Button(
+                        onClick = { viewModel.finishSignature() },
+                        modifier = Modifier.weight(1f),
+                        enabled = uiState.strokes.isNotEmpty(),
+                    ) {
+                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Terminer")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionStatusBar(
+    isConnected: Boolean,
+    isConnecting: Boolean,
+    desktopIp: String?,
+    errorMessage: String?,
+) {
+    val (color, text) = when {
+        isConnected -> MaterialTheme.colorScheme.primary to "Connecté${desktopIp?.let { " à $it" } ?: ""}"
+        isConnecting -> MaterialTheme.colorScheme.tertiary to "Connexion..."
+        errorMessage != null -> MaterialTheme.colorScheme.error to errorMessage
+        else -> MaterialTheme.colorScheme.outline to "Non connecté"
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(color, RoundedCornerShape(4.dp)),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = text, fontSize = 14.sp, color = color)
+    }
+}
+
+@Composable
+private fun SignatureDrawingCanvas(
+    strokes: List<Stroke>,
+    onStartStroke: (Float, Float) -> Unit,
+    onMoveStroke: (Float, Float) -> Unit,
+    onEndStroke: (Float, Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Local drawing state for real-time rendering without waiting for ViewModel
+    val localStrokes = remember { mutableStateListOf<MutableList<StrokePoint>>() }
+    val currentLocalPath = remember { mutableStateListOf<StrokePoint>() }
+
+    // Sync: when ViewModel strokes change (clear/undo), update local strokes
+    androidx.compose.runtime.LaunchedEffect(strokes.size) {
+        if (strokes.size < localStrokes.size) {
+            // Undo or clear happened
+            if (strokes.isEmpty()) {
+                localStrokes.clear()
+            } else {
+                while (localStrokes.size > strokes.size) {
+                    localStrokes.removeAt(localStrokes.lastIndex)
+                }
+            }
+        }
+    }
+
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        currentLocalPath.clear()
+                        currentLocalPath.add(StrokePoint(offset.x, offset.y, System.currentTimeMillis()))
+                        onStartStroke(offset.x, offset.y)
+                    },
+                    onDrag = { change, _ ->
+                        change.consume()
+                        currentLocalPath.add(StrokePoint(change.position.x, change.position.y, System.currentTimeMillis()))
+                        onMoveStroke(change.position.x, change.position.y)
+                    },
+                    onDragEnd = {
+                        if (currentLocalPath.isNotEmpty()) {
+                            val last = currentLocalPath.last()
+                            onEndStroke(last.x, last.y)
+                            localStrokes.add(currentLocalPath.toMutableList())
+                            currentLocalPath.clear()
+                        }
+                    },
+                    onDragCancel = {
+                        currentLocalPath.clear()
+                    },
+                )
+            },
+    ) {
+        // Draw all completed strokes (from ViewModel, e.g. after undo/clear)
+        strokes.forEach { stroke ->
+            drawStrokePath(stroke)
+        }
+
+        // Draw locally tracked completed strokes (real-time, no ViewModel round-trip)
+        localStrokes.forEach { points ->
+            if (points.isNotEmpty()) {
+                drawStrokePath(Stroke(points = points))
+            }
+        }
+
+        // Draw current in-progress stroke (local, instant)
+        if (currentLocalPath.isNotEmpty()) {
+            drawStrokePath(Stroke(points = currentLocalPath.toList()))
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStrokePath(stroke: Stroke) {
+    if (stroke.points.size < 2) {
+        // Draw a dot for single-point strokes
+        if (stroke.points.isNotEmpty()) {
+            drawCircle(
+                color = Color.Black,
+                radius = 2f,
+                center = Offset(stroke.points[0].x, stroke.points[0].y),
+            )
+        }
+        return
+    }
+
+    val path = Path()
+    path.moveTo(stroke.points[0].x, stroke.points[0].y)
+    for (i in 1 until stroke.points.size) {
+        path.lineTo(stroke.points[i].x, stroke.points[i].y)
+    }
+    drawPath(
+        path = path,
+        color = Color.Black,
+        style = DrawStroke(width = 3f),
+    )
+}

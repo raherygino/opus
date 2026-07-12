@@ -23,7 +23,7 @@ export default defineConfig({
           build: {
             outDir: "dist-electron",
             rollupOptions: {
-              external: ["electron"],
+              external: ["electron", "bufferutil", "utf-8-validate"],
             },
           },
         },
@@ -32,7 +32,7 @@ export default defineConfig({
     electronRenderer(),
     {
       name: "copy-preload",
-      closeBundle() {
+      buildStart() {
         const src = path.resolve(__dirname, "electron/preload.cjs");
         const dest = path.resolve(__dirname, "dist-electron/preload.cjs");
         const dir = path.dirname(dest);

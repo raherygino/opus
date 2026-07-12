@@ -1,11 +1,13 @@
 import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { SignaturePadServer } from "./signature-pad-server";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
+const signatureServer = new SignaturePadServer();
 
 const isDev = !app.isPackaged;
 
@@ -34,7 +36,7 @@ function createWindow() {
       responseHeaders: {
         ...details.responseHeaders,
         "Content-Security-Policy": [
-          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://api.mapbox.com; img-src 'self' data: http://127.0.0.1:8080 http://192.168.1.163:8080 https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' http://127.0.0.1:8080 http://192.168.1.163:8080 https://nominatim.openstreetmap.org https://api.mapbox.com https://events.mapbox.com; worker-src 'self' blob:;",
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://api.mapbox.com; img-src 'self' data: http://127.0.0.1:8080 http://192.168.1.163:8080 https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' http://127.0.0.1:8080 http://192.168.1.163:8080 ws://*:9876 https://nominatim.openstreetmap.org https://api.mapbox.com https://events.mapbox.com; worker-src 'self' blob:;",
         ],
         ...(isApi && {
           "Access-Control-Allow-Origin": ["*"],
@@ -89,6 +91,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  signatureServer.stop();
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -124,4 +127,35 @@ ipcMain.handle("is-maximized", () => {
 
 ipcMain.handle("is-focused", () => {
   return mainWindow?.isFocused() ?? false;
+});
+
+// ─── Signature Pad IPC ───
+
+ipcMain.handle("signature:start-session", async () => {
+  try {
+    const session = await signatureServer.startSession();
+    return { success: true, session };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+});
+
+ipcMain.handle("signature:destroy-session", () => {
+  signatureServer.destroySession();
+  return { success: true };
+});
+
+ipcMain.handle("signature:get-session", () => {
+  const session = signatureServer.getSession();
+  const device = signatureServer.getDevice();
+  return { session, device };
+});
+
+ipcMain.handle("signature:send-to-device", (_event, message: Record<string, unknown>) => {
+  return signatureServer.sendToDevice(message);
+});
+
+// Forward device events to the renderer
+signatureServer.addListener((event) => {
+  mainWindow?.webContents.send("signature-device-event", event);
 });

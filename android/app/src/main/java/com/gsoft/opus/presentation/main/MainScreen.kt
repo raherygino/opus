@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -56,6 +57,9 @@ import com.gsoft.opus.presentation.dashboard.DashboardScreen
 import com.gsoft.opus.presentation.notifications.NotificationsScreen
 import com.gsoft.opus.presentation.profile.ProfileScreen
 import com.gsoft.opus.presentation.settings.SettingsScreen
+import com.gsoft.opus.presentation.signature.SignaturePairingScreen
+import com.gsoft.opus.presentation.signature.SignaturePadScreen
+import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.ContextMenuItem
 import com.gsoft.opus.ui.components.OpusBottomNavBar
 import com.gsoft.opus.ui.components.OpusContextMenu
@@ -306,6 +310,18 @@ fun MainScreen(onLogout: () -> Unit) {
             id = "roles",
             title = "Rôles",
             icon = Icons.Outlined.Tune
+        ),
+
+        // ── Signature ──
+        ContextMenuItem(
+            id = "section_signature",
+            title = "Signature",
+            isSectionHeader = true
+        ),
+        ContextMenuItem(
+            id = "signature_pairing",
+            title = "Tablette de signature",
+            icon = Icons.Outlined.Draw
         )
     )
 
@@ -348,7 +364,8 @@ fun MainScreen(onLogout: () -> Unit) {
             "pj_renseignement" to MainRoutes.RenseignementPj.route,
             "cartographie" to MainRoutes.Cartographie.route,
             "utilisateurs" to MainRoutes.Utilisateurs.route,
-            "roles" to MainRoutes.Roles.route
+            "roles" to MainRoutes.Roles.route,
+            "signature_pairing" to MainRoutes.SignaturePairing.route
         )
     }
 
@@ -454,6 +471,64 @@ fun MainScreen(onLogout: () -> Unit) {
                 composable(MainRoutes.Cartographie.route) { ContextMenuItemScreens.Cartographie() }
                 composable(MainRoutes.Utilisateurs.route) { ContextMenuItemScreens.Utilisateurs() }
                 composable(MainRoutes.Roles.route) { ContextMenuItemScreens.Roles() }
+
+                // Signature pad
+                composable(MainRoutes.SignaturePairing.route) {
+                    SignaturePairingScreen(
+                        onQrScanned = { payload: QrPayload ->
+                            val jsonStr = kotlinx.serialization.json.Json.encodeToString(QrPayload.serializer(), payload)
+                            navController.navigate("signature_pad?qrPayload=${java.net.URLEncoder.encode(jsonStr, "UTF-8")}")
+                        },
+                        onManualCodeSubmit = { ip, port, code ->
+                            navController.navigate("signature_pad?ip=$ip&port=$port&code=$code")
+                        },
+                        onNavigateBack = { navController.popBackStack() },
+                    )
+                }
+                composable(
+                    route = "signature_pad?qrPayload={qrPayload}&ip={ip}&port={port}&code={code}",
+                    arguments = listOf(
+                        androidx.navigation.navArgument("qrPayload") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        androidx.navigation.navArgument("ip") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        androidx.navigation.navArgument("port") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        androidx.navigation.navArgument("code") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                    ),
+                ) { backStackEntry ->
+                    val qrPayloadStr = backStackEntry.arguments?.getString("qrPayload")
+                    val ip = backStackEntry.arguments?.getString("ip")
+                    val portStr = backStackEntry.arguments?.getString("port")
+                    val code = backStackEntry.arguments?.getString("code")
+
+                    val qrPayload = qrPayloadStr?.let {
+                        try {
+                            kotlinx.serialization.json.Json.decodeFromString(QrPayload.serializer(), java.net.URLDecoder.decode(it, "UTF-8"))
+                        } catch (e: Exception) { null }
+                    }
+
+                    SignaturePadScreen(
+                        qrPayload = qrPayload,
+                        pairingIp = ip,
+                        pairingPort = portStr?.toIntOrNull(),
+                        pairingCode = code,
+                        onNavigateBack = { navController.popBackStack() },
+                    )
+                }
             }
         }
     }

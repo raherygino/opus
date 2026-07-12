@@ -64,6 +64,7 @@ export interface Personnel {
   address: string | null;
   photo: string | null;
   signature: string | null;
+  signature_svg: string | null;
   status: string;
   created_at: string;
   updated_at: string;

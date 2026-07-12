@@ -25,6 +25,7 @@ import {
   FileDown,
   History,
   Award,
+  PenTool,
 } from "lucide-react";
 import type { Personnel, PersonnelAttachment, Mouvement, Comportement } from "@/types";
 import jsPDF from "jspdf";
@@ -32,6 +33,9 @@ import autoTable from "jspdf-autotable";
 import logoPn from "@/assets/img/logo-pn.png";
 import logoCsp from "@/assets/img/logo-csp.png";
 import logoOpus from "@/assets/img/logo-opus.png";
+import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
+import { useSignaturePadStore, strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
+import { savePersonnelSignatureSvg } from "@/lib/api/personnel";
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
@@ -55,6 +59,7 @@ export function PersonnelDetail() {
   const [mouvements, setMouvements] = useState<Mouvement[]>([]);
   const [comportements, setComportements] = useState<Comportement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sigPadOpen, setSigPadOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -344,10 +349,63 @@ export function PersonnelDetail() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <PenTool className="h-4 w-4" />
+                Signature
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {person.signature_svg ? (
+                <div className="rounded-lg border border-border bg-white p-3">
+                  <div
+                    className="w-full"
+                    dangerouslySetInnerHTML={{ __html: person.signature_svg }}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-lg border-2 border-dashed border-border p-6 text-center">
+                  <PenTool className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Aucune signature enregistrée
+                  </p>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => setSigPadOpen(true)}
+              >
+                <PenTool className="h-4 w-4" />
+                {person.signature_svg ? "Remplacer la signature" : "Faire signer"}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <SignaturePadDialog
+        open={sigPadOpen}
+        onClose={() => setSigPadOpen(false)}
+        onSignatureComplete={handleSignatureComplete}
+      />
     </motion.div>
   );
+
+  async function handleSignatureComplete(strokes: Stroke[]) {
+    if (!person || strokes.length === 0) return;
+    try {
+      const svg = strokesToSvg(strokes);
+      await savePersonnelSignatureSvg(person.id, svg);
+      addNotification("success", "Signature", "Signature enregistrée avec succès");
+      setPerson({ ...person, signature_svg: svg });
+      setSigPadOpen(false);
+    } catch {
+      addNotification("error", "Erreur", "Impossible d'enregistrer la signature");
+    }
+  }
 
   async function handleExportPDF() {
     if (!person) return;

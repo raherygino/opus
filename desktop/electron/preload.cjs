@@ -20,4 +20,23 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("window-focus-changed", handler);
     return () => ipcRenderer.removeListener("window-focus-changed", handler);
   },
+
+  // ─── Signature Pad ───
+  signatureStartSession: () =>
+    ipcRenderer.invoke("signature:start-session"),
+
+  signatureDestroySession: () =>
+    ipcRenderer.invoke("signature:destroy-session"),
+
+  signatureGetSession: () =>
+    ipcRenderer.invoke("signature:get-session"),
+
+  signatureSendToDevice: (message) =>
+    ipcRenderer.invoke("signature:send-to-device", message),
+
+  onSignatureDeviceEvent: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("signature-device-event", handler);
+    return () => ipcRenderer.removeListener("signature-device-event", handler);
+  },
 });

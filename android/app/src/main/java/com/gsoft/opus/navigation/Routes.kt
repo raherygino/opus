@@ -62,4 +62,8 @@ sealed class MainRoutes(val route: String) {
     data object Cartographie : MainRoutes("cartographie")
     data object Utilisateurs : MainRoutes("utilisateurs")
     data object Roles : MainRoutes("roles")
+
+    // Signature pad
+    data object SignaturePairing : MainRoutes("signature_pairing")
+    data object SignaturePad : MainRoutes("signature_pad")
 }

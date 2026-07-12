@@ -156,3 +156,14 @@ export function getPersonnelSignatureUrl(personnelId: number): string {
   const baseUrl = import.meta.env.VITE_API_URL || "/api";
   return `${baseUrl}/personnel/${personnelId}/signature`;
 }
+
+export async function savePersonnelSignatureSvg(
+  personnelId: number,
+  svg: string,
+): Promise<Personnel> {
+  const { data } = await apiClient.post<ApiResponse<Personnel>>(
+    `/personnel/${personnelId}/signature/svg`,
+    { svg },
+  );
+  return data.data;
+}

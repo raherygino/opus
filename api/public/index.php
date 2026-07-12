@@ -56,8 +56,9 @@ $router->get('/api/personnel/{id}/photo',      [PersonnelController::class, 'ser
 // ========================
 // Personnel Signature Routes
 // ========================
-$router->post('/api/personnel/{id}/signature', [PersonnelController::class, 'uploadSignature']);
-$router->get('/api/personnel/{id}/signature',  [PersonnelController::class, 'serveSignature']);
+$router->post('/api/personnel/{id}/signature',     [PersonnelController::class, 'uploadSignature']);
+$router->post('/api/personnel/{id}/signature/svg',  [PersonnelController::class, 'saveSignatureSvg']);
+$router->get('/api/personnel/{id}/signature',      [PersonnelController::class, 'serveSignature']);
 
 // ========================
 // Personnel Attachment Routes

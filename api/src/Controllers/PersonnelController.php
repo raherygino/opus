@@ -408,6 +408,44 @@ class PersonnelController
     }
 
     /**
+     * POST /api/personnel/{id}/signature/svg
+     * Body: { "svg": "<svg>...</svg>" }
+     * Saves the SVG vector data of the signature drawn on the Android signature pad.
+     */
+    public function saveSignatureSvg(array $params): void
+    {
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person) {
+            Response::notFound('Personnel not found');
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        if (empty($data['svg'])) {
+            Response::error('SVG data is required', 422, ['svg' => 'Les données SVG sont requises']);
+        }
+
+        $svg = $data['svg'];
+
+        Personnel::update($id, ['signature_svg' => $svg]);
+        $person = Personnel::getById($id);
+
+        // --- Audit log ---
+        $authUser = AuthController::getAuthenticatedUser();
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'signature_svg_save',
+            'module' => 'personnel',
+            'entity_id' => $id,
+            'description' => "Signature SVG enregistrée pour le personnel '{$person['firstname']} {$person['lastname']}' (ID: {$id})",
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        Response::success($person, 'Signature SVG saved successfully');
+    }
+
+    /**
      * GET /api/personnel/{id}/signature
      * Serve the personnel signature file
      */
