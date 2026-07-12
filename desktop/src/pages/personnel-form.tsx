@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -13,7 +13,10 @@ import {
   getAttachmentDownloadUrl,
   uploadPersonnelPhoto,
   getPersonnelPhotoUrl,
+  generateThumbnail,
+  cropFileToSquare,
 } from "@/lib/api/personnel";
+import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +32,7 @@ import {
   Download,
   Plus,
   Camera,
+  Smartphone,
 } from "lucide-react";
 import type { PersonnelAttachment } from "@/types";
 import gradeData from "@/assets/json/grade.json";
@@ -69,6 +73,8 @@ export function PersonnelForm() {
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoPadOpen, setPhotoPadOpen] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -112,11 +118,17 @@ export function PersonnelForm() {
     }
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) {
-      setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setPhotoUploading(true);
+      try {
+        const square = await cropFileToSquare(file);
+        setPhotoFile(square);
+        setPhotoPreview(URL.createObjectURL(square));
+      } finally {
+        setPhotoUploading(false);
+      }
     }
   }
 
@@ -144,6 +156,40 @@ export function PersonnelForm() {
     });
   }
 
+  const handlePhotoComplete = useCallback(async (photoData: string) => {
+    const [meta, base64] = photoData.split(",");
+    const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    const file = new File([blob], "photo.jpg", { type: mimeType });
+    const thumb = await generateThumbnail(file);
+
+    if (isEdit) {
+      setPhotoUploading(true);
+      try {
+        const updated = await uploadPersonnelPhoto(Number(id), file, thumb);
+        setPhotoPreview(getPersonnelPhotoUrl(updated.id) + "?t=" + Date.now());
+        addNotification("success", "Photo", "Photo enregistrée avec succès");
+        setPhotoFile(null);
+        setPhotoPadOpen(false);
+      } catch {
+        addNotification("error", "Erreur", "Impossible d'enregistrer la photo");
+        throw new Error("Failed to save photo");
+      } finally {
+        setPhotoUploading(false);
+      }
+    } else {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+      setPhotoPadOpen(false);
+    }
+  }, [isEdit, id, addNotification]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -164,7 +210,10 @@ export function PersonnelForm() {
       }
 
       if (photoFile) {
-        await uploadPersonnelPhoto(personnelId, photoFile);
+        const thumb = await generateThumbnail(photoFile);
+        const updated = await uploadPersonnelPhoto(personnelId, photoFile, thumb);
+        setPhotoPreview(getPersonnelPhotoUrl(updated.id) + "?t=" + Date.now());
+        setPhotoFile(null);
       }
 
       for (const a of attachments.filter((x) => !x._delete)) {
@@ -250,34 +299,46 @@ export function PersonnelForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex items-start gap-6 mb-4">
-              <div className="flex flex-col items-center gap-2 shrink-0">
-                <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Photo"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <Camera className="h-8 w-8 text-muted-foreground" />
-                  )}
+              <div className="flex items-start gap-6 mb-4">
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                  <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+                    {photoUploading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Photo"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Camera className="h-8 w-8 text-muted-foreground" />
+                    )}
+                  </div>
+                  <Label
+                    htmlFor="photo-upload"
+                    className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+                  >
+                    {photoPreview ? "Changer" : "Ajouter une photo"}
+                  </Label>
+                  <input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 text-xs h-7"
+                    onClick={() => setPhotoPadOpen(true)}
+                  >
+                    <Smartphone className="h-3 w-3" />
+                    Prendre une photo
+                  </Button>
                 </div>
-                <Label
-                  htmlFor="photo-upload"
-                  className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
-                >
-                  {photoPreview ? "Changer" : "Ajouter une photo"}
-                </Label>
-                <input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="hidden"
-                  onChange={handlePhotoChange}
-                />
               </div>
-            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -461,6 +522,12 @@ export function PersonnelForm() {
           </Button>
         </CardContent>
       </Card>
+
+      <PhotoCaptureDialog
+        open={photoPadOpen}
+        onClose={() => setPhotoPadOpen(false)}
+        onPhotoComplete={handlePhotoComplete}
+      />
     </motion.div>
   );
 }

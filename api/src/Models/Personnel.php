@@ -133,7 +133,7 @@ class Personnel
         $fields = [];
         $values = [];
 
-        $allowed = ['im', 'grade', 'lastname', 'firstname', 'affectation', 'phone', 'address', 'photo', 'signature', 'signature_svg'];
+        $allowed = ['im', 'grade', 'lastname', 'firstname', 'affectation', 'phone', 'address', 'photo', 'thumbnail', 'signature', 'signature_svg'];
         foreach ($allowed as $field) {
             if (isset($data[$field])) {
                 $fields[] = "$field = ?";

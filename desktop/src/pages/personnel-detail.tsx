@@ -26,6 +26,7 @@ import {
   History,
   Award,
   PenTool,
+  Smartphone,
 } from "lucide-react";
 import type { Personnel, PersonnelAttachment, Mouvement, Comportement } from "@/types";
 import jsPDF from "jspdf";
@@ -35,7 +36,8 @@ import logoCsp from "@/assets/img/logo-csp.png";
 import logoOpus from "@/assets/img/logo-opus.png";
 import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
 import { useSignaturePadStore, strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
-import { savePersonnelSignatureSvg } from "@/lib/api/personnel";
+import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail } from "@/lib/api/personnel";
+import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
@@ -60,6 +62,8 @@ export function PersonnelDetail() {
   const [comportements, setComportements] = useState<Comportement[]>([]);
   const [loading, setLoading] = useState(true);
   const [sigPadOpen, setSigPadOpen] = useState(false);
+  const [photoPadOpen, setPhotoPadOpen] = useState(false);
+  const [photoKey, setPhotoKey] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -96,7 +100,7 @@ export function PersonnelDetail() {
 
   if (!person) return null;
 
-  const photoUrl = person.photo ? getPersonnelPhotoUrl(person.id) : null;
+  const photoUrl = person.photo ? getPersonnelPhotoUrl(person.id) + "?v=" + photoKey : null;
 
   return (
     <motion.div
@@ -167,6 +171,15 @@ export function PersonnelDetail() {
             >
               {person.status}
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 mt-2"
+              onClick={() => setPhotoPadOpen(true)}
+            >
+              <Smartphone className="h-4 w-4" />
+              {person.photo ? "Remplacer la photo" : "Prendre une photo"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -391,6 +404,12 @@ export function PersonnelDetail() {
         onClose={() => setSigPadOpen(false)}
         onSignatureComplete={handleSignatureComplete}
       />
+
+      <PhotoCaptureDialog
+        open={photoPadOpen}
+        onClose={() => setPhotoPadOpen(false)}
+        onPhotoComplete={handlePhotoComplete}
+      />
     </motion.div>
   );
 
@@ -404,6 +423,31 @@ export function PersonnelDetail() {
       setSigPadOpen(false);
     } catch {
       addNotification("error", "Erreur", "Impossible d'enregistrer la signature");
+    }
+  }
+
+  async function handlePhotoComplete(photoData: string) {
+    if (!person) return;
+    try {
+      const [meta, base64] = photoData.split(",");
+      const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
+      const byteChars = atob(base64);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) {
+        byteNumbers[i] = byteChars.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const file = new File([blob], "photo.jpg", { type: mimeType });
+      const thumb = await generateThumbnail(file);
+      const updated = await uploadPersonnelPhoto(person.id, file, thumb);
+      addNotification("success", "Photo", "Photo enregistrée avec succès");
+      setPerson(updated);
+      setPhotoKey((k) => k + 1);
+      setPhotoPadOpen(false);
+    } catch {
+      addNotification("error", "Erreur", "Impossible d'enregistrer la photo");
+      throw new Error("Failed to save photo");
     }
   }
 

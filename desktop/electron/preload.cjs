@@ -39,4 +39,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("signature-device-event", handler);
     return () => ipcRenderer.removeListener("signature-device-event", handler);
   },
+
+  // ─── Photo Capture (reuses same WebSocket server) ───
+  photoStartSession: () =>
+    ipcRenderer.invoke("signature:start-session"),
+
+  photoDestroySession: () =>
+    ipcRenderer.invoke("signature:destroy-session"),
+
+  onPhotoDeviceEvent: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("signature-device-event", handler);
+    return () => ipcRenderer.removeListener("signature-device-event", handler);
+  },
 });

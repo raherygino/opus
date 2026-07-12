@@ -52,6 +52,7 @@ $router->delete('/api/personnel/{id}',      [PersonnelController::class, 'destro
 // ========================
 $router->post('/api/personnel/{id}/photo',     [PersonnelController::class, 'uploadPhoto']);
 $router->get('/api/personnel/{id}/photo',      [PersonnelController::class, 'servePhoto']);
+$router->get('/api/personnel/{id}/thumbnail',  [PersonnelController::class, 'serveThumbnail']);
 
 // ========================
 // Personnel Signature Routes

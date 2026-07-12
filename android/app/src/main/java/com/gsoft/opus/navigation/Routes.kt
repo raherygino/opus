@@ -66,4 +66,8 @@ sealed class MainRoutes(val route: String) {
     // Signature pad
     data object SignaturePairing : MainRoutes("signature_pairing")
     data object SignaturePad : MainRoutes("signature_pad")
+
+    // Photo capture
+    data object PhotoPairing : MainRoutes("photo_pairing")
+    data object PhotoCapture : MainRoutes("photo_capture")
 }

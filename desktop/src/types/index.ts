@@ -63,6 +63,7 @@ export interface Personnel {
   phone: string | null;
   address: string | null;
   photo: string | null;
+  thumbnail: string | null;
   signature: string | null;
   signature_svg: string | null;
   status: string;

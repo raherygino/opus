@@ -247,7 +247,7 @@ class PersonnelController
 
     /**
      * POST /api/personnel/{id}/photo
-     * Multipart: photo (file)
+     * Multipart: photo (file), thumbnail (file, optional)
      */
     public function uploadPhoto(array $params): void
     {
@@ -282,6 +282,13 @@ class PersonnelController
                 unlink($oldPath);
             }
         }
+        // Delete old thumbnail if exists
+        if (!empty($person['thumbnail'])) {
+            $oldThumbPath = $uploadDir . '/' . $person['thumbnail'];
+            if (file_exists($oldThumbPath)) {
+                unlink($oldThumbPath);
+            }
+        }
 
         $storedName = 'photo_' . $id . '_' . uniqid() . '.' . $extension;
         $destPath = $uploadDir . '/' . $storedName;
@@ -290,7 +297,21 @@ class PersonnelController
             Response::error('Failed to save photo', 500);
         }
 
-        Personnel::update($id, ['photo' => $storedName]);
+        $updateData = ['photo' => $storedName];
+
+        // Handle optional thumbnail upload
+        if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
+            $thumbExt = strtolower(pathinfo($_FILES['thumbnail']['name'], PATHINFO_EXTENSION));
+            if (in_array($thumbExt, $allowedExtensions)) {
+                $thumbName = 'thumb_' . $id . '_' . uniqid() . '.' . $thumbExt;
+                $thumbDest = $uploadDir . '/' . $thumbName;
+                if (move_uploaded_file($_FILES['thumbnail']['tmp_name'], $thumbDest)) {
+                    $updateData['thumbnail'] = $thumbName;
+                }
+            }
+        }
+
+        Personnel::update($id, $updateData);
         $person = Personnel::getById($id);
 
         // --- Audit log ---
@@ -306,6 +327,41 @@ class PersonnelController
         ]);
 
         Response::success($person, 'Photo uploaded successfully');
+    }
+
+    /**
+     * GET /api/personnel/{id}/thumbnail
+     */
+    public function serveThumbnail(array $params): void
+    {
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person || empty($person['thumbnail'])) {
+            Response::notFound('Thumbnail not found');
+        }
+
+        $config = require __DIR__ . '/../../config/app.php';
+        $uploadDir = rtrim($config['upload_dir'], '/') . '/personnel/photos';
+        $filePath = $uploadDir . '/' . $person['thumbnail'];
+
+        if (!file_exists($filePath)) {
+            Response::notFound('Thumbnail not found');
+        }
+
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+        $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
+
+        header('Content-Type: ' . $mime);
+        header('Cache-Control: public, max-age=86400');
+        readfile($filePath);
+        exit;
     }
 
     /**
@@ -402,7 +458,8 @@ class PersonnelController
 
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($filePath));
-        header('Cache-Control: max-age=86400');
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Pragma: no-cache');
         readfile($filePath);
         exit;
     }

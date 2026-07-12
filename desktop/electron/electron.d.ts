@@ -21,7 +21,8 @@ export type SignatureDeviceEvent =
   | { type: "signature-complete"; strokes: { points: { x: number; y: number; timestamp: number; pressure: number }[] }[] }
   | { type: "signature-cancelled" }
   | { type: "signature-cleared" }
-  | { type: "signature-undone" };
+  | { type: "signature-undone" }
+  | { type: "photo-received"; photoData: string };
 
 export interface ElectronAPI {
   getAppVersion: () => Promise<string>;
@@ -40,6 +41,11 @@ export interface ElectronAPI {
   signatureGetSession: () => Promise<{ session: SignaturePadSession | null; device: ConnectedDevice | null }>;
   signatureSendToDevice: (message: Record<string, unknown>) => Promise<boolean>;
   onSignatureDeviceEvent: (callback: (event: SignatureDeviceEvent) => void) => () => void;
+
+  // Photo Capture (reuses same WebSocket server)
+  photoStartSession: () => Promise<{ success: boolean; session?: SignaturePadSession; error?: string }>;
+  photoDestroySession: () => Promise<{ success: boolean }>;
+  onPhotoDeviceEvent: (callback: (event: SignatureDeviceEvent) => void) => () => void;
 }
 
 declare global {

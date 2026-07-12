@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Draw
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -59,6 +60,7 @@ import com.gsoft.opus.presentation.profile.ProfileScreen
 import com.gsoft.opus.presentation.settings.SettingsScreen
 import com.gsoft.opus.presentation.signature.SignaturePairingScreen
 import com.gsoft.opus.presentation.signature.SignaturePadScreen
+import com.gsoft.opus.presentation.photo.PhotoCaptureScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.ContextMenuItem
 import com.gsoft.opus.ui.components.OpusBottomNavBar
@@ -322,6 +324,18 @@ fun MainScreen(onLogout: () -> Unit) {
             id = "signature_pairing",
             title = "Tablette de signature",
             icon = Icons.Outlined.Draw
+        ),
+
+        // ── Photo ──
+        ContextMenuItem(
+            id = "section_photo",
+            title = "Photo",
+            isSectionHeader = true
+        ),
+        ContextMenuItem(
+            id = "photo_pairing",
+            title = "Capture photo",
+            icon = Icons.Outlined.PhotoCamera
         )
     )
 
@@ -365,7 +379,8 @@ fun MainScreen(onLogout: () -> Unit) {
             "cartographie" to MainRoutes.Cartographie.route,
             "utilisateurs" to MainRoutes.Utilisateurs.route,
             "roles" to MainRoutes.Roles.route,
-            "signature_pairing" to MainRoutes.SignaturePairing.route
+            "signature_pairing" to MainRoutes.SignaturePairing.route,
+            "photo_pairing" to MainRoutes.PhotoPairing.route
         )
     }
 
@@ -522,6 +537,65 @@ fun MainScreen(onLogout: () -> Unit) {
                     }
 
                     SignaturePadScreen(
+                        qrPayload = qrPayload,
+                        pairingIp = ip,
+                        pairingPort = portStr?.toIntOrNull(),
+                        pairingCode = code,
+                        onNavigateBack = { navController.popBackStack() },
+                    )
+                }
+
+                // Photo capture pairing
+                composable(MainRoutes.PhotoPairing.route) {
+                    SignaturePairingScreen(
+                        screenTitle = "Couplage photo",
+                        onQrScanned = { payload: QrPayload ->
+                            val jsonStr = kotlinx.serialization.json.Json.encodeToString(QrPayload.serializer(), payload)
+                            navController.navigate("photo_capture?qrPayload=${java.net.URLEncoder.encode(jsonStr, "UTF-8")}")
+                        },
+                        onManualCodeSubmit = { ip, port, code ->
+                            navController.navigate("photo_capture?ip=$ip&port=$port&code=$code")
+                        },
+                        onNavigateBack = { navController.popBackStack() },
+                    )
+                }
+                composable(
+                    route = "photo_capture?qrPayload={qrPayload}&ip={ip}&port={port}&code={code}",
+                    arguments = listOf(
+                        androidx.navigation.navArgument("qrPayload") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        androidx.navigation.navArgument("ip") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        androidx.navigation.navArgument("port") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                        androidx.navigation.navArgument("code") {
+                            type = androidx.navigation.NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                    ),
+                ) { backStackEntry ->
+                    val qrPayloadStr = backStackEntry.arguments?.getString("qrPayload")
+                    val ip = backStackEntry.arguments?.getString("ip")
+                    val portStr = backStackEntry.arguments?.getString("port")
+                    val code = backStackEntry.arguments?.getString("code")
+
+                    val qrPayload = qrPayloadStr?.let {
+                        try {
+                            kotlinx.serialization.json.Json.decodeFromString(QrPayload.serializer(), java.net.URLDecoder.decode(it, "UTF-8"))
+                        } catch (e: Exception) { null }
+                    }
+
+                    PhotoCaptureScreen(
                         qrPayload = qrPayload,
                         pairingIp = ip,
                         pairingPort = portStr?.toIntOrNull(),

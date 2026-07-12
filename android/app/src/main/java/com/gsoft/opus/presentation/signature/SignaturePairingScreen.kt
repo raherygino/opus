@@ -63,6 +63,7 @@ fun SignaturePairingScreen(
     onQrScanned: (QrPayload) -> Unit,
     onManualCodeSubmit: (ip: String, port: Int, code: String) -> Unit,
     onNavigateBack: () -> Unit,
+    screenTitle: String = "Couplage signature",
 ) {
     val context = LocalContext.current
     var hasCameraPermission by remember {
@@ -89,7 +90,7 @@ fun SignaturePairingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Couplage signature") },
+                title = { Text(screenTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Retour")

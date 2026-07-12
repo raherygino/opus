@@ -39,7 +39,8 @@ type DeviceEvent =
   | { type: "signature-complete"; strokes: Stroke[] }
   | { type: "signature-cancelled" }
   | { type: "signature-cleared" }
-  | { type: "signature-undone" };
+  | { type: "signature-undone" }
+  | { type: "photo-received"; photoData: string };
 
 type DeviceEventListener = (event: DeviceEvent) => void;
 
@@ -361,6 +362,14 @@ export class SignaturePadServer {
 
         case "CANCEL_SIGNATURE":
           this.emit({ type: "signature-cancelled" });
+          break;
+
+        case "PHOTO_DATA":
+          this.emit({ type: "photo-received", photoData: msg.photoData as string });
+          // Send confirmation back to device
+          if (this.client && this.client.readyState === WebSocket.OPEN) {
+            this.client.send(JSON.stringify({ type: "PHOTO_RECEIVED", message: "Photo received successfully" }));
+          }
           break;
 
         case "DISCONNECT":

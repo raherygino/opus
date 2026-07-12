@@ -44,6 +44,12 @@ sealed class IncomingMessage {
     ) : IncomingMessage()
 
     @Serializable
+    @SerialName("PHOTO_RECEIVED")
+    data class PhotoReceived(
+        val message: String? = null,
+    ) : IncomingMessage()
+
+    @Serializable
     @SerialName("DISCONNECT")
     data object Disconnect : IncomingMessage()
 }
@@ -107,6 +113,12 @@ sealed class OutgoingMessage {
     @Serializable
     @SerialName("CANCEL_SIGNATURE")
     data object CancelSignature : OutgoingMessage()
+
+    @Serializable
+    @SerialName("PHOTO_DATA")
+    data class PhotoData(
+        val photoData: String,
+    ) : OutgoingMessage()
 
     @Serializable
     @SerialName("DISCONNECT")

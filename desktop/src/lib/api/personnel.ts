@@ -118,9 +118,13 @@ export function getAttachmentDownloadUrl(
 export async function uploadPersonnelPhoto(
   personnelId: number,
   photo: File,
+  thumbnail?: File,
 ): Promise<Personnel> {
   const formData = new FormData();
   formData.append("photo", photo);
+  if (thumbnail) {
+    formData.append("thumbnail", thumbnail);
+  }
   const { data } = await apiClient.post<ApiResponse<Personnel>>(
     `/personnel/${personnelId}/photo`,
     formData,
@@ -129,9 +133,60 @@ export async function uploadPersonnelPhoto(
   return data.data;
 }
 
+export async function generateThumbnail(
+  file: File,
+  maxSize: number = 200,
+): Promise<File> {
+  const img = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  let w = img.width;
+  let h = img.height;
+  if (w > h) {
+    if (w > maxSize) { h = (h / w) * maxSize; w = maxSize; }
+  } else {
+    if (h > maxSize) { w = (w / h) * maxSize; h = maxSize; }
+  }
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, w, h);
+  img.close();
+  const blob = await new Promise<Blob>((resolve) =>
+    canvas.toBlob((b) => resolve(b!), "image/jpeg", 70),
+  );
+  return new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
+}
+
+export async function cropFileToSquare(
+  file: File,
+  offsetX: number = 0.5,
+  offsetY: number = 0.5,
+  quality: number = 90,
+): Promise<File> {
+  const img = await createImageBitmap(file);
+  const side = Math.min(img.width, img.height);
+  const sx = Math.round(offsetX * (img.width - side));
+  const sy = Math.round(offsetY * (img.height - side));
+  const canvas = document.createElement("canvas");
+  canvas.width = side;
+  canvas.height = side;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, side, side);
+  img.close();
+  const blob = await new Promise<Blob>((resolve) =>
+    canvas.toBlob((b) => resolve(b!), "image/jpeg", quality),
+  );
+  return new File([blob], "photo.jpg", { type: "image/jpeg" });
+}
+
 export function getPersonnelPhotoUrl(personnelId: number): string {
   const baseUrl = import.meta.env.VITE_API_URL || "/api";
   return `${baseUrl}/personnel/${personnelId}/photo`;
+}
+
+export function getPersonnelThumbnailUrl(personnelId: number): string {
+  const baseUrl = import.meta.env.VITE_API_URL || "/api";
+  return `${baseUrl}/personnel/${personnelId}/thumbnail`;
 }
 
 // ========================
