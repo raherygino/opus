@@ -60,7 +60,58 @@ mysql -u root -p < database/001_create_roles.sql
 mysql -u root -p < database/002_create_personnel.sql
 mysql -u root -p < database/003_create_users.sql
 mysql -u root -p < database/004_seed_data.sql
+# ... run remaining migrations in order ...
+mysql -u root -p < database/013_create_device_tokens.sql   # FCM push notifications
 ```
+
+### Firebase Cloud Messaging (Push Notifications)
+
+The Android app uses **Firebase Cloud Messaging (FCM)** to receive push
+notifications. When a notification is created via the API, the backend sends an
+FCM push to all relevant Android devices. Setup requires both a Firebase project
+and a service account key.
+
+#### 1. Create a Firebase project
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/) and create
+   a new project (e.g. `opus`).
+2. Add an **Android app** with package name `com.gsoft.opus`.
+3. Download `google-services.json` and place it at
+   `android/app/google-services.json` (gitignored — never commit it).
+   - A template is provided at `android/app/google-services.json.example`.
+
+#### 2. Generate a service account key (for the PHP backend)
+
+1. In Firebase Console: **Project Settings → Service Accounts → Generate New Private Key**.
+2. Save the JSON file at `api/config/firebase-service-account.json`
+   (gitignored — contains private keys).
+3. The backend reads this file automatically (`api/config/app.php` → `fcm`).
+
+To disable FCM (e.g. for local dev without Firebase), set the env var:
+
+```bash
+FCM_ENABLED=false
+```
+
+#### 3. Run the device tokens migration
+
+```bash
+mysql -u root -p < database/013_create_device_tokens.sql
+```
+
+#### 4. Build & run
+
+The Android app registers its FCM token with the backend on startup (and after
+login). When the API creates a notification (`POST /api/notifications`), it
+automatically pushes it to the relevant devices via FCM HTTP v1 API.
+
+#### FCM endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/devices/register` | Yes | Register an FCM device token |
+| POST | `/api/devices/unregister` | Yes | Deactivate a single device token |
+| DELETE | `/api/devices` | Yes | Deactivate all tokens for the current user (logout) |
 
 ## Development
 
@@ -68,7 +119,7 @@ mysql -u root -p < database/004_seed_data.sql
 
 ```bash
 # Start the PHP development server
-php -S 192.168.1.168:8080 -t api/public
+php -S 192.168.1.190:8080 -t api/public
 ```
 
 The API runs at `http://localhost:8080/api` and provides endpoints for auth, personnel, and user management.
@@ -119,7 +170,7 @@ npm run format       # Prettier formatting
 Start the API server first:
 
 ```bash
-php -S 192.168.1.168:8080 -t api/public
+php -S 192.168.1.190:8080 -t api/public
 ```
 
 All requests return JSON. Use any HTTP client (Postman, Insomnia, cURL, etc.).
@@ -128,27 +179,27 @@ All requests return JSON. Use any HTTP client (Postman, Insomnia, cURL, etc.).
 
 ```bash
 # Health check
-curl http://192.168.1.168:8080/api/health
+curl http://192.168.1.190:8080/api/health
 
 # Login (returns a JWT token)
-curl -X POST http://192.168.1.168:8080/api/auth/login \
+curl -X POST http://192.168.1.190:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"yourpassword"}'
 
 # Authenticated requests (replace TOKEN with the JWT from login)
-curl http://192.168.1.168:8080/api/auth/me \
+curl http://192.168.1.190:8080/api/auth/me \
   -H "Authorization: Bearer TOKEN"
 
-curl http://192.168.1.168:8080/api/personnel \
+curl http://192.168.1.190:8080/api/personnel \
   -H "Authorization: Bearer TOKEN"
 
-curl http://192.168.1.168:8080/api/users \
+curl http://192.168.1.190:8080/api/users \
   -H "Authorization: Bearer TOKEN"
 ```
 
 ### Postman / Insomnia
 
-1. Create a new request to `http://192.168.1.168:8080/api/health` to verify the server is running
+1. Create a new request to `http://192.168.1.190:8080/api/health` to verify the server is running
 2. **Login**: `POST /api/auth/login` with JSON body `{"username":"admin","password":"yourpassword"}` → copy the returned `token`
 3. Set an `Authorization: Bearer <token>` header on subsequent requests
 4. Test authenticated endpoints (see table below)
@@ -171,6 +222,14 @@ curl http://192.168.1.168:8080/api/users \
 | POST | `/api/users` | Yes | Create user |
 | PUT | `/api/users/{id}` | Yes | Update user |
 | DELETE | `/api/users/{id}` | Yes | Delete user |
+| GET | `/api/notifications` | Yes | List notifications |
+| GET | `/api/notifications/unread-count` | Yes | Unread notification count |
+| POST | `/api/notifications` | Yes | Create notification (triggers FCM push) |
+| PUT | `/api/notifications/{id}/read` | Yes | Mark notification as read |
+| PUT | `/api/notifications/read-all` | Yes | Mark all as read |
+| POST | `/api/devices/register` | Yes | Register FCM device token |
+| POST | `/api/devices/unregister` | Yes | Unregister a device token |
+| DELETE | `/api/devices` | Yes | Unregister all devices (logout) |
 
 ## License
 

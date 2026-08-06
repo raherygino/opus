@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -73,6 +74,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
@@ -91,6 +93,10 @@ dependencies {
 
     // Coil (Image Loading)
     implementation(libs.coil.compose)
+
+    // Firebase Cloud Messaging (Push Notifications)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     // Testing
     testImplementation(libs.junit)

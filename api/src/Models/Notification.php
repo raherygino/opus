@@ -109,12 +109,56 @@ class Notification
             $data['title'],
             $data['message'] ?? null,
             $data['type'] ?? 'info',
-            $data['service'],
+            $data['service'] ?? 'System',
             $data['user_id'] ?? null,
             $data['personnel_id'] ?? null,
             $data['created_by'] ?? null,
         ]);
-        return (int) $db->lastInsertId();
+        $id = (int) $db->lastInsertId();
+
+        // --- Send FCM push notification ---
+        // Centralized here so that EVERY notification creation — regardless of
+        // which controller triggered it — automatically delivers a push to the
+        // relevant Android device(s).
+        self::sendPush($id, $data);
+
+        return $id;
+    }
+
+    /**
+     * Send an FCM push notification for a newly created notification record.
+     *
+     * Delivery logic:
+     *  - If user_id is set → push to that specific user.
+     *  - If user_id is NULL (broadcast) → push to all admin users.
+     *
+     * This is wrapped in try/catch so that FCM failures (network errors, missing
+     * service account config, etc.) never prevent the notification record from
+     * being created or the API response from being returned.
+     */
+    private static function sendPush(int $id, array $data): void
+    {
+        try {
+            $payload = [
+                'title' => $data['title'] ?? 'OPUS',
+                'body'  => $data['message'] ?? '',
+                'data'  => [
+                    'notification_id' => (string) $id,
+                    'type'            => (string) ($data['type'] ?? 'info'),
+                    'service'         => (string) ($data['service'] ?? ''),
+                    'click_action'    => 'OPEN_NOTIFICATIONS',
+                ],
+            ];
+
+            if (!empty($data['user_id'])) {
+                \App\Helpers\FcmSender::sendToUser((int) $data['user_id'], $payload);
+            } else {
+                \App\Helpers\FcmSender::sendToAdmins($payload);
+            }
+        } catch (\Throwable $e) {
+            // Log but never throw — push delivery is best-effort.
+            error_log('[Notification::sendPush] Failed: ' . $e->getMessage());
+        }
     }
 
     public static function markAsRead(int $id): bool

@@ -15,4 +15,4 @@ INSERT INTO `personnel` (`im`, `grade`, `lastname`, `firstname`, `affectation`, 
 -- Seed: Super Admin User (password = "admin123")
 -- ============================================
 INSERT INTO `users` (`personnel_id`, `username`, `password_hash`, `role_id`, `is_active`) VALUES
-(1, 'admin', '$2y$12$s/ragHrU9Vf4gP1CzxXvvODFx5c60eFDCGXI2k8LZEKxQ.8hs1WDm', (SELECT id FROM `roles` WHERE `code` = 'SUPER_ADMIN'), 1);
+(1, 'admin', '$2y$12$Jamh6zvN2HnD5NqhWAKRveeuWyJ3ahZlXxxVTU.Yu4tw2E.yZfeqC', (SELECT id FROM `roles` WHERE `code` = 'SUPER_ADMIN'), 1);

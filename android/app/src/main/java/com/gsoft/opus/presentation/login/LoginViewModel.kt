@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.usecase.LoginUseCase
+import com.gsoft.opus.notifications.FcmTokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,8 @@ data class LoginUiState(
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val fcmTokenManager: FcmTokenManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginUiState())
@@ -84,6 +86,8 @@ class LoginViewModel @Inject constructor(
             val result = loginUseCase(current.username, current.password, current.rememberMe)
             when (result) {
                 is Resource.Success -> {
+                    // Register the FCM token with the backend now that the user is logged in.
+                    fcmTokenManager.fetchAndRegisterToken()
                     _state.update { it.copy(isLoading = false, isLoginSuccess = true) }
                 }
                 is Resource.Error -> {

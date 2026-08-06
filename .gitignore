@@ -1,2 +1,6 @@
 /api/uploads
 desktop/.env
+
+# Firebase — contains private keys, must never be committed
+api/config/firebase-service-account.json
+android/app/google-services.json

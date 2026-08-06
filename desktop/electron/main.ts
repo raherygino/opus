@@ -31,12 +31,12 @@ function createWindow() {
 
   // Set CSP & CORS headers so the renderer can reach the local API
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-    const isApi = details.url.startsWith("http://192.168.1.163:8080");
+    const isApi = details.url.startsWith("http://192.168.1.190:8080");
     callback({
       responseHeaders: {
         ...details.responseHeaders,
         "Content-Security-Policy": [
-          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://api.mapbox.com; img-src 'self' data: blob: http://127.0.0.1:8080 http://192.168.1.163:8080 https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' http://127.0.0.1:8080 http://192.168.1.163:8080 ws://*:9876 https://nominatim.openstreetmap.org https://api.mapbox.com https://events.mapbox.com; worker-src 'self' blob:;",
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://api.mapbox.com; img-src 'self' data: blob: http://127.0.0.1:8080 http://192.168.1.190:8080 https://api.mapbox.com https://*.tiles.mapbox.com; connect-src 'self' http://127.0.0.1:8080 http://192.168.1.190:8080 ws://*:9876 https://nominatim.openstreetmap.org https://api.mapbox.com https://events.mapbox.com; worker-src 'self' blob:;",
         ],
         ...(isApi && {
           "Access-Control-Allow-Origin": ["*"],

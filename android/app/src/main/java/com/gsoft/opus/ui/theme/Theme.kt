@@ -10,13 +10,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 import com.gsoft.opus.domain.model.ColorPalette
 import com.gsoft.opus.domain.model.ThemeMode
@@ -66,11 +69,23 @@ fun OpusTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = animatedColorScheme,
-        typography = Typography,
-        content = content
+    // Lock the font scale to 1.0 so the app always renders text at the exact sp
+    // sizes defined in the design, ignoring the system's Accessibility font size
+    // and display size settings. The device pixel density is preserved so dp
+    // values (and therefore layouts) are unaffected.
+    val currentDensity = LocalDensity.current
+    val fixedFontScaleDensity = Density(
+        density = currentDensity.density,
+        fontScale = 1.0f
     )
+
+    CompositionLocalProvider(LocalDensity provides fixedFontScaleDensity) {
+        MaterialTheme(
+            colorScheme = animatedColorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 @Composable

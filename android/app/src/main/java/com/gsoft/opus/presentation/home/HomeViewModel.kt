@@ -19,7 +19,9 @@ data class HomeUiState(
     val personnelId: Int? = null,
     val photo: String? = null,
     val roleName: String? = null,
+    val roleCode: String? = null,
     val grade: String? = null,
+    val affectation: String? = null,
     val isLoading: Boolean = false
 )
 
@@ -48,7 +50,9 @@ class HomeViewModel @Inject constructor(
                     personnelId = user?.personnelId,
                     photo = user?.photo,
                     roleName = user?.roleName,
+                    roleCode = user?.roleCode,
                     grade = user?.grade,
+                    affectation = user?.affectation,
                     isLoading = false
                 )
             }

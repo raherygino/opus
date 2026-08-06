@@ -1,8 +1,10 @@
 package com.gsoft.opus.di
 
 import com.gsoft.opus.data.repository.AuthRepositoryImpl
+import com.gsoft.opus.data.repository.DeviceTokenRepositoryImpl
 import com.gsoft.opus.data.repository.SettingsRepositoryImpl
 import com.gsoft.opus.domain.repository.AuthRepository
+import com.gsoft.opus.domain.repository.DeviceTokenRepository
 import com.gsoft.opus.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDeviceTokenRepository(impl: DeviceTokenRepositoryImpl): DeviceTokenRepository
 }

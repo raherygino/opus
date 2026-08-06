@@ -9,6 +9,7 @@ import com.gsoft.opus.data.local.UserPreferences
 import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.domain.repository.AuthRepository
+import com.gsoft.opus.domain.repository.DeviceTokenRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import retrofit2.HttpException
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val deviceTokenRepository: DeviceTokenRepository
 ) : AuthRepository {
 
     override suspend fun login(username: String, password: String, rememberMe: Boolean): Resource<AuthResult> {
@@ -112,6 +114,9 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
+        // Unregister all device tokens for this user before clearing local auth,
+        // so the backend stops sending push notifications to this device.
+        runCatching { deviceTokenRepository.unregisterAll() }
         userPreferences.clear()
     }
 

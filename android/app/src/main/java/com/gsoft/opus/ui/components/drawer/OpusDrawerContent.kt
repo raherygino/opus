@@ -48,6 +48,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -113,7 +115,7 @@ fun OpusDrawerContent(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 0.dp)
     ) {
         DrawerHeader(
             username = username,
@@ -124,9 +126,25 @@ fun OpusDrawerContent(
             role = role
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF4CAF50), Color.White, Color(0xFFF44336))
+                    )
+                )
+        )
+
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        )
+
         LazyColumn(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
                 StaggeredEntry(index = index, progress = progress) {
@@ -234,20 +252,10 @@ private fun DrawerHeader(
     // leaving an empty circle when the request errors (e.g. offline / 404).
     var photoLoadFailed by remember(fullPhotoUrl) { mutableStateOf(false) }
 
-    OutlinedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant
-        )
-    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (fullPhotoUrl != null && !photoLoadFailed) {
@@ -277,7 +285,7 @@ private fun DrawerHeader(
                 }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -299,7 +307,6 @@ private fun DrawerHeader(
                 }
             }
         }
-    }
 }
 
 @Composable

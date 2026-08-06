@@ -122,6 +122,7 @@ class NotificationController
 
         $data['created_by'] = $authUser['sub'];
 
+        // Notification::create() now sends the FCM push automatically.
         $id = Notification::create($data);
         $notif = Notification::getById($id);
 

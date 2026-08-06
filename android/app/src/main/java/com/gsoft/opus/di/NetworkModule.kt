@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder
 import com.gsoft.opus.core.Constants
 import com.gsoft.opus.data.api.ApiService
 import com.gsoft.opus.data.api.AuthInterceptor
+import com.gsoft.opus.data.api.TokenAuthenticator
 import com.gsoft.opus.data.local.UserPreferences
 import dagger.Module
 import dagger.Provides
@@ -45,12 +46,20 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideTokenAuthenticator(userPreferences: UserPreferences): TokenAuthenticator {
+        return TokenAuthenticator(userPreferences)
+    }
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .authenticator(tokenAuthenticator)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(Constants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(Constants.READ_TIMEOUT, TimeUnit.SECONDS)

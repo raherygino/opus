@@ -1,0 +1,30 @@
+{
+  "_comment": "This is a TEMPLATE. Download your real google-services.json from Firebase Console (Project Settings > General > Your apps > Android app). Replace this file with the real one and rename it to 'google-services.json'. The package_name must match 'com.gsoft.opus'.",
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "opus-xxxxx",
+    "storage_bucket": "opus-xxxxx.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.gsoft.opus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

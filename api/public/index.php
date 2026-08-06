@@ -20,6 +20,7 @@ use App\Controllers\PersonnelAttachmentController;
 use App\Controllers\RoleController;
 use App\Controllers\UserController;
 use App\Controllers\NotificationController;
+use App\Controllers\DeviceTokenController;
 use App\Controllers\AuditLogController;
 
 // --- CORS ---
@@ -130,6 +131,15 @@ $router->post('/api/notifications',                [NotificationController::clas
 $router->put('/api/notifications/{id}/read',       [NotificationController::class, 'markAsRead']);
 $router->put('/api/notifications/read-all',        [NotificationController::class, 'markAllAsRead']);
 $router->delete('/api/notifications/{id}',         [NotificationController::class, 'destroy']);
+
+// ========================
+// Device Token Routes (FCM Push Notifications)
+// ========================
+$router->get('/api/devices',               [DeviceTokenController::class, 'index']);
+$router->post('/api/devices/register',     [DeviceTokenController::class, 'register']);
+$router->post('/api/devices/unregister',   [DeviceTokenController::class, 'unregister']);
+$router->delete('/api/devices',            [DeviceTokenController::class, 'unregisterAll']);
+$router->post('/api/devices/test-push',    [DeviceTokenController::class, 'testPush']);
 
 // ========================
 // Audit Log Routes (SUPER_ADMIN only)
