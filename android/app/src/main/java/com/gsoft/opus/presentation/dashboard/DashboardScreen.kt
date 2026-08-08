@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,21 +34,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.gsoft.opus.R
 import com.gsoft.opus.presentation.home.HomeViewModel
 
 @Composable
@@ -59,106 +53,26 @@ fun DashboardScreen(onLogout: () -> Unit) {
 
     val isCommand = state.roleCode in listOf("SUPER_ADMIN", "CHIEF", "STATION_ADMIN")
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            AnimatedVisibility(
-                visible = !state.isLoading,
-                enter = fadeIn(tween(500)),
-                exit = fadeOut(tween(200))
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    HeaderCard(state.firstName, state.lastName, state.roleName, state.grade)
-
-                    QuickStats()
-
-                    if (isCommand) {
-                        QuickLinks()
-                    }
-
-                    AccountInfo(state)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HeaderCard(firstName: String?, lastName: String?, roleName: String?, grade: String?) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF4CAF50), Color.White, Color(0xFFF44336))
-                        )
-                    )
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.logo_pn),
-                    contentDescription = "PN",
-                    modifier = Modifier.size(64.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Tableau de bord",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Bienvenue, ${firstName ?: ""} ${lastName ?: ""}",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Outlined.Shield,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${roleName ?: ""} — ${grade ?: ""}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+        AnimatedVisibility(
+            visible = !state.isLoading,
+            enter = fadeIn(tween(500)),
+            exit = fadeOut(tween(200))
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                QuickStats()
+
+                if (isCommand) {
+                    QuickLinks()
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Image(
-                    painter = painterResource(R.drawable.logo_csp),
-                    contentDescription = "CSP",
-                    modifier = Modifier.size(64.dp)
-                )
+
+                AccountInfo(state)
             }
         }
     }

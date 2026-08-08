@@ -36,7 +36,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SettingsBrightness
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,74 +63,43 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            SettingsHeader()
-
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.96f),
-                exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.96f)
-            ) {
-                ThemeModeSection(
-                    selectedMode = state.themeMode,
-                    onModeSelected = viewModel::setThemeMode
-                )
-            }
-
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(tween(400, delayMillis = 100)) + scaleIn(tween(400), initialScale = 0.96f),
-                exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.96f)
-            ) {
-                ColorPaletteSection(
-                    selectedPalette = state.colorPalette,
-                    onPaletteSelected = viewModel::setColorPalette
-                )
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-        }
-    }
-}
-
-@Composable
-private fun SettingsHeader() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(14.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(24.dp)
-            )
-        }
         Text(
             text = "Paramètres",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
         )
+
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.96f),
+            exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.96f)
+        ) {
+            ThemeModeSection(
+                selectedMode = state.themeMode,
+                onModeSelected = viewModel::setThemeMode
+            )
+        }
+
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(400, delayMillis = 100)) + scaleIn(tween(400), initialScale = 0.96f),
+            exit = fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.96f)
+        ) {
+            ColorPaletteSection(
+                selectedPalette = state.colorPalette,
+                onPaletteSelected = viewModel::setColorPalette
+            )
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 

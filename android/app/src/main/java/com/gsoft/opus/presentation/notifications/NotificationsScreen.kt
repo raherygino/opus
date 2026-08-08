@@ -41,7 +41,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -131,52 +130,89 @@ fun NotificationsScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            NotificationsHeader(
-                state = state,
-                onRefresh = { viewModel.refresh() },
-                onMarkAllAsRead = viewModel::markAllAsRead
-            )
-
-            state.errorMessage?.let {
-                ErrorMessage(message = it, modifier = Modifier.padding(top = 8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.nav_notifications),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(
+                        if (state.isAdmin) R.string.notifications_subtitle_admin
+                        else R.string.notifications_subtitle_user
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            FilterRow(
-                state = state,
-                onFilterSelected = viewModel::setFilter,
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
+            IconButton(onClick = { viewModel.refresh() }, enabled = !state.isLoading && !state.isRefreshing) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = stringResource(R.string.notifications_refresh),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-            when {
-                state.isLoading -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            if (state.unreadCount > 0) {
+                TextButton(onClick = viewModel::markAllAsRead, enabled = !state.isMarkingAll) {
+                    Icon(
+                        imageVector = Icons.Outlined.DoneAll,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.notifications_mark_all_read),
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
+            }
+        }
 
-                state.filtered.isEmpty() -> EmptyState(filter = state.activeFilter)
+        state.errorMessage?.let {
+            ErrorMessage(message = it, modifier = Modifier.padding(top = 8.dp))
+        }
 
-                else -> LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(state.filtered, key = { it.id }) { notification ->
-                        NotificationCard(
-                            notification = notification,
-                            onMarkAsRead = { viewModel.markAsRead(notification.id) },
-                            onDelete = { viewModel.requestDelete(notification) }
-                        )
-                    }
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
+        FilterRow(
+            state = state,
+            onFilterSelected = viewModel::setFilter,
+            modifier = Modifier.padding(vertical = 12.dp)
+        )
+
+        when {
+            state.isLoading -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+
+            state.filtered.isEmpty() -> EmptyState(filter = state.activeFilter)
+
+            else -> LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(state.filtered, key = { it.id }) { notification ->
+                    NotificationCard(
+                        notification = notification,
+                        onMarkAsRead = { viewModel.markAsRead(notification.id) },
+                        onDelete = { viewModel.requestDelete(notification) }
+                    )
                 }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
             }
         }
     }
@@ -191,75 +227,6 @@ fun NotificationsScreen(
         cancelText = stringResource(R.string.logout_cancel),
         onCancel = viewModel::cancelDelete
     )
-}
-
-@Composable
-private fun NotificationsHeader(
-    state: NotificationsUiState,
-    onRefresh: () -> Unit,
-    onMarkAllAsRead: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.NotificationsActive,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.nav_notifications),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = stringResource(
-                    if (state.isAdmin) R.string.notifications_subtitle_admin
-                    else R.string.notifications_subtitle_user
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        IconButton(onClick = onRefresh, enabled = !state.isLoading && !state.isRefreshing) {
-            Icon(
-                imageVector = Icons.Outlined.Refresh,
-                contentDescription = stringResource(R.string.notifications_refresh),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        if (state.unreadCount > 0) {
-            TextButton(onClick = onMarkAllAsRead, enabled = !state.isMarkingAll) {
-                Icon(
-                    imageVector = Icons.Outlined.DoneAll,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.notifications_mark_all_read),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-        }
-    }
 }
 
 @Composable

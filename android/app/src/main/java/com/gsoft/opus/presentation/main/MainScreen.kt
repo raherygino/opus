@@ -70,11 +70,14 @@ import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
 import com.gsoft.opus.presentation.personnel.MouvementFormScreen
 import com.gsoft.opus.data.signature.QrPayload
+import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
-import com.gsoft.opus.ui.components.OpusBottomNavBar
+import com.gsoft.opus.ui.components.MainScaffold
+import com.gsoft.opus.ui.components.TabItem
 import com.gsoft.opus.ui.components.drawer.OpusAnimatedDrawer
 import com.gsoft.opus.ui.components.drawer.OpusDrawerContent
 import com.gsoft.opus.ui.components.drawer.rememberOpusDrawerState
+import com.gsoft.opus.core.Constants
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -438,6 +441,30 @@ fun MainScreen(
 
     val bottomNavSelectedRoute = if (currentRoute in bottomNavRoutes) currentRoute else null
 
+    // Build tab items from drawer items that have routes
+    val tabItems = remember(drawerItems, drawerRouteMap) {
+        drawerItems.flatMap { item ->
+            when {
+                item.isSectionHeader -> emptyList()
+                item.children != null -> item.children.mapNotNull { child ->
+                    drawerRouteMap[child.id]?.let { route ->
+                        TabItem(id = child.id, title = child.title, icon = child.icon, route = route)
+                    }
+                }
+                else -> drawerRouteMap[item.id]?.let { route ->
+                    listOf(TabItem(id = item.id, title = item.title, icon = item.icon, route = route))
+                } ?: emptyList()
+            }
+        }
+    }
+
+    // Profile photo URL
+    val profilePhotoUrl = homeState.personnelId?.let { id ->
+        val baseUrl = Constants.BASE_URL.trimEnd('/')
+        val photo = homeState.photo
+        if (photo != null) "$baseUrl/api/personnel/$id/photo?v=$photo" else null
+    }
+
     OpusAnimatedDrawer(
         state = drawerState,
         drawerContent = { progress ->
@@ -474,17 +501,11 @@ fun MainScreen(
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
-                OpusBottomNavBar(
+                AppBottomNavigation(
                     items = BottomNavItem.items,
                     selectedRoute = bottomNavSelectedRoute,
                     onItemSelected = { item ->
                         navController.navigateToTab(item.route)
-                    },
-                    fabExpanded = drawerState.isOpen,
-                    onFabClick = {
-                        scope.launch {
-                            if (drawerState.isOpen) drawerState.close() else drawerState.open()
-                        }
                     },
                     notificationBadgeCount = notificationsUiState.unreadCount,
                     modifier = Modifier.navigationBarsPadding()
@@ -510,14 +531,38 @@ fun MainScreen(
                     fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 0.96f)
                 }
             ) {
-                composable(MainRoutes.Dashboard.route) { DashboardScreen(onLogout = onLogout) }
-                composable(MainRoutes.Notifications.route) { NotificationsScreen() }
-                composable(MainRoutes.Settings.route) { SettingsScreen() }
-                composable(MainRoutes.Profile.route) { ProfileScreen() }
+                composable(MainRoutes.Dashboard.route) {
+                    MainScaffold(
+                        photoUrl = profilePhotoUrl,
+                        onProfileClick = {
+                            scope.launch { drawerState.open() }
+                        },
+                        tabs = tabItems,
+                        selectedRoute = currentRoute,
+                        onTabSelected = { tab ->
+                            navController.navigateToDrawerItem(tab.route)
+                        }
+                    ) {
+                        DashboardScreen(onLogout = onLogout)
+                    }
+                }
+                composable(MainRoutes.Notifications.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }) { NotificationsScreen() }
+                }
+                composable(MainRoutes.Settings.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }) { SettingsScreen() }
+                }
+                composable(MainRoutes.Profile.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }) { ProfileScreen() }
+                }
 
                 // Sédentaire – Secrétariat
-                composable(MainRoutes.SedDashboard.route) { ContextMenuItemScreens.SedDashboard() }
-                composable(MainRoutes.Correspondance.route) { ContextMenuItemScreens.Correspondance() }
+                composable(MainRoutes.SedDashboard.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.SedDashboard() }
+                }
+                composable(MainRoutes.Correspondance.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Correspondance() }
+                }
                 composable(MainRoutes.GestionPersonnel.route) {
                     PersonnelScreen(
                         onPersonnelClick = { id ->
@@ -574,49 +619,119 @@ fun MainScreen(
                         onBack = { navController.popBackStack() }
                     )
                 }
-                composable(MainRoutes.DeclarationPerte.route) { ContextMenuItemScreens.DeclarationPerte() }
-                composable(MainRoutes.Rapport.route) { ContextMenuItemScreens.Rapport() }
-                composable(MainRoutes.MainCouranteSec.route) { ContextMenuItemScreens.MainCouranteSec() }
+                composable(MainRoutes.DeclarationPerte.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.DeclarationPerte() }
+                }
+                composable(MainRoutes.Rapport.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Rapport() }
+                }
+                composable(MainRoutes.MainCouranteSec.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.MainCouranteSec() }
+                }
 
                 // Sédentaire – Poste
-                composable(MainRoutes.Passation.route) { ContextMenuItemScreens.Passation() }
-                composable(MainRoutes.Armement.route) { ContextMenuItemScreens.Armement() }
-                composable(MainRoutes.Materiels.route) { ContextMenuItemScreens.Materiels() }
-                composable(MainRoutes.SituationGav.route) { ContextMenuItemScreens.SituationGav() }
-                composable(MainRoutes.MainCourantePoste.route) { ContextMenuItemScreens.MainCourantePoste() }
-                composable(MainRoutes.RenseignementSed.route) { ContextMenuItemScreens.RenseignementSed() }
+                composable(MainRoutes.Passation.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Passation() }
+                }
+                composable(MainRoutes.Armement.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Armement() }
+                }
+                composable(MainRoutes.Materiels.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Materiels() }
+                }
+                composable(MainRoutes.SituationGav.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.SituationGav() }
+                }
+                composable(MainRoutes.MainCourantePoste.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.MainCourantePoste() }
+                }
+                composable(MainRoutes.RenseignementSed.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.RenseignementSed() }
+                }
 
                 // Division Service Général
-                composable(MainRoutes.SgDashboard.route) { ContextMenuItemScreens.SgDashboard() }
-                composable(MainRoutes.Spa.route) { ContextMenuItemScreens.Spa() }
-                composable(MainRoutes.InfoRassemblement.route) { ContextMenuItemScreens.InfoRassemblement() }
-                composable(MainRoutes.Repartition.route) { ContextMenuItemScreens.Repartition() }
-                composable(MainRoutes.Patrouille.route) { ContextMenuItemScreens.Patrouille() }
-                composable(MainRoutes.Intervention.route) { ContextMenuItemScreens.Intervention() }
-                composable(MainRoutes.DispositifExceptionnel.route) { ContextMenuItemScreens.DispositifExceptionnel() }
-                composable(MainRoutes.InstructionAutorite.route) { ContextMenuItemScreens.InstructionAutorite() }
-                composable(MainRoutes.CompteRendu.route) { ContextMenuItemScreens.CompteRendu() }
-                composable(MainRoutes.RechercheSg.route) { ContextMenuItemScreens.RechercheSg() }
-                composable(MainRoutes.RenseignementSg.route) { ContextMenuItemScreens.RenseignementSg() }
+                composable(MainRoutes.SgDashboard.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.SgDashboard() }
+                }
+                composable(MainRoutes.Spa.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Spa() }
+                }
+                composable(MainRoutes.InfoRassemblement.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.InfoRassemblement() }
+                }
+                composable(MainRoutes.Repartition.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Repartition() }
+                }
+                composable(MainRoutes.Patrouille.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Patrouille() }
+                }
+                composable(MainRoutes.Intervention.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Intervention() }
+                }
+                composable(MainRoutes.DispositifExceptionnel.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.DispositifExceptionnel() }
+                }
+                composable(MainRoutes.InstructionAutorite.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.InstructionAutorite() }
+                }
+                composable(MainRoutes.CompteRendu.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.CompteRendu() }
+                }
+                composable(MainRoutes.RechercheSg.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.RechercheSg() }
+                }
+                composable(MainRoutes.RenseignementSg.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.RenseignementSg() }
+                }
 
                 // Division Police Judiciaire
-                composable(MainRoutes.PjDashboard.route) { ContextMenuItemScreens.PjDashboard() }
-                composable(MainRoutes.Plainte.route) { ContextMenuItemScreens.Plainte() }
-                composable(MainRoutes.RegistreEnquete.route) { ContextMenuItemScreens.RegistreEnquete() }
-                composable(MainRoutes.Mandat.route) { ContextMenuItemScreens.Mandat() }
-                composable(MainRoutes.Convocation.route) { ContextMenuItemScreens.Convocation() }
-                composable(MainRoutes.Arrestation.route) { ContextMenuItemScreens.Arrestation() }
-                composable(MainRoutes.Gav.route) { ContextMenuItemScreens.Gav() }
-                composable(MainRoutes.Requisition.route) { ContextMenuItemScreens.Requisition() }
-                composable(MainRoutes.PersonneRecherchee.route) { ContextMenuItemScreens.PersonneRecherchee() }
-                composable(MainRoutes.Objets.route) { ContextMenuItemScreens.Objets() }
-                composable(MainRoutes.RegistreDeferrement.route) { ContextMenuItemScreens.RegistreDeferrement() }
-                composable(MainRoutes.RenseignementPj.route) { ContextMenuItemScreens.RenseignementPj() }
+                composable(MainRoutes.PjDashboard.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.PjDashboard() }
+                }
+                composable(MainRoutes.Plainte.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Plainte() }
+                }
+                composable(MainRoutes.RegistreEnquete.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.RegistreEnquete() }
+                }
+                composable(MainRoutes.Mandat.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Mandat() }
+                }
+                composable(MainRoutes.Convocation.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Convocation() }
+                }
+                composable(MainRoutes.Arrestation.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Arrestation() }
+                }
+                composable(MainRoutes.Gav.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Gav() }
+                }
+                composable(MainRoutes.Requisition.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Requisition() }
+                }
+                composable(MainRoutes.PersonneRecherchee.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.PersonneRecherchee() }
+                }
+                composable(MainRoutes.Objets.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Objets() }
+                }
+                composable(MainRoutes.RegistreDeferrement.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.RegistreDeferrement() }
+                }
+                composable(MainRoutes.RenseignementPj.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.RenseignementPj() }
+                }
 
                 // Global modules
-                composable(MainRoutes.Cartographie.route) { ContextMenuItemScreens.Cartographie() }
-                composable(MainRoutes.Utilisateurs.route) { ContextMenuItemScreens.Utilisateurs() }
-                composable(MainRoutes.Roles.route) { ContextMenuItemScreens.Roles() }
+                composable(MainRoutes.Cartographie.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Cartographie() }
+                }
+                composable(MainRoutes.Utilisateurs.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Utilisateurs() }
+                }
+                composable(MainRoutes.Roles.route) {
+                    MainScaffold(photoUrl = profilePhotoUrl, onProfileClick = { scope.launch { drawerState.open() } }, tabs = tabItems, selectedRoute = currentRoute, onTabSelected = { tab -> navController.navigateToDrawerItem(tab.route) }) { ContextMenuItemScreens.Roles() }
+                }
 
                 // Signature pad
                 composable(MainRoutes.SignaturePairing.route) {
