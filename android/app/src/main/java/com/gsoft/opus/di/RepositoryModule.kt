@@ -1,12 +1,18 @@
 package com.gsoft.opus.di
 
 import com.gsoft.opus.data.repository.AuthRepositoryImpl
+import com.gsoft.opus.data.repository.ComportementRepositoryImpl
 import com.gsoft.opus.data.repository.DeviceTokenRepositoryImpl
+import com.gsoft.opus.data.repository.MouvementRepositoryImpl
 import com.gsoft.opus.data.repository.NotificationRepositoryImpl
+import com.gsoft.opus.data.repository.PersonnelRepositoryImpl
 import com.gsoft.opus.data.repository.SettingsRepositoryImpl
 import com.gsoft.opus.domain.repository.AuthRepository
+import com.gsoft.opus.domain.repository.ComportementRepository
 import com.gsoft.opus.domain.repository.DeviceTokenRepository
+import com.gsoft.opus.domain.repository.MouvementRepository
 import com.gsoft.opus.domain.repository.NotificationRepository
+import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
@@ -33,4 +39,16 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPersonnelRepository(impl: PersonnelRepositoryImpl): PersonnelRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMouvementRepository(impl: MouvementRepositoryImpl): MouvementRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindComportementRepository(impl: ComportementRepositoryImpl): ComportementRepository
 }

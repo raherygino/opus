@@ -75,6 +75,10 @@ apiClient.interceptors.response.use(
 
         const newToken = data.data.access_token;
         localStorage.setItem("opus-access-token", newToken);
+        // Save the rotated refresh token so the session stays alive until logout.
+        if (data.data.refresh_token) {
+          localStorage.setItem("opus-refresh-token", data.data.refresh_token);
+        }
         processQueue(null, newToken);
 
         if (originalRequest.headers) {

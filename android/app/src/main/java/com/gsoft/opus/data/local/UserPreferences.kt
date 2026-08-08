@@ -82,6 +82,10 @@ class UserPreferences @Inject constructor(
         context.dataStore.edit { it[KEY_ACCESS_TOKEN] = accessToken }
     }
 
+    suspend fun updateRefreshToken(refreshToken: String) {
+        context.dataStore.edit { it[KEY_REFRESH_TOKEN] = refreshToken }
+    }
+
     suspend fun clear() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_ACCESS_TOKEN)

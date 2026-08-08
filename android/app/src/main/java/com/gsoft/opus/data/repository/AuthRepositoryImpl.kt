@@ -67,6 +67,8 @@ class AuthRepositoryImpl @Inject constructor(
                 val data = response.body()?.data
                 if (data != null) {
                     userPreferences.updateAccessToken(data.accessToken)
+                    // Save the rotated refresh token so the session stays alive.
+                    data.refreshToken?.let { userPreferences.updateRefreshToken(it) }
                     Resource.success(data.accessToken)
                 } else {
                     Resource.error("Failed to refresh token")

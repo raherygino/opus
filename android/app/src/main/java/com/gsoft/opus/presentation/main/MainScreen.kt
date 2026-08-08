@@ -64,6 +64,11 @@ import com.gsoft.opus.presentation.settings.SettingsScreen
 import com.gsoft.opus.presentation.signature.SignaturePairingScreen
 import com.gsoft.opus.presentation.signature.SignaturePadScreen
 import com.gsoft.opus.presentation.photo.PhotoCaptureScreen
+import com.gsoft.opus.presentation.notifications.NotificationsViewModel
+import com.gsoft.opus.presentation.personnel.PersonnelScreen
+import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
+import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
+import com.gsoft.opus.presentation.personnel.MouvementFormScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.ContextMenuItem
 import com.gsoft.opus.ui.components.OpusBottomNavBar
@@ -108,6 +113,9 @@ fun MainScreen(
 
     val homeViewModel: HomeViewModel = hiltViewModel()
     val homeState by homeViewModel.state.collectAsState()
+
+    val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+    val notificationsUiState by notificationsViewModel.state.collectAsState()
 
     val context = LocalContext.current
     val appVersion = remember {
@@ -478,6 +486,7 @@ fun MainScreen(
                             if (drawerState.isOpen) drawerState.close() else drawerState.open()
                         }
                     },
+                    notificationBadgeCount = notificationsUiState.unreadCount,
                     modifier = Modifier.navigationBarsPadding()
                 )
             }
@@ -509,7 +518,62 @@ fun MainScreen(
                 // Sédentaire – Secrétariat
                 composable(MainRoutes.SedDashboard.route) { ContextMenuItemScreens.SedDashboard() }
                 composable(MainRoutes.Correspondance.route) { ContextMenuItemScreens.Correspondance() }
-                composable(MainRoutes.GestionPersonnel.route) { ContextMenuItemScreens.GestionPersonnel() }
+                composable(MainRoutes.GestionPersonnel.route) {
+                    PersonnelScreen(
+                        onPersonnelClick = { id ->
+                            navController.navigate(MainRoutes.PersonnelDetail.createRoute(id))
+                        },
+                        onCreatePersonnel = {
+                            navController.navigate(MainRoutes.PersonnelForm.createRoute(0))
+                        },
+                        onCreateMouvement = {
+                            navController.navigate(MainRoutes.MouvementForm.createRoute(0))
+                        }
+                    )
+                }
+                composable(
+                    route = MainRoutes.PersonnelDetail.route,
+                    arguments = listOf(
+                        androidx.navigation.navArgument("personnelId") {
+                            type = androidx.navigation.NavType.IntType
+                        }
+                    )
+                ) {
+                    PersonnelDetailScreen(
+                        onEdit = { id ->
+                            navController.navigate(MainRoutes.PersonnelForm.createRoute(id))
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = MainRoutes.PersonnelForm.route,
+                    arguments = listOf(
+                        androidx.navigation.navArgument("personnelId") {
+                            type = androidx.navigation.NavType.IntType
+                            defaultValue = 0
+                        }
+                    )
+                ) {
+                    PersonnelFormScreen(
+                        onSaved = { navController.popBackStack() },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = MainRoutes.MouvementForm.route,
+                    arguments = listOf(
+                        androidx.navigation.navArgument("personnelId") {
+                            type = androidx.navigation.NavType.IntType
+                            defaultValue = 0
+                        }
+                    )
+                ) {
+                    MouvementFormScreen(
+                        onSaved = { navController.popBackStack() },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
                 composable(MainRoutes.DeclarationPerte.route) { ContextMenuItemScreens.DeclarationPerte() }
                 composable(MainRoutes.Rapport.route) { ContextMenuItemScreens.Rapport() }
                 composable(MainRoutes.MainCouranteSec.route) { ContextMenuItemScreens.MainCouranteSec() }

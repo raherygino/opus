@@ -37,5 +37,6 @@ data class LoginResponseDto(
 )
 
 data class RefreshResponseDto(
-    @SerializedName("access_token") val accessToken: String
+    @SerializedName("access_token") val accessToken: String,
+    @SerializedName("refresh_token") val refreshToken: String? = null
 )

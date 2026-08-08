@@ -99,7 +99,12 @@ class TokenAuthenticator @Inject constructor(
                         ?.getAsJsonObject("data")
                     val token = data?.get("access_token")?.asString
                     if (token != null) {
-                        runBlocking { userPreferences.updateAccessToken(token) }
+                        // Save the rotated refresh token so the session stays alive.
+                        val newRefreshToken = data.get("refresh_token")?.asString
+                        runBlocking {
+                            userPreferences.updateAccessToken(token)
+                            newRefreshToken?.let { userPreferences.updateRefreshToken(it) }
+                        }
                     }
                     token
                 } else {

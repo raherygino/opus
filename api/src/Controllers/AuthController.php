@@ -66,6 +66,7 @@ class AuthController
         $refreshToken = JWT::encode([
             'sub'  => $user['id'],
             'type' => 'refresh',
+            'exp'  => time() + $config['jwt_refresh_ttl'],
         ]);
 
         // Load role permissions
@@ -113,8 +114,18 @@ class AuthController
             'personnel_id'  => $user['personnel_id'],
         ]);
 
+        // Rotate the refresh token so the session stays alive as long as the
+        // user keeps using the app. Each refresh issues a brand-new refresh
+        // token with a fresh expiry, extending the session until explicit logout.
+        $newRefreshToken = JWT::encode([
+            'sub'  => $user['id'],
+            'type' => 'refresh',
+            'exp'  => time() + $config['jwt_refresh_ttl'],
+        ]);
+
         Response::success([
-            'access_token' => $accessToken,
+            'access_token'  => $accessToken,
+            'refresh_token' => $newRefreshToken,
         ], 'Token refreshed');
     }
 

@@ -2,7 +2,12 @@ package com.gsoft.opus.data.api.dto
 
 import com.gsoft.opus.domain.model.AppNotification
 import com.gsoft.opus.domain.model.AuthResult
+import com.gsoft.opus.domain.model.Comportement
+import com.gsoft.opus.domain.model.Mouvement
+import com.gsoft.opus.domain.model.MouvementAttachment
 import com.gsoft.opus.domain.model.Permission
+import com.gsoft.opus.domain.model.Personnel
+import com.gsoft.opus.domain.model.PersonnelAttachment
 import com.gsoft.opus.domain.model.User
 
 fun UserDto.toDomain(): User = User(
@@ -51,4 +56,75 @@ fun NotificationDto.toDomain(): AppNotification = AppNotification(
     personnelPrenoms = personnelPrenoms,
     personnelGrade = personnelGrade,
     createdByUsername = createdByUsername
+)
+
+fun PersonnelDto.toDomain(): Personnel = Personnel(
+    id = id,
+    im = im,
+    grade = grade,
+    lastname = lastname,
+    firstname = firstname,
+    affectation = affectation,
+    phone = phone,
+    address = address,
+    photo = photo,
+    thumbnail = thumbnail,
+    signature = signature,
+    signatureSvg = signatureSvg,
+    status = status,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun PersonnelAttachmentDto.toDomain(): PersonnelAttachment = PersonnelAttachment(
+    id = id,
+    personnelId = personnelId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+fun MouvementDto.toDomain(): Mouvement = Mouvement(
+    id = id,
+    personnelId = personnelId,
+    im = im,
+    grade = grade,
+    service = service,
+    nom = nom,
+    prenoms = prenoms,
+    typeMouvement = typeMouvement,
+    dateDepart = dateDepart,
+    days = days,
+    dateRetour = dateRetour,
+    retour = retour,
+    createdAt = createdAt
+)
+
+fun MouvementAttachmentDto.toDomain(): MouvementAttachment = MouvementAttachment(
+    id = id,
+    mouvementId = mouvementId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+fun ComportementDto.toDomain(): Comportement = Comportement(
+    id = id,
+    personnelId = personnelId,
+    im = im,
+    grade = grade,
+    service = service,
+    nom = nom,
+    prenoms = prenoms,
+    type = type,
+    dateComportement = dateComportement,
+    motif = motif,
+    decision = decision,
+    createdAt = createdAt
 )

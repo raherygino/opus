@@ -29,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -81,6 +83,7 @@ fun OpusBottomNavBar(
     onItemSelected: (BottomNavItem) -> Unit,
     fabExpanded: Boolean,
     onFabClick: () -> Unit,
+    notificationBadgeCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -100,6 +103,7 @@ fun OpusBottomNavBar(
             items = items,
             selectedRoute = selectedRoute,
             onItemSelected = onItemSelected,
+            notificationBadgeCount = notificationBadgeCount,
             modifier = Modifier.weight(1f)
         )
     }
@@ -113,6 +117,7 @@ private fun NavPill(
     items: List<BottomNavItem>,
     selectedRoute: String?,
     onItemSelected: (BottomNavItem) -> Unit,
+    notificationBadgeCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val selectedIndex = remember(selectedRoute, items) {
@@ -176,10 +181,12 @@ private fun NavPill(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { item ->
+                    val badgeCount = if (item is BottomNavItem.Notifications) notificationBadgeCount else 0
                     NavPillItem(
                         item = item,
                         selected = item.route == selectedRoute,
                         onClick = { onItemSelected(item) },
+                        badgeCount = badgeCount,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -196,6 +203,7 @@ private fun NavPillItem(
     item: BottomNavItem,
     selected: Boolean,
     onClick: () -> Unit,
+    badgeCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -244,17 +252,32 @@ private fun NavPillItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = if (selected) item.selectedIcon else item.icon,
-            contentDescription = stringResource(item.labelRes),
-            tint = contentColor,
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer {
-                    scaleX = iconScale
-                    scaleY = iconScale
+        BadgedBox(
+            badge = {
+                if (badgeCount > 0) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ) {
+                        Text(
+                            text = if (badgeCount > 99) "99+" else badgeCount.toString()
+                        )
+                    }
                 }
-        )
+            }
+        ) {
+            Icon(
+                imageVector = if (selected) item.selectedIcon else item.icon,
+                contentDescription = stringResource(item.labelRes),
+                tint = contentColor,
+                modifier = Modifier
+                    .size(24.dp)
+                    .graphicsLayer {
+                        scaleX = iconScale
+                        scaleY = iconScale
+                    }
+            )
+        }
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = stringResource(item.labelRes),

@@ -70,4 +70,15 @@ sealed class MainRoutes(val route: String) {
     // Photo capture
     data object PhotoPairing : MainRoutes("photo_pairing")
     data object PhotoCapture : MainRoutes("photo_capture")
+
+    // Personnel management
+    data object PersonnelDetail : MainRoutes("personnel_detail/{personnelId}") {
+        fun createRoute(personnelId: Int) = "personnel_detail/$personnelId"
+    }
+    data object PersonnelForm : MainRoutes("personnel_form?personnelId={personnelId}") {
+        fun createRoute(personnelId: Int) = "personnel_form?personnelId=$personnelId"
+    }
+    data object MouvementForm : MainRoutes("mouvement_form?personnelId={personnelId}") {
+        fun createRoute(personnelId: Int = 0) = "mouvement_form?personnelId=$personnelId"
+    }
 }
