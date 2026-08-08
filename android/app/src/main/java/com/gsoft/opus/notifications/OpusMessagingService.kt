@@ -30,6 +30,9 @@ class OpusMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var fcmTokenManager: FcmTokenManager
 
+    @Inject
+    lateinit var navigationBus: NotificationNavigationBus
+
     /**
      * Called when a new FCM token is issued. The token may rotate, so we
      * re-register it with the backend.
@@ -68,6 +71,10 @@ class OpusMessagingService : FirebaseMessagingService() {
             ?: (System.currentTimeMillis() and 0xFFFFFFFFL).toInt()
 
         Log.d(TAG, "Showing notification: id=$notificationId title=$title type=$type")
+
+        // Let the notifications screen refresh its list in real time.
+        navigationBus.notifyNotificationReceived()
+
         notificationHelper.showNotification(
             notificationId = notificationId,
             title = title,

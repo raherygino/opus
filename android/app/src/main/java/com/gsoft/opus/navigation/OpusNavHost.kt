@@ -14,11 +14,14 @@ import androidx.navigation.compose.composable
 import com.gsoft.opus.presentation.login.LoginScreen
 import com.gsoft.opus.presentation.main.MainScreen
 import com.gsoft.opus.presentation.splash.SplashScreen
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun OpusNavHost(
     navController: NavHostController,
-    startDestination: String = Routes.Splash.route
+    startDestination: String = Routes.Splash.route,
+    openNotificationsRequests: StateFlow<Boolean>? = null,
+    onOpenNotificationsConsumed: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -99,7 +102,9 @@ fun OpusNavHost(
                     navController.navigate(Routes.Login.route) {
                         popUpTo(Routes.Main.route) { inclusive = true }
                     }
-                }
+                },
+                openNotificationsRequests = openNotificationsRequests,
+                onOpenNotificationsConsumed = onOpenNotificationsConsumed
             )
         }
     }

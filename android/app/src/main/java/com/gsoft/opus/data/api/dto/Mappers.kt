@@ -1,5 +1,6 @@
 package com.gsoft.opus.data.api.dto
 
+import com.gsoft.opus.domain.model.AppNotification
 import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.Permission
 import com.gsoft.opus.domain.model.User
@@ -34,4 +35,20 @@ fun LoginResponseDto.toDomain(): AuthResult = AuthResult(
     accessToken = accessToken,
     refreshToken = refreshToken,
     user = user.toDomain()
+)
+
+fun NotificationDto.toDomain(): AppNotification = AppNotification(
+    id = id,
+    title = title,
+    message = message,
+    type = type,
+    service = service,
+    isRead = isRead == 1,
+    createdAt = createdAt,
+    personnelId = personnelId,
+    personnelIm = personnelIm,
+    personnelNom = personnelNom,
+    personnelPrenoms = personnelPrenoms,
+    personnelGrade = personnelGrade,
+    createdByUsername = createdByUsername
 )

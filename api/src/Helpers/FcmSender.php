@@ -140,31 +140,34 @@ class FcmSender
             return ['sent' => false, 'deactivate' => false];
         }
 
+        // Build a DATA-ONLY message. We intentionally do NOT include a
+        // 'notification' block. When a 'notification' block is present and the
+        // app is in the background, Android displays the notification itself
+        // using the default launcher icon and never calls onMessageReceived().
+        // By sending data-only messages, we guarantee that
+        // OpusMessagingService.onMessageReceived() is always invoked —
+        // regardless of foreground/background state — so our NotificationHelper
+        // can display the notification with the correct custom icon.
+        $data = array_merge(
+            [
+                'title' => $payload['title'] ?? 'OPUS',
+                'body'  => $payload['body'] ?? '',
+            ],
+            $payload['data'] ?? []
+        );
+
         $message = [
             'message' => [
                 'token' => $token,
-                'notification' => [
-                    'title' => $payload['title'],
-                    'body'  => $payload['body'] ?? '',
-                ],
+                'data'  => array_map(
+                    fn($v) => is_string($v) ? $v : (string) $v,
+                    $data
+                ),
                 'android' => [
                     'priority' => 'high',
-                    'notification' => [
-                        'channel_id' => $payload['channel_id'] ?? 'opus_notifications',
-                        'notification_priority' => 'PRIORITY_HIGH',
-                    ],
                 ],
             ],
         ];
-
-        // Optional data payload (key-value strings)
-        if (!empty($payload['data']) && is_array($payload['data'])) {
-            // FCM v1 requires data values to be strings
-            $message['message']['data'] = array_map(
-                fn($v) => is_string($v) ? $v : (string) $v,
-                $payload['data']
-            );
-        }
 
         $url = sprintf(self::FCM_ENDPOINT, $projectId);
         $body = json_encode($message);

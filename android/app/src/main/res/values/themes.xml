@@ -5,7 +5,7 @@
 
     <style name="Theme.Opus.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_rounded</item>
         <item name="windowSplashScreenAnimationDuration">1000</item>
         <item name="postSplashScreenTheme">@style/Theme.Opus</item>
     </style>

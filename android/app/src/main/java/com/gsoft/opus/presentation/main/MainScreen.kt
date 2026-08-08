@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -69,6 +70,7 @@ import com.gsoft.opus.ui.components.OpusBottomNavBar
 import com.gsoft.opus.ui.components.drawer.OpusAnimatedDrawer
 import com.gsoft.opus.ui.components.drawer.OpusDrawerContent
 import com.gsoft.opus.ui.components.drawer.rememberOpusDrawerState
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -80,10 +82,26 @@ import kotlinx.coroutines.launch
  * the left while the whole content transforms into a floating card.
  */
 @Composable
-fun MainScreen(onLogout: () -> Unit) {
+fun MainScreen(
+    onLogout: () -> Unit,
+    openNotificationsRequests: StateFlow<Boolean>? = null,
+    onOpenNotificationsConsumed: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+
+    // When a push notification is tapped, select the Notifications tab.
+    // The request is sticky, so this also works right after a cold start.
+    val openNotificationsRequested by
+        (openNotificationsRequests ?: remember { kotlinx.coroutines.flow.MutableStateFlow(false) })
+            .collectAsState()
+    LaunchedEffect(openNotificationsRequested) {
+        if (openNotificationsRequested) {
+            navController.navigateToTab(MainRoutes.Notifications.route)
+            onOpenNotificationsConsumed()
+        }
+    }
 
     val drawerState = rememberOpusDrawerState()
     val scope = rememberCoroutineScope()

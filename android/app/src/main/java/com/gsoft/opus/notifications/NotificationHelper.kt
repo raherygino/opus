@@ -106,7 +106,7 @@ class NotificationHelper @Inject constructor(
         val channelId = if (highPriority) CHANNEL_ID_HIGH else CHANNEL_ID_DEFAULT
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_notification_bell_fill_24)
+            .setSmallIcon(R.drawable.ic_opus_simple)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))

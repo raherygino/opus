@@ -16,15 +16,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import android.content.Intent
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.gsoft.opus.navigation.OpusNavHost
+import com.gsoft.opus.notifications.NotificationHelper
+import com.gsoft.opus.notifications.NotificationNavigationBus
 import com.gsoft.opus.presentation.theme.ThemeViewModel
 import com.gsoft.opus.ui.theme.OpusTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var notificationNavigationBus: NotificationNavigationBus
 
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
@@ -39,6 +46,7 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition { false }
 
         requestPostNotificationsPermissionIfNeeded()
+        handleNotificationIntent(intent)
 
         setContent {
             val themeViewModel: ThemeViewModel = hiltViewModel()
@@ -48,9 +56,32 @@ class MainActivity : ComponentActivity() {
                 colorPalette = themeState.colorPalette
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    OpusApp()
+                    OpusApp(navigationBus = notificationNavigationBus)
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    /**
+     * When the user taps a system notification, open the Notifications tab.
+     *
+     * Two intent shapes can arrive here:
+     *  - Foreground pushes are displayed by [NotificationHelper], whose
+     *    PendingIntent carries [NotificationHelper.EXTRA_CLICK_ACTION].
+     *  - Background/killed pushes are displayed by the FCM system tray, which
+     *    launches this activity with the message's data keys as plain extras
+     *    (so the backend's "click_action" key is directly available).
+     */
+    private fun handleNotificationIntent(intent: Intent?) {
+        val action = intent?.getStringExtra(NotificationHelper.EXTRA_CLICK_ACTION)
+            ?: intent?.getStringExtra("click_action")
+        if (action == NotificationHelper.ACTION_OPEN_NOTIFICATIONS) {
+            notificationNavigationBus.requestOpenNotifications()
         }
     }
 
@@ -71,7 +102,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun OpusApp() {
+private fun OpusApp(navigationBus: NotificationNavigationBus) {
     val navController = rememberNavController()
-    OpusNavHost(navController = navController)
+    OpusNavHost(
+        navController = navController,
+        openNotificationsRequests = navigationBus.openRequests,
+        onOpenNotificationsConsumed = navigationBus::consumeOpenRequest
+    )
 }
