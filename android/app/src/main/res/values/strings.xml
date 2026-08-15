@@ -17,7 +17,7 @@
     <string name="login_error_invalid">Nom d\'utilisateur ou mot de passe invalide</string>
 
     <!-- Bottom Navigation -->
-    <string name="nav_dashboard">Tableau de bord</string>
+    <string name="nav_dashboard">Main</string>
     <string name="nav_notifications">Notifications</string>
     <string name="nav_settings">Paramètres</string>
     <string name="nav_profile">Profil</string>

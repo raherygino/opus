@@ -6,18 +6,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,25 +32,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.gsoft.opus.R
 
-/**
- * Collapsible top header inspired by Google Play Store.
- *
- * Shows the app logo on the left and the user's profile avatar on the right.
- * The header smoothly collapses/expands based on [collapseProgress]:
- *   0f = fully expanded, 1f = fully collapsed.
- *
- * @param collapseProgress 0f..1f
- * @param photoUrl         optional profile photo URL
- * @param onProfileClick   invoked when the avatar is tapped
- */
+private val HeaderHeight = 96.dp
+private val AvatarShape = RoundedCornerShape(12.dp)
+
 @Composable
 fun CollapsibleHeader(
     collapseProgress: Float,
     photoUrl: String? = null,
+    userName: String? = null,
+    subtitle: String? = null,
+    onMenuClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -58,7 +56,6 @@ fun CollapsibleHeader(
         label = "header_collapse"
     )
 
-    val expandedHeight = 56.dp
     val alpha = 1f - animatedProgress
 
     Surface(
@@ -68,33 +65,57 @@ fun CollapsibleHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
-                .height(expandedHeight)
-                .padding(horizontal = 16.dp),
+                .height(HeaderHeight)
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo on the left
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier.graphicsLayer { this.alpha = alpha }
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Menu,
+                    contentDescription = "Menu",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
             Image(
                 painter = painterResource(id = R.drawable.logo_opus),
                 contentDescription = "Opus",
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(48.dp)
                     .graphicsLayer { this.alpha = alpha }
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-            Text(
-                text = "OPUS",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.graphicsLayer { this.alpha = alpha }
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .graphicsLayer { this.alpha = alpha }
+            ) {
+                if (!userName.isNullOrBlank()) {
+                    Text(
+                        text = userName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Profile avatar on the right
             ProfileAvatar(
                 photoUrl = photoUrl,
                 size = 38.dp,
@@ -114,7 +135,7 @@ fun ProfileAvatar(
 ) {
     val modifierWithClick = modifier
         .size(size)
-        .clip(CircleShape)
+        .clip(AvatarShape)
         .clickable(onClick = onClick)
 
     if (photoUrl != null) {
