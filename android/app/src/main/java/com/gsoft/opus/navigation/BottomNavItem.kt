@@ -4,11 +4,11 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.SpaceDashboard
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SpaceDashboard
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.gsoft.opus.R
@@ -39,11 +39,11 @@ sealed class BottomNavItem(
         selectedIcon = Icons.Filled.Notifications
     )
 
-    data object Settings : BottomNavItem(
-        route = MainRoutes.Settings.route,
-        labelRes = R.string.nav_settings,
-        icon = Icons.Outlined.Settings,
-        selectedIcon = Icons.Filled.Settings
+    data object Personnels : BottomNavItem(
+        route = MainRoutes.PersonnelList.route,
+        labelRes = R.string.nav_personnels,
+        icon = Icons.Outlined.Groups,
+        selectedIcon = Icons.Filled.Groups
     )
 
     data object Profile : BottomNavItem(
@@ -55,6 +55,6 @@ sealed class BottomNavItem(
 
     companion object {
         /** Items rendered inside the pill container, in display order. */
-        val items: List<BottomNavItem> = listOf(Dashboard, Notifications, Settings, Profile)
+        val items: List<BottomNavItem> = listOf(Dashboard, Notifications, Personnels, Profile)
     }
 }

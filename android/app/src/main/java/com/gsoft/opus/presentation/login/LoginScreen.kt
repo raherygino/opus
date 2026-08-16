@@ -33,11 +33,13 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -71,6 +73,7 @@ import com.gsoft.opus.ui.theme.BrandSecondary
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onNavigateToQrScanner: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -159,6 +162,35 @@ fun LoginScreen(
                         onLogin = viewModel::login,
                         onDismissError = viewModel::onDismissError
                     )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // "Se connecter avec un ordinateur" — opens the QR scanner so the
+                // phone can scan a QR code displayed by an already-authenticated
+                // desktop. The phone is always the device that scans & approves.
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(tween(600, delayMillis = 400))
+                ) {
+                    OutlinedButton(
+                        onClick = onNavigateToQrScanner,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.QrCodeScanner,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(R.string.qr_login_with_computer),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))

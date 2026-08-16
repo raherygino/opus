@@ -4,6 +4,12 @@ import com.gsoft.opus.domain.model.AppNotification
 import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Mouvement
+import com.gsoft.opus.domain.model.QrAuthDeviceType
+import com.gsoft.opus.domain.model.QrAuthRequester
+import com.gsoft.opus.domain.model.QrAuthRequestInfo
+import com.gsoft.opus.domain.model.QrAuthScanResult
+import com.gsoft.opus.domain.model.QrAuthStatus
+import com.gsoft.opus.domain.model.QrAuthStatusResult
 import com.gsoft.opus.domain.model.MouvementAttachment
 import com.gsoft.opus.domain.model.Permission
 import com.gsoft.opus.domain.model.Personnel
@@ -127,4 +133,41 @@ fun ComportementDto.toDomain(): Comportement = Comportement(
     motif = motif,
     decision = decision,
     createdAt = createdAt
+)
+
+fun QrAuthRequesterDto.toDomain(): QrAuthRequester = QrAuthRequester(
+    username = username,
+    firstname = firstname,
+    lastname = lastname,
+    roleCode = roleCode,
+    roleName = roleName
+)
+
+fun QrAuthRequestResponseDto.toDomain(): QrAuthRequestInfo = QrAuthRequestInfo(
+    requestCode = requestCode,
+    deviceType = QrAuthDeviceType.fromValue(deviceType),
+    deviceName = deviceName,
+    expiresAt = expiresAt,
+    ttlSeconds = ttlSeconds
+)
+
+fun QrAuthScanResponseDto.toDomain(): QrAuthScanResult = QrAuthScanResult(
+    requestCode = requestCode,
+    deviceType = QrAuthDeviceType.fromValue(deviceType),
+    deviceName = deviceName,
+    requester = requester?.toDomain(),
+    expiresAt = expiresAt
+)
+
+fun QrAuthStatusResponseDto.toDomain(): QrAuthStatusResult = QrAuthStatusResult(
+    requestCode = requestCode,
+    deviceType = QrAuthDeviceType.fromValue(deviceType),
+    deviceName = deviceName,
+    status = QrAuthStatus.fromValue(status),
+    expiresAt = expiresAt,
+    scannedAt = scannedAt,
+    resolvedAt = resolvedAt,
+    accessToken = accessToken,
+    refreshToken = refreshToken,
+    user = user?.toDomain()
 )

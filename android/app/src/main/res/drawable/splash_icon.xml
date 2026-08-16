@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Splash screen icon for the Android 12+ SplashScreen API.
+
+    Uses a plain layer-list (NOT an adaptive-icon) so the system does not
+    apply its circular mask — the logo is shown as-is inside a rounded
+    rectangle whose color matches the splash background, giving the logo
+    a clean rounded-corner frame without the blurry launcher icon.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="32dp" />
+            <solid android:color="@color/splash_background" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/logo_opus"
+        android:gravity="center" />
+</layer-list>

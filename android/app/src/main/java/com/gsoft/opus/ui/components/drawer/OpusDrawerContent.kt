@@ -10,6 +10,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -33,8 +36,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -52,11 +60,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.gsoft.opus.R
 import com.gsoft.opus.core.Constants
@@ -66,15 +77,15 @@ import com.gsoft.opus.ui.components.OpusDialog
 private val ItemHeight = 56.dp
 private val ItemCorner = 16.dp
 private val IconSize = 24.dp
-private val ProfileSize = 72.dp
 private const val StaggerStep = 0.03f
 private const val StaggerWindow = 0.45f
 
 /**
  * Fixed left pane of [OpusAnimatedDrawer].
  *
- * Renders the profile header, the navigation entries (with section headers
- * and expandable groups), a logout action and the app version footer.
+ * Renders a centered application logo header, the navigation entries (with
+ * section headers and expandable groups), and an outlined user profile card
+ * at the bottom with an overflow menu for Profil and Déconnexion.
  * Items stagger-animate in as the drawer opens, driven by [progress].
  *
  * @param items       navigation entries (reuses the [ContextMenuItem] model).
@@ -89,7 +100,8 @@ private const val StaggerWindow = 0.45f
  * @param role        user's role or grade (displayed as secondary text).
  * @param progress    live drawer open fraction for stagger animations.
  * @param onItemClick invoked for leaf items.
- * @param onLogout    invoked when the logout row is tapped.
+ * @param onProfileClick invoked when the Profil overflow action is tapped.
+ * @param onLogout    invoked when the Déconnexion action is confirmed.
  * @param appVersion  version label displayed at the bottom.
  */
 @Composable
@@ -104,6 +116,7 @@ fun OpusDrawerContent(
     role: String?,
     progress: () -> Float,
     onItemClick: (ContextMenuItem) -> Unit,
+    onProfileClick: () -> Unit,
     onLogout: () -> Unit,
     appVersion: String,
     modifier: Modifier = Modifier
@@ -117,19 +130,12 @@ fun OpusDrawerContent(
             .navigationBarsPadding()
             .padding(horizontal = 0.dp)
     ) {
-        DrawerHeader(
-            username = username,
-            firstName = firstName,
-            lastName = lastName,
-            personnelId = personnelId,
-            photo = photo,
-            role = role
-        )
+        DrawerLogoHeader()
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
+                .height(2.dp)
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(Color(0xFF4CAF50), Color.White, Color(0xFFF44336))
@@ -171,14 +177,15 @@ fun OpusDrawerContent(
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
 
-        DrawerItem(
-            item = ContextMenuItem(
-                id = "logout",
-                title = "Déconnexion",
-                icon = Icons.AutoMirrored.Outlined.Logout
-            ),
-            selected = false,
-            onClick = { showLogoutDialog = true }
+        DrawerProfileCard(
+            username = username,
+            firstName = firstName,
+            lastName = lastName,
+            personnelId = personnelId,
+            photo = photo,
+            role = role,
+            onProfileClick = onProfileClick,
+            onLogoutClick = { showLogoutDialog = true }
         )
 
         Text(
@@ -223,16 +230,78 @@ private fun StaggeredEntry(
     }
 }
 
+/**
+ * Centered application branding header: large OPUS logo, the application
+ * name and its full French description. Mirrors the desktop sidebar header
+ * layout (centered logo + name) and extends it with the tagline.
+ */
 @Composable
-private fun DrawerHeader(
+private fun DrawerLogoHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.logo_opus),
+            contentDescription = "OPUS",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .width(132.dp)
+                .aspectRatio(1f)
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "OPUS",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = "Opérations Policières Unifiées et Structurées",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Outlined user profile card pinned at the bottom of the drawer.
+ *
+ * Shows the user's avatar, display name and role inside a border-only card
+ * (no shadow). A three-dot overflow icon on the right opens a Material
+ * dropdown menu with Profil and Déconnexion actions, styled like a
+ * Chrome-style context menu (rounded corners, leading icons, clear labels).
+ */
+@Composable
+private fun DrawerProfileCard(
     username: String,
     firstName: String?,
     lastName: String?,
     personnelId: Int?,
     photo: String?,
-    role: String?
+    role: String?,
+    onProfileClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
-    val displayName = firstName?.takeIf { it.isNotBlank() } ?: username
+    val displayName = listOfNotNull(
+        firstName?.takeIf { it.isNotBlank() },
+        lastName?.takeIf { it.isNotBlank() }
+    ).joinToString(" ").ifBlank { username }
+
     val avatarLetter = firstName?.firstOrNull()?.uppercaseChar()
         ?: username.firstOrNull()?.uppercaseChar()
         ?: '?'
@@ -251,11 +320,22 @@ private fun DrawerHeader(
     // Track load failures so we can fall back to the letter avatar instead of
     // leaving an empty circle when the request errors (e.g. offline / 404).
     var photoLoadFailed by remember(fullPhotoUrl) { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
 
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant
+        )
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (fullPhotoUrl != null && !photoLoadFailed) {
@@ -263,7 +343,7 @@ private fun DrawerHeader(
                     model = fullPhotoUrl,
                     contentDescription = "Profile photo",
                     modifier = Modifier
-                        .size(ProfileSize)
+                        .size(40.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop,
                     onError = { photoLoadFailed = true }
@@ -271,26 +351,26 @@ private fun DrawerHeader(
             } else {
                 Box(
                     modifier = Modifier
-                        .size(ProfileSize)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = avatarLetter.toString(),
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = displayName,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
@@ -299,14 +379,78 @@ private fun DrawerHeader(
                 if (!role.isNullOrBlank()) {
                     Text(
                         text = role,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
+
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.MoreVert,
+                        contentDescription = "Plus d'options",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    shape = RoundedCornerShape(12.dp),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 6.dp,
+                    modifier = Modifier.wrapContentSize()
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = "Profil",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onProfileClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = "Déconnexion",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onLogoutClick()
+                        }
+                    )
+                }
+            }
         }
+    }
 }
 
 @Composable

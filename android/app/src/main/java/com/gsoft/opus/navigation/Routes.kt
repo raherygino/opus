@@ -4,6 +4,7 @@ sealed class Routes(val route: String) {
     data object Splash : Routes("splash")
     data object Login : Routes("login")
     data object Main : Routes("main")
+    data object QrAuthScanner : Routes("qr_auth_scanner")
 }
 
 /**
@@ -14,6 +15,7 @@ sealed class MainRoutes(val route: String) {
     data object Notifications : MainRoutes("notifications")
     data object Settings : MainRoutes("settings")
     data object Profile : MainRoutes("profile")
+    data object PersonnelList : MainRoutes("personnel_list")
 
     // Sédentaire – Secrétariat
     data object SedDashboard : MainRoutes("sed_dashboard")
@@ -71,12 +73,18 @@ sealed class MainRoutes(val route: String) {
     data object PhotoPairing : MainRoutes("photo_pairing")
     data object PhotoCapture : MainRoutes("photo_capture")
 
+    // QR auth — scan to log in a desktop from the phone
+    data object QrAuthScanner : MainRoutes("qr_auth_scanner_main")
+
     // Personnel management
     data object PersonnelDetail : MainRoutes("personnel_detail/{personnelId}") {
         fun createRoute(personnelId: Int) = "personnel_detail/$personnelId"
     }
     data object PersonnelForm : MainRoutes("personnel_form?personnelId={personnelId}") {
         fun createRoute(personnelId: Int) = "personnel_form?personnelId=$personnelId"
+    }
+    data object PersonnelBrowseDetail : MainRoutes("personnel_browse_detail/{personnelId}") {
+        fun createRoute(personnelId: Int) = "personnel_browse_detail/$personnelId"
     }
     data object MouvementForm : MainRoutes("mouvement_form?personnelId={personnelId}") {
         fun createRoute(personnelId: Int = 0) = "mouvement_form?personnelId=$personnelId"

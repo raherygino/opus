@@ -70,13 +70,6 @@ fun SettingsScreen(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Text(
-            text = "Paramètres",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
         AnimatedVisibility(
             visible = true,
             enter = fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.96f),
@@ -128,7 +121,7 @@ private fun SectionHeader(
 }
 
 @Composable
-private fun ThemeModeSection(
+fun ThemeModeSection(
     selectedMode: ThemeMode,
     onModeSelected: (ThemeMode) -> Unit
 ) {
@@ -258,7 +251,7 @@ private fun ThemeModeCard(
 }
 
 @Composable
-private fun ColorPaletteSection(
+fun ColorPaletteSection(
     selectedPalette: ColorPalette,
     onPaletteSelected: (ColorPalette) -> Unit
 ) {

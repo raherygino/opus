@@ -143,11 +143,6 @@ fun NotificationsScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.nav_notifications),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
                     text = stringResource(
                         if (state.isAdmin) R.string.notifications_subtitle_admin
                         else R.string.notifications_subtitle_user

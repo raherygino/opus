@@ -14,6 +14,12 @@ return [
     ],
     'upload_dir' => __DIR__ . '/../uploads',
 
+    // QR-code-based login (scan-to-log-in between desktop & phone)
+    'qr_auth' => [
+        'ttl_seconds' => 300,        // QR code expires after 5 minutes
+        'poll_interval_seconds' => 2, // Recommended desktop polling interval
+    ],
+
     // Firebase Cloud Messaging (FCM) — push notifications for Android
     // Download the service account JSON from Firebase Console:
     //   Project Settings > Service Accounts > Generate New Private Key

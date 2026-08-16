@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,6 +65,39 @@ fun SignaturePairingScreen(
     onNavigateBack: () -> Unit,
     screenTitle: String = "Couplage signature",
 ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(screenTitle) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
+            )
+        },
+    ) { padding ->
+        PairingContent(
+            onQrScanned = onQrScanned,
+            onManualCodeSubmit = onManualCodeSubmit,
+            modifier = Modifier.padding(padding),
+        )
+    }
+}
+
+/**
+ * QR pairing content (camera scan + manual code entry), without any
+ * Scaffold/TopAppBar so it can be hosted inside tabs or standalone screens.
+ */
+@Composable
+fun PairingContent(
+    onQrScanned: (QrPayload) -> Unit,
+    onManualCodeSubmit: (ip: String, port: Int, code: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -87,28 +120,12 @@ fun SignaturePairingScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(screenTitle) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Retour")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-        },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
             if (showManualEntry) {
                 ManualCodeEntry(
                     onSubmit = { ip, port, code ->
@@ -182,7 +199,6 @@ fun SignaturePairingScreen(
             }
         }
     }
-}
 
 @Composable
 private fun QrCameraPreview(

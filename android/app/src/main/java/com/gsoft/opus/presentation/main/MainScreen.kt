@@ -1,5 +1,11 @@
 package com.gsoft.opus.presentation.main
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -32,6 +38,7 @@ import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,6 +56,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.gsoft.opus.R
 import com.gsoft.opus.navigation.BottomNavItem
 import com.gsoft.opus.navigation.MainRoutes
 import com.gsoft.opus.presentation.contextmenu.ContextMenuItemScreens
@@ -65,6 +73,9 @@ import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
 import com.gsoft.opus.presentation.personnel.MouvementFormScreen
+import com.gsoft.opus.presentation.personnel.PersonnelBrowseScreen
+import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
+import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
@@ -72,7 +83,6 @@ import com.gsoft.opus.ui.components.MainScaffold
 import com.gsoft.opus.ui.components.drawer.OpusAnimatedDrawer
 import com.gsoft.opus.ui.components.drawer.OpusDrawerContent
 import com.gsoft.opus.ui.components.drawer.rememberOpusDrawerState
-import com.gsoft.opus.core.Constants
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -377,6 +387,19 @@ fun MainScreen(
             id = "photo_pairing",
             title = "Capture photo",
             icon = Icons.Outlined.PhotoCamera
+        ),
+
+        // ── Connexion ──
+        ContextMenuItem(
+            id = "section_connexion",
+            title = "Connexion",
+            isSectionHeader = true
+        ),
+        ContextMenuItem(
+            id = "qr_auth_scanner",
+            title = "Connecter un ordinateur",
+            subtitle = "Scanner un QR code",
+            icon = Icons.Outlined.QrCodeScanner
         )
     )
 
@@ -421,7 +444,8 @@ fun MainScreen(
             "utilisateurs" to MainRoutes.Utilisateurs.route,
             "roles" to MainRoutes.Roles.route,
             "signature_pairing" to MainRoutes.SignaturePairing.route,
-            "photo_pairing" to MainRoutes.PhotoPairing.route
+            "photo_pairing" to MainRoutes.PhotoPairing.route,
+            "qr_auth_scanner" to MainRoutes.QrAuthScanner.route
         )
     }
 
@@ -442,41 +466,38 @@ fun MainScreen(
         else -> null
     }
 
-    // Routes that should show the header (main screens, not detail/form)
-    val showHeader = currentRoute in bottomNavRoutes || currentRoute in drawerRouteSet || currentRoute == MainRoutes.Dashboard.route
+    // Routes that should show the header (main screens, not detail/form/pairing)
+    val routesWithoutHeader = remember {
+        setOf(
+            MainRoutes.SignaturePairing.route,
+            MainRoutes.PhotoPairing.route,
+            MainRoutes.PersonnelBrowseDetail.route,
+            MainRoutes.QrAuthScanner.route
+        )
+    }
+    val showHeader = (currentRoute in bottomNavRoutes || currentRoute in drawerRouteSet ||
+            currentRoute == MainRoutes.Dashboard.route) && currentRoute !in routesWithoutHeader
 
-    // Current screen name for subtitle
-    val currentScreenName = when {
-        currentRoute == MainRoutes.Dashboard.route -> "Main"
-        currentRoute == MainRoutes.Notifications.route -> "Notifications"
-        currentRoute == MainRoutes.Settings.route -> "Paramètres"
-        currentRoute == MainRoutes.Profile.route -> "Profil"
-        else -> {
-            // Find the drawer item title for this route
-            val drawerId = routeToDrawerId[currentRoute]
-            drawerItems.firstNotNullOfOrNull { item ->
-                when {
-                    item.id == drawerId -> item.title
-                    item.children != null -> item.children.firstOrNull { it.id == drawerId }?.title
-                    else -> null
-                }
-            } ?: "OPUS"
+    // Map each route to a human-readable title for the top app bar subtitle.
+    val routeTitleMap = remember(drawerItems, drawerRouteMap) {
+        val map = mutableMapOf<String, String>()
+        // Drawer routes (including nested children)
+        drawerItems.forEach { item ->
+            drawerRouteMap[item.id]?.let { route -> map[route] = item.title }
+            item.children?.forEach { child ->
+                drawerRouteMap[child.id]?.let { route -> map[route] = child.title }
+            }
         }
+        // Bottom nav + settings routes
+        map[MainRoutes.Dashboard.route] = context.getString(R.string.nav_dashboard)
+        map[MainRoutes.Notifications.route] = context.getString(R.string.nav_notifications)
+        map[MainRoutes.PersonnelList.route] = context.getString(R.string.nav_personnels)
+        map[MainRoutes.Profile.route] = context.getString(R.string.nav_profile)
+        map[MainRoutes.Settings.route] = context.getString(R.string.settings_title)
+        map[MainRoutes.QrAuthScanner.route] = context.getString(R.string.qr_connect_computer)
+        map
     }
-
-    // User display name
-    val userDisplayName = remember(homeState.firstName, homeState.lastName) {
-        val first = homeState.firstName?.takeIf { it.isNotBlank() } ?: ""
-        val last = homeState.lastName?.takeIf { it.isNotBlank() } ?: ""
-        if (first.isBlank() && last.isBlank()) homeState.username else "$first $last".trim()
-    }
-
-    // Profile photo URL
-    val profilePhotoUrl = homeState.personnelId?.let { id ->
-        val baseUrl = Constants.BASE_URL.trimEnd('/')
-        val photo = homeState.photo
-        if (photo != null) "$baseUrl/api/personnel/$id/photo?v=$photo" else null
-    }
+    val appBarSubtitle = currentRoute?.let { routeTitleMap[it] }
 
     OpusAnimatedDrawer(
         state = drawerState,
@@ -496,6 +517,12 @@ fun MainScreen(
                     scope.launch {
                         drawerState.close()
                         route?.let { navController.navigateToDrawerItem(it) }
+                    }
+                },
+                onProfileClick = {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigateToTab(MainRoutes.Profile.route)
                     }
                 },
                 onLogout = {
@@ -524,30 +551,72 @@ fun MainScreen(
             }
         ) { paddingValues ->
             MainScaffold(
-                photoUrl = profilePhotoUrl,
-                userName = userDisplayName,
-                subtitle = currentScreenName,
                 onMenuClick = {
                     scope.launch { drawerState.open() }
                 },
-                onProfileClick = {
-                    scope.launch { drawerState.open() }
-                },
-                showHeader = showHeader
+                showHeader = showHeader,
+                subtitle = appBarSubtitle
             ) {
                 NavHost(
                     navController = navController,
                     startDestination = MainRoutes.Dashboard.route,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                    enterTransition = {
+                        fadeIn(tween(220, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(
+                            initialOffsetX = { it / 20 },
+                            animationSpec = tween(220, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    exitTransition = {
+                        fadeOut(tween(180, easing = FastOutSlowInEasing)) +
+                        slideOutHorizontally(
+                            targetOffsetX = { -it / 20 },
+                            animationSpec = tween(180, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popEnterTransition = {
+                        fadeIn(tween(220, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(
+                            initialOffsetX = { -it / 20 },
+                            animationSpec = tween(220, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popExitTransition = {
+                        fadeOut(tween(180, easing = FastOutSlowInEasing)) +
+                        slideOutHorizontally(
+                            targetOffsetX = { it / 20 },
+                            animationSpec = tween(180, easing = FastOutSlowInEasing)
+                        )
+                    }
                 ) {
                     composable(MainRoutes.Dashboard.route) {
                         DashboardScreen(onLogout = onLogout)
                     }
                     composable(MainRoutes.Notifications.route) { NotificationsScreen() }
                     composable(MainRoutes.Settings.route) { SettingsScreen() }
-                    composable(MainRoutes.Profile.route) { ProfileScreen() }
+                    composable(MainRoutes.Profile.route) {
+                        ProfileScreen(
+                            onNavigateToSignature = {
+                                navController.navigate(MainRoutes.SignaturePairing.route)
+                            },
+                            onNavigateToPhoto = {
+                                navController.navigate(MainRoutes.PhotoPairing.route)
+                            },
+                            onNavigateToNotifications = {
+                                navController.navigateToTab(MainRoutes.Notifications.route)
+                            }
+                        )
+                    }
+                    composable(MainRoutes.PersonnelList.route) {
+                        PersonnelBrowseScreen(
+                            onPersonnelClick = { id ->
+                                navController.navigate(MainRoutes.PersonnelBrowseDetail.createRoute(id))
+                            }
+                        )
+                    }
 
                     // Sédentaire – Secrétariat
                     composable(MainRoutes.SedDashboard.route) { ContextMenuItemScreens.SedDashboard() }
@@ -616,12 +685,52 @@ fun MainScreen(
                             androidx.navigation.navArgument("personnelId") {
                                 type = androidx.navigation.NavType.IntType
                             }
-                        )
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
                     ) {
                         PersonnelDetailScreen(
                             onEdit = { id ->
                                 navController.navigate(MainRoutes.PersonnelForm.createRoute(id))
                             },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PersonnelBrowseDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("personnelId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PersonnelBrowseDetailScreen(
                             onBack = { navController.popBackStack() }
                         )
                     }
@@ -632,7 +741,21 @@ fun MainScreen(
                                 type = androidx.navigation.NavType.IntType
                                 defaultValue = 0
                             }
-                        )
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
                     ) {
                         PersonnelFormScreen(
                             onSaved = { navController.popBackStack() },
@@ -646,7 +769,21 @@ fun MainScreen(
                                 type = androidx.navigation.NavType.IntType
                                 defaultValue = 0
                             }
-                        )
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
                     ) {
                         MouvementFormScreen(
                             onSaved = { navController.popBackStack() },
@@ -654,7 +791,7 @@ fun MainScreen(
                         )
                     }
 
-                    // Signature pad
+                    // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
                         SignaturePairingScreen(
                             onQrScanned = { payload: QrPayload ->
@@ -691,6 +828,20 @@ fun MainScreen(
                                 defaultValue = null
                             },
                         ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
                     ) { backStackEntry ->
                         val qrPayloadStr = backStackEntry.arguments?.getString("qrPayload")
                         val ip = backStackEntry.arguments?.getString("ip")
@@ -750,6 +901,20 @@ fun MainScreen(
                                 defaultValue = null
                             },
                         ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
                     ) { backStackEntry ->
                         val qrPayloadStr = backStackEntry.arguments?.getString("qrPayload")
                         val ip = backStackEntry.arguments?.getString("ip")
@@ -768,6 +933,14 @@ fun MainScreen(
                             pairingPort = portStr?.toIntOrNull(),
                             pairingCode = code,
                             onNavigateBack = { navController.popBackStack() },
+                        )
+                    }
+
+                    // QR auth — scan a desktop's QR code to approve its login
+                    composable(MainRoutes.QrAuthScanner.route) {
+                        QrAuthScannerScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onSuccess = { navController.popBackStack() }
                         )
                     }
                 }

@@ -15,6 +15,11 @@ import com.gsoft.opus.data.api.dto.NotificationDto
 import com.gsoft.opus.data.api.dto.PersonnelAttachmentDto
 import com.gsoft.opus.data.api.dto.PersonnelDto
 import com.gsoft.opus.data.api.dto.PersonnelRequest
+import com.gsoft.opus.data.api.dto.QrAuthApproveResponseDto
+import com.gsoft.opus.data.api.dto.QrAuthRequestDto
+import com.gsoft.opus.data.api.dto.QrAuthRequestResponseDto
+import com.gsoft.opus.data.api.dto.QrAuthScanResponseDto
+import com.gsoft.opus.data.api.dto.QrAuthStatusResponseDto
 import com.gsoft.opus.data.api.dto.RefreshResponseDto
 import com.gsoft.opus.data.api.dto.RefreshTokenRequestDto
 import com.gsoft.opus.data.api.dto.UserDto
@@ -44,6 +49,26 @@ interface ApiService {
 
     @GET("api/health")
     suspend fun healthCheck(): Response<ApiResponse<Nothing>>
+
+    // ─── QR Auth (scan-to-log-in) ───────────────────────────────────
+
+    @POST("api/qr-auth/request")
+    suspend fun createQrAuthRequest(@Body request: QrAuthRequestDto): Response<ApiResponse<QrAuthRequestResponseDto>>
+
+    @GET("api/qr-auth/{code}")
+    suspend fun getQrAuthStatus(@Path("code") code: String): Response<ApiResponse<QrAuthStatusResponseDto>>
+
+    @POST("api/qr-auth/{code}/scan")
+    suspend fun scanQrAuth(@Path("code") code: String): Response<ApiResponse<QrAuthScanResponseDto>>
+
+    @POST("api/qr-auth/{code}/approve")
+    suspend fun approveQrAuth(@Path("code") code: String): Response<ApiResponse<QrAuthApproveResponseDto>>
+
+    @POST("api/qr-auth/{code}/reject")
+    suspend fun rejectQrAuth(@Path("code") code: String): Response<ApiResponse<Nothing>>
+
+    @POST("api/qr-auth/{code}/cancel")
+    suspend fun cancelQrAuth(@Path("code") code: String): Response<ApiResponse<Nothing>>
 
     // ─── FCM Device Token Registration ──────────────────────────────
 

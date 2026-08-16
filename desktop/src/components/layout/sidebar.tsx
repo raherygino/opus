@@ -5,6 +5,7 @@ import { useSidebarStore } from "@/stores/sidebar-store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { PhonePairingDialog } from "@/components/auth/phone-pairing-dialog";
 import { cn } from "@/lib/utils";
 import { hasPermission } from "@/lib/permissions";
 import { getUnreadCount } from "@/lib/api/notifications";
@@ -52,6 +53,7 @@ import {
   MessageSquareText,
   MessageSquareMore,
   BellRing,
+  Smartphone,
 } from "lucide-react";
 
 interface NavItem {
@@ -265,6 +267,7 @@ export function Sidebar() {
   const { isOpen, width } = useSidebarStore();
   const { user, logout } = useAuthStore();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [phonePairingOpen, setPhonePairingOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnread = useCallback(async () => {
@@ -473,6 +476,14 @@ export function Sidebar() {
               </div>
               <Button
                 variant="ghost"
+                className="w-full justify-start gap-2 h-8 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setPhonePairingOpen(true)}
+              >
+                <Smartphone className="h-3.5 w-3.5" />
+                Connecter un téléphone
+              </Button>
+              <Button
+                variant="ghost"
                 className="w-full justify-start gap-2 h-8 text-xs text-muted-foreground hover:text-destructive"
                 onClick={handleLogout}
               >
@@ -483,6 +494,11 @@ export function Sidebar() {
           </div>
         </motion.aside>
       )}
+
+      <PhonePairingDialog
+        open={phonePairingOpen}
+        onClose={() => setPhonePairingOpen(false)}
+      />
     </AnimatePresence>
   );
 }

@@ -44,6 +44,57 @@ export interface AuthResponse {
   user: User;
 }
 
+// ========================
+// QR Auth Types (scan-to-log-in)
+// ========================
+export type QrAuthDeviceType = "desktop" | "android";
+export type QrAuthStatus =
+  | "pending"
+  | "scanned"
+  | "approved"
+  | "rejected"
+  | "expired"
+  | "cancelled"
+  | "consumed";
+
+export interface QrAuthRequestResponse {
+  request_code: string;
+  device_type: QrAuthDeviceType;
+  device_name: string;
+  expires_at: string;
+  ttl_seconds: number;
+}
+
+export interface QrAuthRequesterInfo {
+  username: string;
+  firstname: string;
+  lastname: string;
+  role_code: string;
+  role_name: string;
+}
+
+export interface QrAuthScanResponse {
+  request_code: string;
+  device_type: QrAuthDeviceType;
+  device_name: string;
+  requester: QrAuthRequesterInfo | null;
+  expires_at: string;
+}
+
+export interface QrAuthStatusResponse {
+  request_code: string;
+  device_type: QrAuthDeviceType;
+  device_name: string;
+  status: QrAuthStatus;
+  expires_at: string;
+  scanned_at: string | null;
+  resolved_at: string | null;
+  // Present only once when status === "approved" (one-time retrieval)
+  access_token?: string;
+  refresh_token?: string;
+  user?: User;
+}
+
 export interface Division {
   code: string;
   label: string;

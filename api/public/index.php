@@ -22,6 +22,7 @@ use App\Controllers\UserController;
 use App\Controllers\NotificationController;
 use App\Controllers\DeviceTokenController;
 use App\Controllers\AuditLogController;
+use App\Controllers\QrAuthController;
 
 // --- CORS ---
 CorsMiddleware::handle();
@@ -38,6 +39,16 @@ $router->get('/api/auth/me',        [AuthController::class, 'me']);
 $router->put('/api/auth/password',  [AuthController::class, 'password']);
 $router->post('/api/auth/photo',    [AuthController::class, 'uploadPhoto']);
 $router->delete('/api/auth/photo',    [AuthController::class, 'deletePhoto']);
+
+// ========================
+// QR Auth Routes (scan-to-log-in between desktop & phone)
+// ========================
+$router->post('/api/qr-auth/request',           [QrAuthController::class, 'request']);
+$router->get('/api/qr-auth/{code}',              [QrAuthController::class, 'status']);
+$router->post('/api/qr-auth/{code}/scan',        [QrAuthController::class, 'scan']);
+$router->post('/api/qr-auth/{code}/approve',     [QrAuthController::class, 'approve']);
+$router->post('/api/qr-auth/{code}/reject',      [QrAuthController::class, 'reject']);
+$router->post('/api/qr-auth/{code}/cancel',      [QrAuthController::class, 'cancel']);
 
 // ========================
 // Personnel Routes

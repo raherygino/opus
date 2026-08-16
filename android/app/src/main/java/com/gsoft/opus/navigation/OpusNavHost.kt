@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.gsoft.opus.presentation.login.LoginScreen
 import com.gsoft.opus.presentation.main.MainScreen
+import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
 import com.gsoft.opus.presentation.splash.SplashScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -81,6 +82,30 @@ fun OpusNavHost(
         ) {
             LoginScreen(
                 onLoginSuccess = {
+                    navController.navigate(Routes.Main.route) {
+                        popUpTo(Routes.Login.route) { inclusive = true }
+                    }
+                },
+                onNavigateToQrScanner = {
+                    navController.navigate(Routes.QrAuthScanner.route)
+                }
+            )
+        }
+
+        composable(
+            route = Routes.QrAuthScanner.route,
+            enterTransition = {
+                slideInHorizontally(tween(400)) { it } + fadeIn(tween(400))
+            },
+            exitTransition = {
+                slideOutHorizontally(tween(300)) { -it / 3 } + fadeOut(tween(300))
+            }
+        ) {
+            QrAuthScannerScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onSuccess = {
                     navController.navigate(Routes.Main.route) {
                         popUpTo(Routes.Login.route) { inclusive = true }
                     }

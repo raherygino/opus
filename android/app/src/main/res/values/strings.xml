@@ -16,10 +16,38 @@
     <string name="login_error_network">Erreur réseau. Vérifiez votre connexion.</string>
     <string name="login_error_invalid">Nom d\'utilisateur ou mot de passe invalide</string>
 
+    <!-- QR Auth (scan-to-log-in) -->
+    <string name="qr_login_with_phone">Se connecter avec un téléphone</string>
+    <string name="qr_login_with_computer">Se connecter avec un ordinateur</string>
+    <string name="qr_connect_computer">Connecter un ordinateur</string>
+    <string name="qr_scan_title">Scanner un QR code</string>
+    <string name="qr_scan_instruction">Scannez le QR code affiché sur l\'ordinateur</string>
+    <string name="qr_scan_permission_required">Permission caméra requise pour scanner le QR code</string>
+    <string name="qr_scan_grant_permission">Accorder la permission</string>
+    <string name="qr_confirm_title">Autoriser la connexion</string>
+    <string name="qr_confirm_subtitle">Autoriser la connexion de cet ordinateur ?</string>
+    <string name="qr_confirm_subtitle_phone">Autoriser la connexion à ce compte sur votre téléphone ?</string>
+    <string name="qr_workstation">Poste de travail</string>
+    <string name="qr_account">Compte utilisateur</string>
+    <string name="qr_approve">Autoriser</string>
+    <string name="qr_reject">Refuser</string>
+    <string name="qr_validating">Validation en cours…</string>
+    <string name="qr_success">Authentification réussie</string>
+    <string name="qr_rejected">Connexion refusée</string>
+    <string name="qr_expired">QR code expiré</string>
+    <string name="qr_invalid">QR code invalide</string>
+    <string name="qr_cancel">Annuler</string>
+    <string name="qr_retry">Réessayer</string>
+    <string name="qr_back_to_login">Retour à la connexion</string>
+    <string name="qr_device_name">Ordinateur</string>
+    <string name="qr_unknown_device">Appareil inconnu</string>
+
     <!-- Bottom Navigation -->
     <string name="nav_dashboard">Main</string>
     <string name="nav_notifications">Notifications</string>
     <string name="nav_settings">Paramètres</string>
+    <string name="nav_qr_code">QR Code</string>
+    <string name="nav_personnels">Personnels</string>
     <string name="nav_profile">Profil</string>
     <string name="nav_more">Plus</string>
     <string name="placeholder_coming_soon">Cette fonctionnalité sera bientôt disponible</string>

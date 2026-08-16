@@ -8,9 +8,10 @@ import { login as apiLogin } from "@/lib/api/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Loader2, Shield } from "lucide-react";
+import { Eye, EyeOff, Loader2, Shield, Smartphone, Lock } from "lucide-react";
 import { WindowControls } from "@/components/title-bar/window-controls";
 import { TrafficLights } from "@/components/title-bar/traffic-lights";
+import { QrLoginPanel } from "@/components/auth/qr-login-panel";
 import { cn } from "@/lib/utils";
 import logoSrc from "@/assets/img/logo-opus.png";
 import logoPnSrc from "@/assets/img/logo-pn.png";
@@ -23,6 +24,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [authMode, setAuthMode] = useState<"password" | "qr">("password");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,19 +80,7 @@ export function LoginPage() {
       const result = await apiLogin(username, password);
       login(result.user, result.access_token, result.refresh_token);
       addNotification("success", "Connexion réussie", `Bienvenue ${result.user.firstname} ${result.user.lastname}`);
-
-      const role = result.user.role_code;
-      if (role === "SUPER_ADMIN" || role === "CHIEF" || role === "STATION_ADMIN") {
-        navigate("/dashboard");
-      } else if (role === "HEAD_SG" || role === "OFFICER") {
-        navigate("/sg/dashboard");
-      } else if (role === "HEAD_SED" || role === "RECEPTION" || role === "CLERK") {
-        navigate("/sedentaire/dashboard");
-      } else if (role === "HEAD_PJ" || role === "INVESTIGATOR" || role === "CUSTODY") {
-        navigate("/pj/dashboard");
-      } else {
-        navigate(from);
-      }
+      navigateAfterLogin(result.user.role_code);
     } catch (err: unknown) {
       const msg =
         err && typeof err === "object" && "response" in err
@@ -100,6 +90,20 @@ export function LoginPage() {
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  }
+
+  function navigateAfterLogin(role: string) {
+    if (role === "SUPER_ADMIN" || role === "CHIEF" || role === "STATION_ADMIN") {
+      navigate("/dashboard");
+    } else if (role === "HEAD_SG" || role === "OFFICER") {
+      navigate("/sg/dashboard");
+    } else if (role === "HEAD_SED" || role === "RECEPTION" || role === "CLERK") {
+      navigate("/sedentaire/dashboard");
+    } else if (role === "HEAD_PJ" || role === "INVESTIGATOR" || role === "CUSTODY") {
+      navigate("/pj/dashboard");
+    } else {
+      navigate(from);
     }
   }
 
@@ -262,75 +266,115 @@ export function LoginPage() {
               Connectez-vous pour accéder au système
             </h1>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="username">Nom d'utilisateur</Label>
-                <Input
-                  id="username"
-                  placeholder="Entrez votre nom d'utilisateur"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  autoFocus
-                  disabled={loading}
-                  className="h-11 rounded-lg"
-                />
-              </div>
+            {/* Auth mode toggle */}
+            <div className="mt-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+              <button
+                type="button"
+                onClick={() => setAuthMode("password")}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all",
+                  authMode === "password"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Lock className="h-4 w-4" />
+                Mot de passe
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMode("qr")}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all",
+                  authMode === "qr"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Smartphone className="h-4 w-4" />
+                Téléphone
+              </button>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
+            {authMode === "password" ? (
+              <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Nom d'utilisateur</Label>
                   <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Entrez votre mot de passe"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="username"
+                    placeholder="Entrez votre nom d'utilisateur"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoFocus
                     disabled={loading}
-                    className="h-11 rounded-lg pr-10"
+                    className="h-11 rounded-lg"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Entrez votre mot de passe"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={loading}
+                      className="h-11 rounded-lg pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                    {error}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full h-11 rounded-lg text-base font-medium gap-2"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Shield className="h-5 w-5" />
+                  )}
+                  {loading ? "Connexion en cours..." : "Se connecter"}
+                </Button>
+
+                <div className="text-center">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    tabIndex={-1}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    Mot de passe oublié ?
                   </button>
                 </div>
+              </form>
+            ) : (
+              <div className="mt-6">
+                <QrLoginPanel
+                  deviceType="desktop"
+                  onSuccess={(user) => navigateAfterLogin(user.role_code)}
+                  onCancel={() => setAuthMode("password")}
+                />
               </div>
-
-              {error && (
-                <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full h-11 rounded-lg text-base font-medium gap-2"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Shield className="h-5 w-5" />
-                )}
-                {loading ? "Connexion en cours..." : "Se connecter"}
-              </Button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Mot de passe oublié ?
-                </button>
-              </div>
-            </form>
+            )}
           </motion.div>
         </div>
       </div>

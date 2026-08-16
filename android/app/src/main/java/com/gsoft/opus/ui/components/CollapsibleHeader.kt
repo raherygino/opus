@@ -1,7 +1,5 @@
 package com.gsoft.opus.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,55 +22,42 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.gsoft.opus.R
 
-private val HeaderHeight = 96.dp
+val AppBarHeight = 70.dp
+val AppBarLogoSize = 65.dp
+
 private val AvatarShape = RoundedCornerShape(12.dp)
 
 @Composable
-fun CollapsibleHeader(
-    collapseProgress: Float,
-    photoUrl: String? = null,
-    userName: String? = null,
-    subtitle: String? = null,
+fun OpusTopAppBar(
     onMenuClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
+    subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = collapseProgress,
-        animationSpec = tween(durationMillis = 200),
-        label = "header_collapse"
-    )
-
-    val alpha = 1f - animatedProgress
-
     Surface(
         color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(HeaderHeight)
-                .padding(horizontal = 12.dp),
+                .height(AppBarHeight)
+                .padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onMenuClick,
-                modifier = Modifier.graphicsLayer { this.alpha = alpha }
-            ) {
+            IconButton(onClick = onMenuClick) {
                 Icon(
                     imageVector = Icons.Outlined.Menu,
                     contentDescription = "Menu",
@@ -81,34 +66,27 @@ fun CollapsibleHeader(
             }
 
             Image(
-                painter = painterResource(id = R.drawable.logo_opus),
-                contentDescription = "Opus",
-                modifier = Modifier
-                    .size(48.dp)
-                    .graphicsLayer { this.alpha = alpha }
+                painter = painterResource(id = R.drawable.logo_csp_150),
+                contentDescription = "CSP",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(AppBarLogoSize)
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .graphicsLayer { this.alpha = alpha }
-            ) {
-                if (!userName.isNullOrBlank()) {
-                    Text(
-                        text = userName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "OPUS",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 if (!subtitle.isNullOrBlank()) {
                     Text(
                         text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -116,12 +94,14 @@ fun CollapsibleHeader(
                 }
             }
 
-            ProfileAvatar(
-                photoUrl = photoUrl,
-                size = 38.dp,
-                onClick = onProfileClick,
-                modifier = Modifier.graphicsLayer { this.alpha = alpha }
+            Image(
+                painter = painterResource(id = R.drawable.logo_pn_150),
+                contentDescription = "Opus",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(AppBarLogoSize)
             )
+
+            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 }
@@ -148,13 +128,13 @@ fun ProfileAvatar(
     } else {
         Box(
             modifier = modifierWithClick
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Outlined.Person,
                 contentDescription = "Profile",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(size * 0.55f)
             )
         }

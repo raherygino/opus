@@ -62,6 +62,7 @@ mysql -u root -p < database/003_create_users.sql
 mysql -u root -p < database/004_seed_data.sql
 # ... run remaining migrations in order ...
 mysql -u root -p < database/013_create_device_tokens.sql   # FCM push notifications
+mysql -u root -p < database/014_create_qr_auth_requests.sql # QR-code scan-to-login
 ```
 
 ### Firebase Cloud Messaging (Push Notifications)
@@ -230,6 +231,16 @@ curl http://192.168.1.190:8080/api/users \
 | POST | `/api/devices/register` | Yes | Register FCM device token |
 | POST | `/api/devices/unregister` | Yes | Unregister a device token |
 | DELETE | `/api/devices` | Yes | Unregister all devices (logout) |
+| POST | `/api/qr-auth/request` | No* | Create a QR-code login request (returns a one-time code) |
+| GET | `/api/qr-auth/{code}` | No | Poll QR auth request status (returns tokens on first approved poll) |
+| POST | `/api/qr-auth/{code}/scan` | Yes | Mark a QR auth request as scanned (phone side) |
+| POST | `/api/qr-auth/{code}/approve` | Yes | Approve a QR auth request (issues tokens for the requesting device) |
+| POST | `/api/qr-auth/{code}/reject` | Yes | Reject a QR auth request |
+| POST | `/api/qr-auth/{code}/cancel` | No | Cancel a pending QR auth request |
+
+\* The `/qr-auth/request` endpoint accepts an optional Bearer token. When
+provided (desktop already logged in), it enables the reverse flow where a
+phone scans to log in using the desktop's session.
 
 ## License
 
