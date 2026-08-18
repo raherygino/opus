@@ -3,12 +3,14 @@ package com.gsoft.opus.data.repository
 import android.util.Log
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.data.api.ApiService
+import com.gsoft.opus.data.api.dto.ComportementRequest
 import com.gsoft.opus.data.api.dto.MouvementRequest
 import com.gsoft.opus.data.api.dto.MouvementRetourRequest
 import com.gsoft.opus.data.api.dto.toDomain
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.model.MouvementAttachment
+import com.gsoft.opus.domain.repository.ComportementFormData
 import com.gsoft.opus.domain.repository.ComportementRepository
 import com.gsoft.opus.domain.repository.MouvementFormData
 import com.gsoft.opus.domain.repository.MouvementRepository
@@ -166,6 +168,48 @@ class ComportementRepositoryImpl @Inject constructor(
             Resource.error("Erreur réseau. Vérifiez votre connexion.")
         } catch (e: Exception) {
             Log.e(TAG, "getComportementList failed", e)
+            Resource.error("Une erreur inattendue s'est produite.")
+        }
+    }
+
+    override suspend fun createComportement(data: ComportementFormData): Resource<Comportement> {
+        return try {
+            val request = ComportementRequest(
+                personnelId = data.personnelId,
+                im = data.im,
+                grade = data.grade,
+                service = data.service,
+                nom = data.nom,
+                prenoms = data.prenoms,
+                type = data.type,
+                dateComportement = data.dateComportement,
+                motif = data.motif,
+                decision = data.decision?.takeIf { it.isNotBlank() }
+            )
+            val response = apiService.createComportement(request)
+            if (response.isSuccessful && response.body()?.success == true && response.body()!!.data != null) {
+                Resource.success(response.body()!!.data!!.toDomain())
+            } else {
+                val errors = response.body()?.errors?.entries?.joinToString(", ") { "${it.key}: ${it.value}" }
+                Resource.error(errors ?: response.body()?.message ?: "Impossible d'ajouter le comportement", response.code())
+            }
+        } catch (e: IOException) {
+            Resource.error("Erreur réseau. Vérifiez votre connexion.")
+        } catch (e: Exception) {
+            Log.e(TAG, "createComportement failed", e)
+            Resource.error("Une erreur inattendue s'est produite.")
+        }
+    }
+
+    override suspend fun deleteComportement(id: Int): Resource<Unit> {
+        return try {
+            val response = apiService.deleteComportement(id)
+            if (response.isSuccessful && response.body()?.success == true) Resource.success(Unit)
+            else Resource.error(response.body()?.message ?: "Impossible de supprimer ce comportement", response.code())
+        } catch (e: IOException) {
+            Resource.error("Erreur réseau. Vérifiez votre connexion.")
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteComportement failed", e)
             Resource.error("Une erreur inattendue s'est produite.")
         }
     }

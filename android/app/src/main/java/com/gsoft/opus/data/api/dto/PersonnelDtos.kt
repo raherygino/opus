@@ -112,3 +112,16 @@ data class ComportementDto(
     @SerializedName("decision") val decision: String? = null,
     @SerializedName("created_at") val createdAt: String? = null
 )
+
+data class ComportementRequest(
+    @SerializedName("personnel_id") val personnelId: Int,
+    @SerializedName("im") val im: String,
+    @SerializedName("grade") val grade: String?,
+    @SerializedName("service") val service: String?,
+    @SerializedName("nom") val nom: String?,
+    @SerializedName("prenoms") val prenoms: String?,
+    @SerializedName("type") val type: String,
+    @SerializedName("date_comportement") val dateComportement: String,
+    @SerializedName("motif") val motif: String,
+    @SerializedName("decision") val decision: String?
+)

@@ -66,11 +66,14 @@ fun PersonnelScreen(
     onPersonnelClick: (Int) -> Unit,
     onCreatePersonnel: () -> Unit,
     onCreateMouvement: () -> Unit,
+    onCreateComportement: () -> Unit,
     viewModel: PersonnelViewModel = hiltViewModel(),
-    mouvementViewModel: MouvementViewModel = hiltViewModel()
+    mouvementViewModel: MouvementViewModel = hiltViewModel(),
+    comportementViewModel: ComportementViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val mvtState by mouvementViewModel.state.collectAsState()
+    val compState by comportementViewModel.state.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -81,6 +84,7 @@ fun PersonnelScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.refresh()
                 mouvementViewModel.refresh()
+                comportementViewModel.refresh()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -100,23 +104,38 @@ fun PersonnelScreen(
             mouvementViewModel.dismissMessage()
         }
     }
+    LaunchedEffect(compState.userMessage) {
+        compState.userMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            comportementViewModel.dismissMessage()
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            if (selectedTab == 0 && state.canCreate) {
-                FloatingActionButton(
-                    onClick = onCreatePersonnel,
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(Icons.Outlined.Add, contentDescription = "Ajouter")
+            when (selectedTab) {
+                0 -> if (state.canCreate) {
+                    FloatingActionButton(
+                        onClick = onCreatePersonnel,
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        Icon(Icons.Outlined.Add, contentDescription = "Ajouter")
+                    }
                 }
-            } else if (selectedTab == 1) {
-                FloatingActionButton(
+                1 -> FloatingActionButton(
                     onClick = onCreateMouvement,
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Outlined.Add, contentDescription = "Nouveau mouvement")
+                }
+                2 -> if (compState.canCreate) {
+                    FloatingActionButton(
+                        onClick = onCreateComportement,
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        Icon(Icons.Outlined.Add, contentDescription = "Nouveau comportement")
+                    }
                 }
             }
         }
@@ -137,6 +156,11 @@ fun PersonnelScreen(
                     onClick = { selectedTab = 1 },
                     text = { Text("Mouvements") }
                 )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text("Comportement") }
+                )
             }
 
             when (selectedTab) {
@@ -154,6 +178,13 @@ fun PersonnelScreen(
                     onOpenDetail = mouvementViewModel::openDetail,
                     onOpenRetour = mouvementViewModel::openRetourDialog,
                     onRequestDelete = mouvementViewModel::requestDelete
+                )
+                2 -> ComportementListTab(
+                    state = compState,
+                    onSearch = comportementViewModel::setSearchQuery,
+                    onRefresh = comportementViewModel::refresh,
+                    onOpenDetail = comportementViewModel::openDetail,
+                    onRequestDelete = comportementViewModel::requestDelete
                 )
             }
         }
@@ -198,6 +229,26 @@ fun PersonnelScreen(
         onConfirm = mouvementViewModel::confirmDelete,
         cancelText = "Annuler",
         onCancel = mouvementViewModel::cancelDelete
+    )
+
+    // Comportement detail dialog
+    if (compState.detailTarget != null) {
+        ComportementDetailDialog(
+            state = compState,
+            onDismiss = comportementViewModel::closeDetail
+        )
+    }
+
+    // Comportement delete confirmation
+    OpusDialog(
+        visible = compState.deleteTarget != null,
+        onDismiss = comportementViewModel::cancelDelete,
+        title = "Supprimer le comportement",
+        message = "Voulez-vous vraiment supprimer ce comportement ?",
+        confirmText = if (compState.isDeleting) "..." else "Supprimer",
+        onConfirm = comportementViewModel::confirmDelete,
+        cancelText = "Annuler",
+        onCancel = comportementViewModel::cancelDelete
     )
 }
 

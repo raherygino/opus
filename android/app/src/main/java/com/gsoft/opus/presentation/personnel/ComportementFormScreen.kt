@@ -1,11 +1,8 @@
 package com.gsoft.opus.presentation.personnel
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,12 +18,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.PersonSearch
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.Report
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -56,23 +50,21 @@ import com.gsoft.opus.ui.components.FormSectionCard
 import com.gsoft.opus.ui.components.GradientButton
 import com.gsoft.opus.ui.components.OpusDropdown
 
+private val COMPORTEMENT_TYPES = listOf("Positive", "Negative")
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MouvementFormScreen(
+fun ComportementFormScreen(
     onSaved: () -> Unit,
     onBack: () -> Unit,
-    viewModel: MouvementFormViewModel = hiltViewModel()
+    viewModel: ComportementFormViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     var showDatePicker by remember { mutableStateOf(false) }
-    var dateTarget by remember { mutableStateOf("depart") }
-    var attachmentTitle by remember { mutableStateOf("") }
 
     LaunchedEffect(state.saved) {
         if (state.saved) {
-            state.errorMessage?.let { snackbarHostState.showSnackbar(it) }
             onSaved()
         }
     }
@@ -83,24 +75,11 @@ fun MouvementFormScreen(
         }
     }
 
-    val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        if (uri != null) {
-            val title = if (attachmentTitle.isNotBlank()) attachmentTitle else "Pièce jointe"
-            val uploadFile = uriToUploadFile(context, uri)
-            if (uploadFile != null) {
-                viewModel.addPendingFile(title, uploadFile)
-                attachmentTitle = ""
-            }
-        }
-    }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Nouveau mouvement", fontWeight = FontWeight.Bold) },
+                title = { Text("Nouveau comportement", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Retour")
@@ -122,7 +101,7 @@ fun MouvementFormScreen(
             FormSectionCard(
                 title = "Personnel concerné",
                 icon = Icons.Outlined.PersonSearch,
-                subtitle = "Recherchez la personne concernée par le mouvement"
+                subtitle = "Recherchez la personne concernée"
             ) {
                 OutlinedTextField(
                     value = state.searchName,
@@ -192,121 +171,63 @@ fun MouvementFormScreen(
                 }
             }
 
-            // ─── Détails du mouvement ─────────────────────────────────────
+            // ─── Détails du comportement ──────────────────────────────────
             FormSectionCard(
-                title = "Détails du mouvement",
-                icon = Icons.Outlined.Schedule,
-                subtitle = "Type et dates"
+                title = "Détails du comportement",
+                icon = Icons.Outlined.Report,
+                subtitle = "Type et date"
             ) {
                 OpusDropdown(
-                    label = "Type de mouvement *",
-                    options = MOUVEMENT_TYPES,
-                    selected = state.typeMouvement,
+                    label = "Type *",
+                    options = COMPORTEMENT_TYPES,
+                    selected = state.type,
                     onSelect = viewModel::onTypeChange,
-                    isError = state.typeMouvement.isBlank() && state.errorMessage != null,
+                    isError = state.type.isBlank() && state.errorMessage != null,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 OutlinedTextField(
-                    value = state.dateDepart,
+                    value = state.dateComportement,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Date de départ") },
+                    label = { Text("Date *") },
                     leadingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null) },
                     trailingIcon = {
-                        IconButton(onClick = {
-                            dateTarget = "depart"
-                            showDatePicker = true
-                        }) {
+                        IconButton(onClick = { showDatePicker = true }) {
                             Icon(Icons.Outlined.CalendarMonth, contentDescription = "Choisir la date")
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = state.days,
-                    onValueChange = viewModel::onDaysChange,
-                    label = { Text("Nombre de jours") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = state.dateRetour,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Date de retour") },
-                    leadingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null) },
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            dateTarget = "retour"
-                            showDatePicker = true
-                        }) {
-                            Icon(Icons.Outlined.CalendarMonth, contentDescription = "Choisir la date")
-                        }
-                    },
-                    singleLine = true,
+                    isError = state.dateComportement.isBlank() && state.errorMessage != null,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            // ─── Pièces jointes ───────────────────────────────────────────
+            // ─── Motif & décision ─────────────────────────────────────────
             FormSectionCard(
-                title = "Pièces jointes",
-                icon = Icons.Outlined.AttachFile,
-                subtitle = "Documents liés au mouvement"
+                title = "Motif & décision",
+                icon = Icons.Outlined.Gavel,
+                subtitle = "Description et décision de la hiérarchie"
             ) {
-                state.pendingFiles.forEachIndexed { index, pf ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Outlined.AttachFile, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = pf.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = pf.fileName,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        IconButton(onClick = { viewModel.removePendingFile(index) }) {
-                            Icon(Icons.Outlined.Close, contentDescription = "Retirer", modifier = Modifier.size(18.dp))
-                        }
-                    }
-                }
+                OutlinedTextField(
+                    value = state.motif,
+                    onValueChange = viewModel::onMotifChange,
+                    label = { Text("Motif *") },
+                    placeholder = { Text("Décrire le motif...") },
+                    isError = state.motif.isBlank() && state.errorMessage != null,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = attachmentTitle,
-                        onValueChange = { attachmentTitle = it },
-                        label = { Text("Titre (optionnel)") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
-                        Icon(Icons.Outlined.AttachFile, contentDescription = "Ajouter fichier")
-                    }
-                }
+                OutlinedTextField(
+                    value = state.decision,
+                    onValueChange = viewModel::onDecisionChange,
+                    label = { Text("Décision de la hiérarchie") },
+                    placeholder = { Text("Décision prise par la hiérarchie...") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             if (state.errorMessage != null && !state.saved) {
@@ -329,12 +250,11 @@ fun MouvementFormScreen(
     if (showDatePicker) {
         OpusDatePickerDialog(
             visible = true,
+            title = "Date du comportement",
             onDismiss = { showDatePicker = false },
             onConfirm = { millis ->
                 showDatePicker = false
-                val dateStr = millisToIsoDate(millis)
-                if (dateTarget == "depart") viewModel.onDateDepartChange(dateStr)
-                else viewModel.onDateRetourChange(dateStr)
+                viewModel.onDateChange(millisToIsoDate(millis))
             }
         )
     }

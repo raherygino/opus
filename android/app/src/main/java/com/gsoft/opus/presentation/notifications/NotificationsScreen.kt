@@ -2,6 +2,7 @@ package com.gsoft.opus.presentation.notifications
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
@@ -126,6 +128,7 @@ private fun formatTimeAgo(dateStr: String): String {
 
 @Composable
 fun NotificationsScreen(
+    onPersonnelClick: (Int) -> Unit,
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -204,7 +207,8 @@ fun NotificationsScreen(
                     NotificationCard(
                         notification = notification,
                         onMarkAsRead = { viewModel.markAsRead(notification.id) },
-                        onDelete = { viewModel.requestDelete(notification) }
+                        onDelete = { viewModel.requestDelete(notification) },
+                        onPersonnelClick = onPersonnelClick
                     )
                 }
                 item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -290,10 +294,13 @@ private fun FilterRow(
 private fun NotificationCard(
     notification: AppNotification,
     onMarkAsRead: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onPersonnelClick: (Int) -> Unit
 ) {
     val accent = typeColor(notification.type)
     val unread = !notification.isRead
+    val hasPersonnel = notification.personnelId != null && notification.personnelId > 0 &&
+        !notification.personnelNom.isNullOrBlank()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -410,17 +417,53 @@ private fun NotificationCard(
                     }
                 }
                 val creatorLine = notification.createdByUsername?.let { "par $it" }
-                val metaLine = listOfNotNull(
-                    personnelLine.takeIf { it.isNotBlank() },
-                    creatorLine
-                ).joinToString(" · ")
-                if (metaLine.isNotBlank()) {
-                    Text(
-                        text = metaLine,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+
+                if (hasPersonnel) {
+                    // Clickable personnel chip — navigates to the personnel detail
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 6.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                            .clickable { notification.personnelId?.let(onPersonnelClick) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = personnelLine,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    if (creatorLine != null) {
+                        Text(
+                            text = creatorLine,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                } else {
+                    val metaLine = listOfNotNull(
+                        personnelLine.takeIf { it.isNotBlank() },
+                        creatorLine
+                    ).joinToString(" · ")
+                    if (metaLine.isNotBlank()) {
+                        Text(
+                            text = metaLine,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
 

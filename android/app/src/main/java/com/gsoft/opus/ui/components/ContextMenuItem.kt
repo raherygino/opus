@@ -19,6 +19,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
  *                        becomes expandable/collapsible instead of navigable.
  * @param isSectionHeader when true the item is rendered as a non-interactive
  *                        section header label (no icon, no ripple).
+ * @param module          optional permission module code used to gate visibility
+ *                        of this item. When null (and the item has no visible
+ *                        children) the item is always shown to authenticated
+ *                        users. Mirrors the desktop sidebar `module` field.
  */
 data class ContextMenuItem(
     val id: String,
@@ -27,5 +31,6 @@ data class ContextMenuItem(
     val subtitle: String? = null,
     val badgeCount: Int? = null,
     val children: List<ContextMenuItem>? = null,
-    val isSectionHeader: Boolean = false
+    val isSectionHeader: Boolean = false,
+    val module: String? = null
 )

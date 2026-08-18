@@ -16,35 +16,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Undo
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.ui.components.ErrorMessage
+import com.gsoft.opus.ui.components.OpusDetailDialog
 
 @Composable
 fun MouvementListTab(
@@ -197,71 +187,93 @@ fun MouvementDetailDialog(
     val mvt = state.detailTarget ?: return
     val context = LocalContext.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Détail du mouvement") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                DetailRow("Type", mvt.typeMouvement)
-                DetailRow("IM", mvt.im)
-                mvt.grade?.let { DetailRow("Grade", it) }
-                mvt.service?.let { DetailRow("Service", it) }
-                mvt.nom?.let { DetailRow("Nom", "${mvt.prenoms ?: ""} $it".trim()) }
-                DetailRow("Date départ", formatDateDisplay(mvt.dateDepart))
-                mvt.days?.let { DetailRow("Durée", "$it jour(s)") }
-                DetailRow("Date retour", formatDateDisplay(mvt.dateRetour))
-                DetailRow("Statut", mvt.retour)
+    OpusDetailDialog(
+        visible = true,
+        onDismiss = onDismiss,
+        title = "Détail du mouvement",
+        subtitle = listOfNotNull(mvt.prenoms, mvt.nom)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+            .ifBlank { null },
+        dismissText = "Fermer"
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            DetailRow("Type", mvt.typeMouvement)
+            DetailRow("IM", mvt.im)
+            mvt.grade?.let { DetailRow("Grade", it) }
+            mvt.service?.let { DetailRow("Service", it) }
+            mvt.nom?.let { DetailRow("Nom", "${mvt.prenoms ?: ""} $it".trim()) }
+            DetailRow("Date départ", formatDateDisplay(mvt.dateDepart))
+            mvt.days?.let { DetailRow("Durée", "$it jour(s)") }
+            DetailRow("Date retour", formatDateDisplay(mvt.dateRetour))
+            DetailRow("Statut", mvt.retour)
 
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Pièces jointes",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (state.isLoadingAttachments) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                } else if (state.detailAttachments.isEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Pièces jointes",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            if (state.isLoadingAttachments) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                     Text(
-                        text = "Aucune pièce jointe",
+                        text = "Chargement...",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } else {
-                    state.detailAttachments.forEach { att ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Outlined.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = att.title,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
+                }
+            } else if (state.detailAttachments.isEmpty()) {
+                Text(
+                    text = "Aucune pièce jointe",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                state.detailAttachments.forEach { att ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Outlined.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = att.title,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = {
+                            val url = mouvementAttachmentDownloadUrl(mvt.id, att.id)
+                            openUrl(context, url)
+                        }) {
+                            Icon(Icons.Outlined.Download, contentDescription = "Télécharger", modifier = Modifier.size(18.dp))
+                        }
+                        IconButton(onClick = { onDeleteAttachment(att.id) }) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = "Supprimer",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.error
                             )
-                            IconButton(onClick = {
-                                val url = mouvementAttachmentDownloadUrl(mvt.id, att.id)
-                                openUrl(context, url)
-                            }) {
-                                Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(18.dp))
-                            }
-                            IconButton(onClick = { onDeleteAttachment(att.id) }) {
-                                Icon(
-                                    Icons.Outlined.Delete,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
                         }
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Fermer") }
         }
-    )
+    }
 }
 
 @Composable
@@ -290,53 +302,51 @@ fun MouvementRetourDialog(
     onDismiss: () -> Unit
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    val target = state.retourTarget
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Confirmer le retour") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Enregistrer la date de retour pour ce mouvement",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                OutlinedTextField(
-                    value = state.retourDate,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Date de retour") },
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
-                        }
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                if (state.isSavingRetour) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Enregistrement...")
+    OpusDetailDialog(
+        visible = true,
+        onDismiss = onDismiss,
+        title = "Confirmer le retour",
+        subtitle = target?.let {
+            listOfNotNull(it.prenoms, it.nom, it.typeMouvement)
+                .filter { s -> s.isNotBlank() }
+                .joinToString(" — ")
+        },
+        confirmText = "Confirmer",
+        onConfirm = onConfirm,
+        dismissText = "Annuler",
+        onDismissClick = onDismiss,
+        isConfirmLoading = state.isSavingRetour,
+        confirmEnabled = !state.isSavingRetour
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Enregistrer la date de retour pour ce mouvement",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            OutlinedTextField(
+                value = state.retourDate,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Date de retour") },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Outlined.CalendarMonth, contentDescription = "Choisir la date")
                     }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm, enabled = !state.isSavingRetour) {
-                Text("Confirmer")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !state.isSavingRetour) {
-                Text("Annuler")
-            }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-    )
+    }
 
     if (showDatePicker) {
         OpusDatePickerDialog(
             visible = true,
+            title = "Date de retour",
             onDismiss = { showDatePicker = false },
             onConfirm = { millis ->
                 showDatePicker = false

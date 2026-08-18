@@ -32,6 +32,20 @@ data class MouvementFormData(
     val dateRetour: String?
 )
 
+/** Input data for creating a comportement record. */
+data class ComportementFormData(
+    val personnelId: Int,
+    val im: String,
+    val grade: String?,
+    val service: String?,
+    val nom: String?,
+    val prenoms: String?,
+    val type: String,
+    val dateComportement: String,
+    val motif: String,
+    val decision: String?
+)
+
 /** A file picked from the device, ready for multipart upload. */
 data class UploadFile(
     val fileName: String,
@@ -68,4 +82,6 @@ interface MouvementRepository {
 
 interface ComportementRepository {
     suspend fun getComportementList(personnelId: Int? = null): Resource<List<Comportement>>
+    suspend fun createComportement(data: ComportementFormData): Resource<Comportement>
+    suspend fun deleteComportement(id: Int): Resource<Unit>
 }

@@ -2,6 +2,7 @@ package com.gsoft.opus.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.usecase.LogoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,9 @@ data class HomeUiState(
     val roleCode: String? = null,
     val grade: String? = null,
     val affectation: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    /** Full authenticated user, exposed so screens can gate UI on permissions. */
+    val user: User? = null
 )
 
 @HiltViewModel
@@ -53,7 +56,8 @@ class HomeViewModel @Inject constructor(
                     roleCode = user?.roleCode,
                     grade = user?.grade,
                     affectation = user?.affectation,
-                    isLoading = false
+                    isLoading = false,
+                    user = user
                 )
             }
         }

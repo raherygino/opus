@@ -3,6 +3,7 @@ package com.gsoft.opus.data.api
 import com.gsoft.opus.data.api.dto.ApiResponse
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
 import com.gsoft.opus.data.api.dto.ComportementDto
+import com.gsoft.opus.data.api.dto.ComportementRequest
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
 import com.gsoft.opus.data.api.dto.LoginRequestDto
@@ -190,5 +191,18 @@ interface ApiService {
     // ─── Comportements ──────────────────────────────────────────────
 
     @GET("api/comportements")
-    suspend fun getComportementList(@Query("personnel_id") personnelId: Int? = null): Response<ApiResponse<List<ComportementDto>>>
+    suspend fun getComportementList(
+        @Query("personnel_id") personnelId: Int? = null,
+        @Query("type") type: String? = null,
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<ComportementDto>>>
+
+    @GET("api/comportements/{id}")
+    suspend fun getComportement(@Path("id") id: Int): Response<ApiResponse<ComportementDto>>
+
+    @POST("api/comportements")
+    suspend fun createComportement(@Body request: ComportementRequest): Response<ApiResponse<ComportementDto>>
+
+    @DELETE("api/comportements/{id}")
+    suspend fun deleteComportement(@Path("id") id: Int): Response<ApiResponse<Nothing>>
 }

@@ -57,6 +57,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gsoft.opus.R
+import com.gsoft.opus.core.PermissionAction
+import com.gsoft.opus.core.hasPermission
+import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.navigation.BottomNavItem
 import com.gsoft.opus.navigation.MainRoutes
 import com.gsoft.opus.presentation.contextmenu.ContextMenuItemScreens
@@ -73,6 +76,7 @@ import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
 import com.gsoft.opus.presentation.personnel.MouvementFormScreen
+import com.gsoft.opus.presentation.personnel.ComportementFormScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
 import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
@@ -132,276 +136,9 @@ fun MainScreen(
         }.getOrNull() ?: "1.0.0"
     }
 
-    val drawerItems = listOf(
-        // ── Sédentaire ──
-        ContextMenuItem(id = "section_sedentaire", title = "Sédentaire", isSectionHeader = true),
-        ContextMenuItem(
-            id = "sed_dashboard",
-            title = "Dashboard Sédentaire",
-            icon = Icons.Outlined.Dashboard
-        ),
-        ContextMenuItem(
-            id = "sed_secretariat",
-            title = "Secrétariat",
-            icon = Icons.Outlined.NoteAlt,
-            children = listOf(
-                ContextMenuItem(
-                    id = "sed_correspondance",
-                    title = "Correspondance",
-                    icon = Icons.Outlined.Repeat
-                ),
-                ContextMenuItem(
-                    id = "sed_gestion_personnel",
-                    title = "Gestion du personnel",
-                    icon = Icons.Outlined.People
-                ),
-                ContextMenuItem(
-                    id = "sed_declaration_perte",
-                    title = "Déclaration de perte",
-                    icon = Icons.Outlined.FileCopy
-                ),
-                ContextMenuItem(
-                    id = "sed_rapport",
-                    title = "Rapport",
-                    icon = Icons.Outlined.Square
-                ),
-                ContextMenuItem(
-                    id = "sed_main_courante_sec",
-                    title = "Main courante",
-                    icon = Icons.Outlined.NoteAlt
-                )
-            )
-        ),
-        ContextMenuItem(
-            id = "sed_poste",
-            title = "Poste",
-            icon = Icons.Outlined.Business,
-            children = listOf(
-                ContextMenuItem(
-                    id = "sed_passation",
-                    title = "Passation",
-                    icon = Icons.Outlined.Handshake
-                ),
-                ContextMenuItem(
-                    id = "sed_armement",
-                    title = "Armement",
-                    icon = Icons.Outlined.Security
-                ),
-                ContextMenuItem(
-                    id = "sed_materiels",
-                    title = "Matériels",
-                    icon = Icons.Outlined.Inventory
-                ),
-                ContextMenuItem(
-                    id = "sed_situation_gav",
-                    title = "Situation GAV",
-                    icon = Icons.Outlined.ViewColumn
-                ),
-                ContextMenuItem(
-                    id = "sed_main_courante_poste",
-                    title = "Main courante",
-                    icon = Icons.Outlined.NoteAlt
-                ),
-                ContextMenuItem(
-                    id = "sed_renseignement",
-                    title = "Envoi de renseignement",
-                    icon = Icons.Outlined.Message
-                )
-            )
-        ),
-
-        // ── Division Service Général ──
-        ContextMenuItem(
-            id = "section_sg",
-            title = "Division Service Général",
-            isSectionHeader = true
-        ),
-        ContextMenuItem(
-            id = "sg_dashboard",
-            title = "Dashboard SG",
-            icon = Icons.Outlined.Dashboard
-        ),
-        ContextMenuItem(
-            id = "sg_spa",
-            title = "SPA",
-            subtitle = "Service Prise d'Armes",
-            icon = Icons.Outlined.Receipt
-        ),
-        ContextMenuItem(
-            id = "sg_info_rassemblement",
-            title = "Info rassemblement",
-            icon = Icons.Outlined.Info
-        ),
-        ContextMenuItem(
-            id = "sg_repartition",
-            title = "Répartition",
-            icon = Icons.Outlined.ViewColumn
-        ),
-        ContextMenuItem(
-            id = "sg_patrouille",
-            title = "Patrouille",
-            icon = Icons.Outlined.Security
-        ),
-        ContextMenuItem(
-            id = "sg_intervention",
-            title = "Intervention",
-            icon = Icons.Outlined.Shield
-        ),
-        ContextMenuItem(
-            id = "sg_dispositif_exceptionnel",
-            title = "Dispositif exceptionnel",
-            icon = Icons.Outlined.FilePresent
-        ),
-        ContextMenuItem(
-            id = "sg_instruction_autorite",
-            title = "Instruction autorité",
-            icon = Icons.Outlined.Message
-        ),
-        ContextMenuItem(
-            id = "sg_compte_rendu",
-            title = "Compte rendu",
-            subtitle = "Avec géolocalisation",
-            icon = Icons.Outlined.Description
-        ),
-        ContextMenuItem(
-            id = "sg_recherche",
-            title = "Recherche",
-            icon = Icons.Outlined.FindInPage
-        ),
-        ContextMenuItem(
-            id = "sg_renseignement",
-            title = "Renseignement",
-            icon = Icons.Outlined.Message
-        ),
-
-        // ── Division Police Judiciaire ──
-        ContextMenuItem(
-            id = "section_pj",
-            title = "Division Police Judiciaire",
-            isSectionHeader = true
-        ),
-        ContextMenuItem(
-            id = "pj_dashboard",
-            title = "Dashboard PJ",
-            icon = Icons.Outlined.Dashboard
-        ),
-        ContextMenuItem(
-            id = "pj_plainte",
-            title = "Plainte",
-            subtitle = "Plainte reçue",
-            icon = Icons.Outlined.Description
-        ),
-        ContextMenuItem(
-            id = "pj_registre_enquete",
-            title = "Registre d'enquête",
-            icon = Icons.Outlined.FindInPage
-        ),
-        ContextMenuItem(
-            id = "pj_mandat",
-            title = "Mandat",
-            icon = Icons.Outlined.FilePresent
-        ),
-        ContextMenuItem(
-            id = "pj_convocation",
-            title = "Convocation",
-            icon = Icons.Outlined.Email
-        ),
-        ContextMenuItem(
-            id = "pj_arrestation",
-            title = "Arrestation",
-            icon = Icons.Outlined.LocalPolice
-        ),
-        ContextMenuItem(
-            id = "pj_gav",
-            title = "GAV",
-            subtitle = "Garde à vue",
-            icon = Icons.Outlined.ViewColumn
-        ),
-        ContextMenuItem(
-            id = "pj_requisition",
-            title = "Réquisition",
-            icon = Icons.Outlined.FilePresent
-        ),
-        ContextMenuItem(
-            id = "pj_personne_recherchee",
-            title = "Personne recherchée",
-            icon = Icons.Outlined.PersonSearch
-        ),
-        ContextMenuItem(
-            id = "pj_objets",
-            title = "Objets",
-            icon = Icons.Outlined.Inventory2
-        ),
-        ContextMenuItem(
-            id = "pj_registre_deferrement",
-            title = "Registre de déferrement",
-            icon = Icons.Outlined.Gavel
-        ),
-        ContextMenuItem(
-            id = "pj_renseignement",
-            title = "Renseignement",
-            icon = Icons.Outlined.Message
-        ),
-
-        // ── Global modules ──
-        ContextMenuItem(
-            id = "section_global",
-            title = "Modules globaux",
-            isSectionHeader = true
-        ),
-        ContextMenuItem(
-            id = "cartographie",
-            title = "Cartographie",
-            icon = Icons.Outlined.Map
-        ),
-        ContextMenuItem(
-            id = "utilisateurs",
-            title = "Utilisateurs",
-            icon = Icons.Outlined.Badge
-        ),
-        ContextMenuItem(
-            id = "roles",
-            title = "Rôles",
-            icon = Icons.Outlined.Tune
-        ),
-
-        // ── Signature ──
-        ContextMenuItem(
-            id = "section_signature",
-            title = "Signature",
-            isSectionHeader = true
-        ),
-        ContextMenuItem(
-            id = "signature_pairing",
-            title = "Tablette de signature",
-            icon = Icons.Outlined.Draw
-        ),
-
-        // ── Photo ──
-        ContextMenuItem(
-            id = "section_photo",
-            title = "Photo",
-            isSectionHeader = true
-        ),
-        ContextMenuItem(
-            id = "photo_pairing",
-            title = "Capture photo",
-            icon = Icons.Outlined.PhotoCamera
-        ),
-
-        // ── Connexion ──
-        ContextMenuItem(
-            id = "section_connexion",
-            title = "Connexion",
-            isSectionHeader = true
-        ),
-        ContextMenuItem(
-            id = "qr_auth_scanner",
-            title = "Connecter un ordinateur",
-            subtitle = "Scanner un QR code",
-            icon = Icons.Outlined.QrCodeScanner
-        )
-    )
+    val drawerItems = remember(homeState.user) {
+        buildDrawerItems(homeState.user)
+    }
 
     val drawerRouteMap = remember {
         mapOf(
@@ -595,7 +332,13 @@ fun MainScreen(
                     composable(MainRoutes.Dashboard.route) {
                         DashboardScreen(onLogout = onLogout)
                     }
-                    composable(MainRoutes.Notifications.route) { NotificationsScreen() }
+                    composable(MainRoutes.Notifications.route) {
+                        NotificationsScreen(
+                            onPersonnelClick = { id ->
+                                navController.navigate(MainRoutes.PersonnelDetail.createRoute(id))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Settings.route) { SettingsScreen() }
                     composable(MainRoutes.Profile.route) {
                         ProfileScreen(
@@ -631,6 +374,9 @@ fun MainScreen(
                             },
                             onCreateMouvement = {
                                 navController.navigate(MainRoutes.MouvementForm.createRoute(0))
+                            },
+                            onCreateComportement = {
+                                navController.navigate(MainRoutes.ComportementForm.createRoute(0))
                             }
                         )
                     }
@@ -786,6 +532,34 @@ fun MainScreen(
                         }
                     ) {
                         MouvementFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ComportementForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("personnelId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ComportementFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )
@@ -975,4 +749,172 @@ private fun NavHostController.navigateToDrawerItem(route: String) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Permission-gated drawer construction
+//
+// Mirrors the desktop sidebar (`desktop/src/components/layout/sidebar.tsx`):
+// each drawer entry declares the permission `module` it requires, divisions
+// are only shown when at least one of their modules is viewable, and section
+// headers are dropped when their section ends up empty. SUPER_ADMIN bypasses
+// the permission table entirely (see [hasPermission]).
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
+    "sedentaire" to listOf(
+        "sedentaire_secretariat_correspondance",
+        "personnel",
+        "sedentaire_secretariat_declaration_perte",
+        "sedentaire_secretariat_rapport",
+        "sedentaire_secretariat_main_courante",
+        "sedentaire_poste_passation",
+        "sedentaire_poste_armement",
+        "sedentaire_poste_materiels",
+        "sedentaire_poste_situation_gav",
+        "sedentaire_poste_main_courante",
+        "sedentaire_poste_renseignement",
+    ),
+    "sg" to listOf(
+        "sg_spa",
+        "sg_info_rassemblement",
+        "sg_repartition",
+        "sg_patrouille",
+        "sg_intervention",
+        "sg_dispositif_exceptionnel",
+        "sg_instruction_autorite",
+        "sg_compte_rendu",
+        "sg_recherche",
+        "sg_renseignement",
+    ),
+    "pj" to listOf(
+        "pj_plainte",
+        "pj_enquete",
+        "pj_mandat",
+        "pj_convocation",
+        "pj_arrestation",
+        "pj_gav",
+        "pj_requisition",
+        "pj_personne_recherchee",
+        "pj_objets",
+        "pj_deferrement",
+        "pj_renseignement",
+    ),
+)
+
+private fun userCanAccessDivision(user: User?, division: String): Boolean {
+    val modules = DIVISION_MODULES[division] ?: return false
+    return modules.any { hasPermission(user, it, PermissionAction.VIEW) }
+}
+
+/**
+ * Returns true when [item] should be visible to [user]. Section headers are
+ * never visible on their own (they are emitted by the section builder only
+ * when the section contains at least one visible entry).
+ */
+private fun hasVisibleItem(user: User?, item: ContextMenuItem): Boolean {
+    if (item.isSectionHeader) return false
+    if (item.module == null) {
+        // No module requirement: visible if it has no children, or if any
+        // child is visible (mirrors desktop `hasVisibleNavItem`).
+        return item.children?.any { hasVisibleItem(user, it) } ?: true
+    }
+    if (hasPermission(user, item.module, PermissionAction.VIEW)) return true
+    return item.children?.any { hasVisibleItem(user, it) } ?: false
+}
+
+private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
+    val items = mutableListOf<ContextMenuItem>()
+
+    // ── Sédentaire ──
+    if (userCanAccessDivision(user, "sedentaire")) {
+        items.add(ContextMenuItem(id = "section_sedentaire", title = "Sédentaire", isSectionHeader = true))
+        items.add(ContextMenuItem(id = "sed_dashboard", title = "Dashboard Sédentaire", icon = Icons.Outlined.Dashboard))
+
+        val secretariatChildren = listOf(
+            ContextMenuItem(id = "sed_correspondance", title = "Correspondance", icon = Icons.Outlined.Repeat, module = "sedentaire_secretariat_correspondance"),
+            ContextMenuItem(id = "sed_gestion_personnel", title = "Gestion du personnel", icon = Icons.Outlined.People, module = "personnel"),
+            ContextMenuItem(id = "sed_declaration_perte", title = "Déclaration de perte", icon = Icons.Outlined.FileCopy, module = "sedentaire_secretariat_declaration_perte"),
+            ContextMenuItem(id = "sed_rapport", title = "Rapport", icon = Icons.Outlined.Square, module = "sedentaire_secretariat_rapport"),
+            ContextMenuItem(id = "sed_main_courante_sec", title = "Main courante", icon = Icons.Outlined.NoteAlt, module = "sedentaire_secretariat_main_courante"),
+        ).filter { hasVisibleItem(user, it) }
+
+        val posteChildren = listOf(
+            ContextMenuItem(id = "sed_passation", title = "Passation", icon = Icons.Outlined.Handshake, module = "sedentaire_poste_passation"),
+            ContextMenuItem(id = "sed_armement", title = "Armement", icon = Icons.Outlined.Security, module = "sedentaire_poste_armement"),
+            ContextMenuItem(id = "sed_materiels", title = "Matériels", icon = Icons.Outlined.Inventory, module = "sedentaire_poste_materiels"),
+            ContextMenuItem(id = "sed_situation_gav", title = "Situation GAV", icon = Icons.Outlined.ViewColumn, module = "sedentaire_poste_situation_gav"),
+            ContextMenuItem(id = "sed_main_courante_poste", title = "Main courante", icon = Icons.Outlined.NoteAlt, module = "sedentaire_poste_main_courante"),
+            ContextMenuItem(id = "sed_renseignement", title = "Envoi de renseignement", icon = Icons.Outlined.Message, module = "sedentaire_poste_renseignement"),
+        ).filter { hasVisibleItem(user, it) }
+
+        if (secretariatChildren.isNotEmpty()) {
+            items.add(ContextMenuItem(id = "sed_secretariat", title = "Secrétariat", icon = Icons.Outlined.NoteAlt, children = secretariatChildren))
+        }
+        if (posteChildren.isNotEmpty()) {
+            items.add(ContextMenuItem(id = "sed_poste", title = "Poste", icon = Icons.Outlined.Business, children = posteChildren))
+        }
+    }
+
+    // ── Division Service Général ──
+    if (userCanAccessDivision(user, "sg")) {
+        items.add(ContextMenuItem(id = "section_sg", title = "Division Service Général", isSectionHeader = true))
+        items.add(ContextMenuItem(id = "sg_dashboard", title = "Dashboard SG", icon = Icons.Outlined.Dashboard))
+        val sgChildren = listOf(
+            ContextMenuItem(id = "sg_spa", title = "SPA", subtitle = "Service Prise d'Armes", icon = Icons.Outlined.Receipt, module = "sg_spa"),
+            ContextMenuItem(id = "sg_info_rassemblement", title = "Info rassemblement", icon = Icons.Outlined.Info, module = "sg_info_rassemblement"),
+            ContextMenuItem(id = "sg_repartition", title = "Répartition", icon = Icons.Outlined.ViewColumn, module = "sg_repartition"),
+            ContextMenuItem(id = "sg_patrouille", title = "Patrouille", icon = Icons.Outlined.Security, module = "sg_patrouille"),
+            ContextMenuItem(id = "sg_intervention", title = "Intervention", icon = Icons.Outlined.Shield, module = "sg_intervention"),
+            ContextMenuItem(id = "sg_dispositif_exceptionnel", title = "Dispositif exceptionnel", icon = Icons.Outlined.FilePresent, module = "sg_dispositif_exceptionnel"),
+            ContextMenuItem(id = "sg_instruction_autorite", title = "Instruction autorité", icon = Icons.Outlined.Message, module = "sg_instruction_autorite"),
+            ContextMenuItem(id = "sg_compte_rendu", title = "Compte rendu", subtitle = "Avec géolocalisation", icon = Icons.Outlined.Description, module = "sg_compte_rendu"),
+            ContextMenuItem(id = "sg_recherche", title = "Recherche", icon = Icons.Outlined.FindInPage, module = "sg_recherche"),
+            ContextMenuItem(id = "sg_renseignement", title = "Renseignement", icon = Icons.Outlined.Message, module = "sg_renseignement"),
+        ).filter { hasVisibleItem(user, it) }
+        items.addAll(sgChildren)
+    }
+
+    // ── Division Police Judiciaire ──
+    if (userCanAccessDivision(user, "pj")) {
+        items.add(ContextMenuItem(id = "section_pj", title = "Division Police Judiciaire", isSectionHeader = true))
+        items.add(ContextMenuItem(id = "pj_dashboard", title = "Dashboard PJ", icon = Icons.Outlined.Dashboard))
+        val pjChildren = listOf(
+            ContextMenuItem(id = "pj_plainte", title = "Plainte", subtitle = "Plainte reçue", icon = Icons.Outlined.Description, module = "pj_plainte"),
+            ContextMenuItem(id = "pj_registre_enquete", title = "Registre d'enquête", icon = Icons.Outlined.FindInPage, module = "pj_enquete"),
+            ContextMenuItem(id = "pj_mandat", title = "Mandat", icon = Icons.Outlined.FilePresent, module = "pj_mandat"),
+            ContextMenuItem(id = "pj_convocation", title = "Convocation", icon = Icons.Outlined.Email, module = "pj_convocation"),
+            ContextMenuItem(id = "pj_arrestation", title = "Arrestation", icon = Icons.Outlined.LocalPolice, module = "pj_arrestation"),
+            ContextMenuItem(id = "pj_gav", title = "GAV", subtitle = "Garde à vue", icon = Icons.Outlined.ViewColumn, module = "pj_gav"),
+            ContextMenuItem(id = "pj_requisition", title = "Réquisition", icon = Icons.Outlined.FilePresent, module = "pj_requisition"),
+            ContextMenuItem(id = "pj_personne_recherchee", title = "Personne recherchée", icon = Icons.Outlined.PersonSearch, module = "pj_personne_recherchee"),
+            ContextMenuItem(id = "pj_objets", title = "Objets", icon = Icons.Outlined.Inventory2, module = "pj_objets"),
+            ContextMenuItem(id = "pj_registre_deferrement", title = "Registre de déferrement", icon = Icons.Outlined.Gavel, module = "pj_deferrement"),
+            ContextMenuItem(id = "pj_renseignement", title = "Renseignement", icon = Icons.Outlined.Message, module = "pj_renseignement"),
+        ).filter { hasVisibleItem(user, it) }
+        items.addAll(pjChildren)
+    }
+
+    // ── Global modules ──
+    val globalChildren = listOf(
+        ContextMenuItem(id = "cartographie", title = "Cartographie", icon = Icons.Outlined.Map, module = "cartographie"),
+        ContextMenuItem(id = "utilisateurs", title = "Utilisateurs", icon = Icons.Outlined.Badge, module = "users"),
+        ContextMenuItem(id = "roles", title = "Rôles", icon = Icons.Outlined.Tune, module = "roles"),
+    ).filter { hasVisibleItem(user, it) }
+    if (globalChildren.isNotEmpty()) {
+        items.add(ContextMenuItem(id = "section_global", title = "Modules globaux", isSectionHeader = true))
+        items.addAll(globalChildren)
+    }
+
+    // ── Signature / Photo / Connexion ──
+    // Mobile-only pairing features: no backend permission module, so they
+    // remain available to every authenticated user.
+    items.add(ContextMenuItem(id = "section_signature", title = "Signature", isSectionHeader = true))
+    items.add(ContextMenuItem(id = "signature_pairing", title = "Tablette de signature", icon = Icons.Outlined.Draw))
+    items.add(ContextMenuItem(id = "section_photo", title = "Photo", isSectionHeader = true))
+    items.add(ContextMenuItem(id = "photo_pairing", title = "Capture photo", icon = Icons.Outlined.PhotoCamera))
+    items.add(ContextMenuItem(id = "section_connexion", title = "Connexion", isSectionHeader = true))
+    items.add(ContextMenuItem(id = "qr_auth_scanner", title = "Connecter un ordinateur", subtitle = "Scanner un QR code", icon = Icons.Outlined.QrCodeScanner))
+
+    return items
 }

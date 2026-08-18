@@ -89,4 +89,7 @@ sealed class MainRoutes(val route: String) {
     data object MouvementForm : MainRoutes("mouvement_form?personnelId={personnelId}") {
         fun createRoute(personnelId: Int = 0) = "mouvement_form?personnelId=$personnelId"
     }
+    data object ComportementForm : MainRoutes("comportement_form?personnelId={personnelId}") {
+        fun createRoute(personnelId: Int = 0) = "comportement_form?personnelId=$personnelId"
+    }
 }

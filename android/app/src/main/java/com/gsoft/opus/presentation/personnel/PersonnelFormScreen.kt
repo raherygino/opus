@@ -24,18 +24,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContactPhone
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +42,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,12 +56,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.ui.components.ErrorMessage
+import com.gsoft.opus.ui.components.FormSectionCard
 import com.gsoft.opus.ui.components.GradientButton
+import com.gsoft.opus.ui.components.OpusDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,219 +136,131 @@ fun PersonnelFormScreen(
                 .padding(padding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Photo section
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { photoPickerLauncher.launch("image/*") },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (state.photoPreview != null) {
-                            AsyncImage(
-                                model = state.photoPreview,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize().clip(CircleShape)
-                            )
-                        } else {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Outlined.CameraAlt,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Photo",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Form fields
-            OutlinedTextField(
-                value = state.im,
-                onValueChange = viewModel::updateIm,
-                label = { Text("IM *") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+            // ─── Photo section ────────────────────────────────────────────
+            PhotoPickerCard(
+                photoPreview = state.photoPreview,
+                onPickPhoto = { photoPickerLauncher.launch("image/*") }
             )
 
-            // Grade dropdown
-            var gradeExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = gradeExpanded,
-                onExpandedChange = { gradeExpanded = it }
+            // ─── Identité section ─────────────────────────────────────────
+            FormSectionCard(
+                title = "Identité",
+                icon = Icons.Outlined.Person,
+                subtitle = "Informations administratives"
             ) {
                 OutlinedTextField(
-                    value = state.grade,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Grade *") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = gradeExpanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                    value = state.im,
+                    onValueChange = viewModel::updateIm,
+                    label = { Text("IM *") },
+                    placeholder = { Text("Matricule") },
+                    leadingIcon = { Icon(Icons.Outlined.Badge, contentDescription = null) },
+                    singleLine = true,
+                    isError = state.im.isBlank() && state.errorMessage != null,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                ExposedDropdownMenu(
-                    expanded = gradeExpanded,
-                    onDismissRequest = { gradeExpanded = false }
-                ) {
-                    GRADES.forEach { grade ->
-                        DropdownMenuItem(
-                            text = { Text(grade) },
-                            onClick = {
-                                viewModel.updateGrade(grade)
-                                gradeExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
 
-            OutlinedTextField(
-                value = state.lastname,
-                onValueChange = viewModel::updateLastname,
-                label = { Text("Nom *") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+                OpusDropdown(
+                    label = "Grade *",
+                    options = GRADES,
+                    selected = state.grade,
+                    onSelect = viewModel::updateGrade,
+                    leadingIcon = { Icon(Icons.Outlined.Work, contentDescription = null) },
+                    isError = state.grade.isBlank() && state.errorMessage != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            OutlinedTextField(
-                value = state.firstname,
-                onValueChange = viewModel::updateFirstname,
-                label = { Text("Prénom(s) *") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Affectation dropdown
-            var affectationExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = affectationExpanded,
-                onExpandedChange = { affectationExpanded = it }
-            ) {
                 OutlinedTextField(
-                    value = state.affectation,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Affectation") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = affectationExpanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                    value = state.lastname,
+                    onValueChange = viewModel::updateLastname,
+                    label = { Text("Nom *") },
+                    singleLine = true,
+                    isError = state.lastname.isBlank() && state.errorMessage != null,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                ExposedDropdownMenu(
-                    expanded = affectationExpanded,
-                    onDismissRequest = { affectationExpanded = false }
-                ) {
-                    AFFECTATIONS.forEach { aff ->
-                        DropdownMenuItem(
-                            text = { Text(aff) },
-                            onClick = {
-                                viewModel.updateAffectation(aff)
-                                affectationExpanded = false
-                            }
-                        )
-                    }
-                }
+
+                OutlinedTextField(
+                    value = state.firstname,
+                    onValueChange = viewModel::updateFirstname,
+                    label = { Text("Prénom(s) *") },
+                    singleLine = true,
+                    isError = state.firstname.isBlank() && state.errorMessage != null,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            OutlinedTextField(
-                value = state.phone,
-                onValueChange = viewModel::updatePhone,
-                label = { Text("Téléphone") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.address,
-                onValueChange = viewModel::updateAddress,
-                label = { Text("Adresse") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Attachments section
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            // ─── Affectation & Contact section ────────────────────────────
+            FormSectionCard(
+                title = "Affectation & Contact",
+                icon = Icons.Outlined.ContactPhone,
+                subtitle = "Service et coordonnées"
             ) {
-                Text(
-                    text = "Pièces jointes",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                OpusDropdown(
+                    label = "Affectation",
+                    options = AFFECTATIONS,
+                    selected = state.affectation,
+                    onSelect = viewModel::updateAffectation,
+                    leadingIcon = { Icon(Icons.Outlined.Home, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
                 )
-                IconButton(onClick = { viewModel.addAttachment() }) {
-                    Icon(Icons.Outlined.Add, contentDescription = "Ajouter")
-                }
+
+                OutlinedTextField(
+                    value = state.phone,
+                    onValueChange = viewModel::updatePhone,
+                    label = { Text("Téléphone") },
+                    placeholder = { Text("Ex: 0601020304") },
+                    leadingIcon = { Icon(Icons.Outlined.ContactPhone, contentDescription = null) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = state.address,
+                    onValueChange = viewModel::updateAddress,
+                    label = { Text("Adresse") },
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Outlined.Home, contentDescription = null) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            state.attachments.filter { !it.isDeleted }.forEachIndexed { index, item ->
-                val realIndex = state.attachments.indexOf(item)
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = item.title,
-                                onValueChange = { viewModel.updateAttachmentTitle(realIndex, it) },
-                                label = { Text("Titre") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(onClick = { viewModel.removeAttachment(realIndex) }) {
-                                Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                            }
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = item.uploadFile?.fileName ?: item.existingFilename ?: "Aucun fichier",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(onClick = {
-                                attachmentFilePickerIndex = realIndex
-                                attachmentFilePickerLauncher.launch("*/*")
-                            }) {
-                                Icon(Icons.Outlined.AttachFile, contentDescription = "Choisir fichier")
-                            }
-                        }
-                    }
+            // ─── Pièces jointes section ───────────────────────────────────
+            FormSectionCard(
+                title = "Pièces jointes",
+                icon = Icons.Outlined.AttachFile,
+                subtitle = "Documents associés au personnel"
+            ) {
+                state.attachments.filter { !it.isDeleted }.forEachIndexed { _, item ->
+                    val realIndex = state.attachments.indexOf(item)
+                    AttachmentFieldCard(
+                        title = item.title,
+                        fileName = item.uploadFile?.fileName ?: item.existingFilename,
+                        onTitleChange = { viewModel.updateAttachmentTitle(realIndex, it) },
+                        onPickFile = {
+                            attachmentFilePickerIndex = realIndex
+                            attachmentFilePickerLauncher.launch("*/*")
+                        },
+                        onRemove = { viewModel.removeAttachment(realIndex) }
+                    )
                 }
+
+                AddAttachmentButton(onClick = { viewModel.addAttachment() })
             }
 
+            // ─── Error + submit ───────────────────────────────────────────
             if (state.errorMessage != null) {
                 ErrorMessage(message = state.errorMessage!!)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             GradientButton(
                 text = if (state.isEdit) "Mettre à jour" else "Enregistrer",
@@ -359,5 +271,152 @@ fun PersonnelFormScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+@Composable
+private fun PhotoPickerCard(
+    photoPreview: String?,
+    onPickPhoto: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable { onPickPhoto() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            if (photoPreview != null) {
+                AsyncImage(
+                    model = photoPreview,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Outlined.CameraAlt,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Photo",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Photo du personnel",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Touchez pour choisir une image",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun AttachmentFieldCard(
+    title: String,
+    fileName: String?,
+    onTitleChange: (String) -> Unit,
+    onPickFile: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = title,
+                onValueChange = onTitleChange,
+                label = { Text("Titre") },
+                singleLine = true,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Outlined.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .clickable { onPickFile() }
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Outlined.AttachFile, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = fileName ?: "Aucun fichier — touchez pour choisir",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (fileName.isNullOrBlank()) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddAttachmentButton(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Outlined.Add,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Ajouter une pièce jointe",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
