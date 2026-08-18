@@ -21,23 +21,33 @@ data class PersonnelUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val searchQuery: String = "",
+    val serviceFilter: String = "",
     val canCreate: Boolean = false,
     val canDelete: Boolean = false,
     val deleteTarget: Personnel? = null,
     val isDeleting: Boolean = false,
     val userMessage: String? = null
 ) {
+    /** Distinct affectations present in the data, for the service tabs. */
+    val services: List<String>
+        get() = personnel.mapNotNull { it.affectation }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+
     val filtered: List<Personnel>
         get() {
             val query = searchQuery.trim().lowercase()
-            if (query.isEmpty()) return personnel
             return personnel.filter { p ->
-                p.lastname.lowercase().contains(query) ||
+                val matchesService = serviceFilter.isEmpty() || p.affectation == serviceFilter
+                val matchesQuery = query.isEmpty() ||
+                    p.lastname.lowercase().contains(query) ||
                     p.firstname.lowercase().contains(query) ||
                     "${p.firstname} ${p.lastname}".lowercase().contains(query) ||
                     p.im.lowercase().contains(query) ||
                     p.grade.lowercase().contains(query) ||
                     (p.affectation?.lowercase()?.contains(query) == true)
+                matchesService && matchesQuery
             }
         }
 }
@@ -85,6 +95,10 @@ class PersonnelViewModel @Inject constructor(
 
     fun setSearchQuery(query: String) {
         _state.update { it.copy(searchQuery = query) }
+    }
+
+    fun setServiceFilter(service: String) {
+        _state.update { it.copy(serviceFilter = service) }
     }
 
     fun requestDelete(personnel: Personnel) {

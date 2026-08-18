@@ -164,12 +164,13 @@ fun PersonnelScreen(
             }
 
             when (selectedTab) {
-                0 -> PersonnelListTab(
+                0 -> PersonnelListContent(
                     state = state,
                     onSearch = viewModel::setSearchQuery,
+                    onServiceFilter = viewModel::setServiceFilter,
                     onRefresh = viewModel::refresh,
                     onPersonnelClick = onPersonnelClick,
-                    onRequestDelete = viewModel::requestDelete
+                    onRequestDelete = if (state.canDelete) viewModel::requestDelete else null
                 )
                 1 -> MouvementListTab(
                     state = mvtState,
@@ -250,141 +251,6 @@ fun PersonnelScreen(
         cancelText = "Annuler",
         onCancel = comportementViewModel::cancelDelete
     )
-}
-
-@Composable
-private fun PersonnelListTab(
-    state: PersonnelUiState,
-    onSearch: (String) -> Unit,
-    onRefresh: () -> Unit,
-    onPersonnelClick: (Int) -> Unit,
-    onRequestDelete: (Personnel) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        SearchBar(
-            query = state.searchQuery,
-            onQueryChange = onSearch,
-            onRefresh = onRefresh,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.errorMessage != null) {
-            ErrorMessage(
-                message = state.errorMessage,
-                modifier = Modifier.padding(16.dp)
-            )
-        } else if (state.filtered.isEmpty()) {
-            EmptyState("Aucun personnel trouvé")
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 8.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(state.filtered, key = { it.id }) { personnel ->
-                    PersonnelListItem(
-                        personnel = personnel,
-                        canDelete = state.canDelete,
-                        onClick = { onPersonnelClick(personnel.id) },
-                        onDelete = { onRequestDelete(personnel) }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PersonnelListItem(
-    personnel: Personnel,
-    canDelete: Boolean,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Photo
-        val photoUrl = personnel.photo?.let { personnelPhotoUrl(personnel.id) }
-        if (photoUrl != null) {
-            AsyncImage(
-                model = photoUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Outlined.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${personnel.firstname} ${personnel.lastname}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "${personnel.grade} • IM: ${personnel.im}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (!personnel.affectation.isNullOrBlank()) {
-                Text(
-                    text = personnel.affectation,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        StatusBadge(status = personnel.status)
-
-        // Explicit delete button — clearly separated from click-to-open-details
-        if (canDelete) {
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Outlined.Delete,
-                    contentDescription = "Supprimer",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
 }
 
 @Composable

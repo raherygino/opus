@@ -33,6 +33,7 @@ data class PersonnelDetailUiState(
     val errorMessage: String? = null,
     val canEdit: Boolean = false,
     val canDelete: Boolean = false,
+    val canViewRecords: Boolean = false,
     val isUploadingAttachment: Boolean = false,
     val deleteAttachmentTarget: PersonnelAttachment? = null,
     val userMessage: String? = null,
@@ -64,7 +65,8 @@ class PersonnelDetailViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     canEdit = hasPermission(user, "personnel", PermissionAction.EDIT),
-                    canDelete = hasPermission(user, "personnel", PermissionAction.DELETE)
+                    canDelete = hasPermission(user, "personnel", PermissionAction.DELETE),
+                    canViewRecords = hasPermission(user, "personnel", PermissionAction.VIEW)
                 )
             }
         }
