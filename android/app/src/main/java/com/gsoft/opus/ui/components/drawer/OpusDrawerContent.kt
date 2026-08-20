@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -79,6 +80,8 @@ private val ItemCorner = 16.dp
 private val IconSize = 24.dp
 private const val StaggerStep = 0.03f
 private const val StaggerWindow = 0.45f
+/** Horizontal slide (in dp) applied to staggered entries before they settle. */
+private val StaggerSlideDp = 24.dp
 
 /**
  * Fixed left pane of [OpusAnimatedDrawer].
@@ -123,6 +126,11 @@ fun OpusDrawerContent(
 ) {
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
+    // Precompute the stagger slide distance in pixels once, instead of
+    // calling 24.dp.toPx() inside every StaggeredEntry's per-frame
+    // graphicsLayer lambda (one toPx() per item per frame otherwise).
+    val staggerSlidePx = with(LocalDensity.current) { StaggerSlideDp.toPx() }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -153,7 +161,11 @@ fun OpusDrawerContent(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
-                StaggeredEntry(index = index, progress = progress) {
+                StaggeredEntry(
+                    index = index,
+                    progress = progress,
+                    slidePx = staggerSlidePx
+                ) {
                     when {
                         item.isSectionHeader -> DrawerSectionHeader(title = item.title)
                         item.children != null -> DrawerExpandableItem(
@@ -216,6 +228,7 @@ fun OpusDrawerContent(
 private fun StaggeredEntry(
     index: Int,
     progress: () -> Float,
+    slidePx: Float,
     content: @Composable () -> Unit
 ) {
     Box(
@@ -223,7 +236,7 @@ private fun StaggeredEntry(
             val delay = (index * StaggerStep).coerceAtMost(StaggerWindow)
             val p = ((progress() - delay) / (1f - delay)).coerceIn(0f, 1f)
             alpha = p
-            translationX = -24.dp.toPx() * (1f - p)
+            translationX = -slidePx * (1f - p)
         }
     ) {
         content()

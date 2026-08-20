@@ -23,15 +23,22 @@ import androidx.compose.runtime.setValue
  * (translation, scale, corner radius, rotation, elevation, overlay alpha)
  * perfectly in sync.
  *
- * [isOpened] is a stable boolean that only flips when an open/close
- * animation **completes**. It is read by the overlay to decide whether to
- * intercept taps (so the dimmed scrim only closes the drawer once it is
- * fully open, not while it is animating).
+ * Two boolean snapshots are exposed:
+ * - [isOpen] flips **immediately** when open/close is requested. It is backed
+ *   by [mutableStateOf] so Compose can react to it (e.g. enabling the system
+ *   back handler). It reflects *intent*, not the settled visual state.
+ * - [isOpened] flips only when an open/close animation **completes**. It is
+ *   read by the overlay to decide whether to intercept taps (so the dimmed
+ *   scrim only closes the drawer once it is fully open, not while animating).
+ *
+ * Both are snapshot state so they can be read in composition without pulling
+ * the whole drawer into recomposition on every animation frame — only the
+ * small leaf composables that read them recompose.
  */
 @Stable
 class OpusDrawerState(initiallyOpen: Boolean = false) {
 
-    /** Animated open fraction. */
+    /** Animated open fraction. Read inside `graphicsLayer` blocks only. */
     val progress = Animatable(if (initiallyOpen) 1f else 0f)
 
     /**
@@ -41,18 +48,26 @@ class OpusDrawerState(initiallyOpen: Boolean = false) {
     var isOpened by mutableStateOf(initiallyOpen)
         private set
 
-    /** Whether the drawer is (or is settling) open. */
-    val isOpen: Boolean
-        get() = progress.targetValue > 0.5f
+    /**
+     * Whether the drawer is open or settling open. Flips immediately on
+     * open()/close() so callers (BackHandler, gesture handlers) react without
+     * waiting for the animation to finish. Backed by snapshot state.
+     */
+    var isOpen by mutableStateOf(initiallyOpen)
+        private set
 
     /** Animates the drawer fully open. Suspends until the animation completes. */
     suspend fun open() {
+        if (isOpen) return
+        isOpen = true
         progress.animateTo(1f, AnimationSpec)
         isOpened = true
     }
 
     /** Animates the drawer fully closed. Suspends until the animation completes. */
     suspend fun close() {
+        if (!isOpen) return
+        isOpen = false
         progress.animateTo(0f, AnimationSpec)
         isOpened = false
     }
