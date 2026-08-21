@@ -95,9 +95,13 @@ export function UsersList() {
       key: "role_name",
       header: "Rôle",
       sortable: true,
-      render: (u) => (
+      render: (u) => {
+        const isAdmin = u.role_code === "SUPER_ADMIN" || u.role_code === "STATION_ADMIN";
+        // An admin may not change another admin's role.
+        const canChangeRole = isSuperAdmin && u.id !== currentUser?.id && !isAdmin;
+        return (
         <div className="flex items-center gap-2">
-          {isSuperAdmin && u.id !== currentUser?.id ? (
+          {canChangeRole ? (
             <div className="relative">
               <Select
                 value={String(u.role_id)}
@@ -116,7 +120,8 @@ export function UsersList() {
             </span>
           )}
         </div>
-      ),
+        );
+      },
     },
     {
       key: "is_active",
@@ -144,18 +149,26 @@ export function UsersList() {
       key: "actions",
       header: "Actions",
       className: "w-[100px]",
-      render: (u) => (
+      render: (u) => {
+        // An admin user can never be deleted — not even by another admin.
+        const isAdmin = u.role_code === "SUPER_ADMIN" || u.role_code === "STATION_ADMIN";
+        // An admin may only edit their own account, not another admin's.
+        const canEditUser = u.id === currentUser?.id || !isAdmin;
+        return (
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/users/${u.id}/edit`)}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          {isSuperAdmin && u.id !== currentUser?.id && (
+          {canEditUser && (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/users/${u.id}/edit`)}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {isSuperAdmin && u.id !== currentUser?.id && !isAdmin && (
             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteTarget(u)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
-      ),
+        );
+      },
     },
   ];
 

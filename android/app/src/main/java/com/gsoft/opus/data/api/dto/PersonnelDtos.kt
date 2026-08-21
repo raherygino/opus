@@ -19,7 +19,8 @@ data class PersonnelDto(
     @SerializedName("signature_svg") val signatureSvg: String? = null,
     @SerializedName("status") val status: String = "",
     @SerializedName("created_at") val createdAt: String? = null,
-    @SerializedName("updated_at") val updatedAt: String? = null
+    @SerializedName("updated_at") val updatedAt: String? = null,
+    @SerializedName("is_admin_profile") val isAdminProfile: Boolean? = null
 )
 
 data class PersonnelRequest(

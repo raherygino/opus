@@ -15,7 +15,9 @@ data class Personnel(
     val signatureSvg: String?,
     val status: String,
     val createdAt: String?,
-    val updatedAt: String?
+    val updatedAt: String?,
+    /** True when this personnel record is linked to an admin user account. */
+    val isAdminProfile: Boolean = false
 )
 
 data class PersonnelAttachment(

@@ -35,6 +35,22 @@ class NotificationRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getUnreadCount(): Resource<Int> {
+        return try {
+            val response = apiService.getUnreadCount()
+            if (response.isSuccessful && response.body()?.success == true) {
+                Resource.success(response.body()!!.data?.count ?: 0)
+            } else {
+                Resource.error(response.body()?.message ?: "Failed to load unread count", response.code())
+            }
+        } catch (e: IOException) {
+            Resource.error("Network error. Check your connection.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load unread count", e)
+            Resource.error("An unexpected error occurred.")
+        }
+    }
+
     override suspend fun markAsRead(id: Int): Boolean {
         return try {
             val response = apiService.markNotificationAsRead(id)

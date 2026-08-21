@@ -13,6 +13,7 @@ import com.gsoft.opus.data.api.dto.MouvementDto
 import com.gsoft.opus.data.api.dto.MouvementRequest
 import com.gsoft.opus.data.api.dto.MouvementRetourRequest
 import com.gsoft.opus.data.api.dto.NotificationDto
+import com.gsoft.opus.data.api.dto.UnreadCountDto
 import com.gsoft.opus.data.api.dto.PersonnelAttachmentDto
 import com.gsoft.opus.data.api.dto.PersonnelDto
 import com.gsoft.opus.data.api.dto.PersonnelRequest
@@ -86,6 +87,9 @@ interface ApiService {
 
     @GET("api/notifications")
     suspend fun getNotifications(): Response<ApiResponse<List<NotificationDto>>>
+
+    @GET("api/notifications/unread-count")
+    suspend fun getUnreadCount(): Response<ApiResponse<UnreadCountDto>>
 
     @PUT("api/notifications/{id}/read")
     suspend fun markNotificationAsRead(@Path("id") id: Int): Response<ApiResponse<Nothing>>

@@ -3,6 +3,7 @@ package com.gsoft.opus.notifications
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.gsoft.opus.presentation.notifications.UnreadCountStore
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -32,6 +33,9 @@ class OpusMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var navigationBus: NotificationNavigationBus
+
+    @Inject
+    lateinit var unreadCountStore: UnreadCountStore
 
     /**
      * Called when a new FCM token is issued. The token may rotate, so we
@@ -74,6 +78,11 @@ class OpusMessagingService : FirebaseMessagingService() {
 
         // Let the notifications screen refresh its list in real time.
         navigationBus.notifyNotificationReceived()
+
+        // Bump the global unread count immediately so the badge updates even
+        // if no screen is currently collecting it. The store will then sync
+        // the authoritative count from the server.
+        unreadCountStore.onPushReceived()
 
         notificationHelper.showNotification(
             notificationId = notificationId,

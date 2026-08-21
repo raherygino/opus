@@ -61,7 +61,11 @@ fun NotificationDto.toDomain(): AppNotification = AppNotification(
     personnelNom = personnelNom,
     personnelPrenoms = personnelPrenoms,
     personnelGrade = personnelGrade,
-    createdByUsername = createdByUsername
+    personnelPhoto = personnelPhoto,
+    createdByUsername = createdByUsername,
+    createdByFirstname = createdByFirstname,
+    createdByPhoto = createdByPhoto,
+    createdByPersonnelId = createdByPersonnelId
 )
 
 fun PersonnelDto.toDomain(): Personnel = Personnel(
@@ -79,7 +83,8 @@ fun PersonnelDto.toDomain(): Personnel = Personnel(
     signatureSvg = signatureSvg,
     status = status,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    isAdminProfile = isAdminProfile ?: false
 )
 
 fun PersonnelAttachmentDto.toDomain(): PersonnelAttachment = PersonnelAttachment(

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
+import { hasPermission } from "@/lib/permissions";
 import {
   getPersonnelById,
   getPersonnelAttachments,
@@ -58,6 +60,7 @@ export function PersonnelDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user: currentUser } = useAuthStore();
 
   const [person, setPerson] = useState<Personnel | null>(null);
   const [attachments, setAttachments] = useState<PersonnelAttachment[]>([]);
@@ -108,6 +111,15 @@ export function PersonnelDetail() {
 
   if (!person) return null;
 
+  // Permission: can the current user edit this personnel record?
+  // - Must have the "personnel" edit permission (RBAC).
+  // - Must NOT be viewing another admin's profile (an admin may only edit
+  //   their own profile, never another admin's).
+  const isOwnProfile = currentUser?.personnel_id === person.id;
+  const canEditProfile =
+    hasPermission(currentUser, "personnel", "can_edit") &&
+    !(person.is_admin_profile && !isOwnProfile);
+
   const photoUrl = person.photo ? getPersonnelPhotoUrl(person.id) + "?v=" + person.photo : null;
 
   return (
@@ -143,13 +155,15 @@ export function PersonnelDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
-          <Button
-            onClick={() => navigate(`/personnel/${person.id}/edit`)}
-            className="gap-2"
-          >
-            <Pencil className="h-4 w-4" />
-            Modifier
-          </Button>
+          {canEditProfile && (
+            <Button
+              onClick={() => navigate(`/personnel/${person.id}/edit`)}
+              className="gap-2"
+            >
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
         </div>
       </div>
 
@@ -190,6 +204,7 @@ export function PersonnelDetail() {
             >
               {person.status}
             </Badge>
+            {canEditProfile && (
             <div className="relative mt-2">
               <button
                 type="button"
@@ -240,6 +255,7 @@ export function PersonnelDetail() {
                 onChange={handlePhotoChange}
               />
             </div>
+            )}
           </CardContent>
         </Card>
 
@@ -446,6 +462,7 @@ export function PersonnelDetail() {
                   </p>
                 </div>
               )}
+              {canEditProfile && (
               <Button
                 variant="outline"
                 className="w-full gap-2"
@@ -454,6 +471,7 @@ export function PersonnelDetail() {
                 <PenTool className="h-4 w-4" />
                 {person.signature_svg ? "Remplacer la signature" : "Faire signer"}
               </Button>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -17,5 +17,9 @@ data class AppNotification(
     val personnelNom: String?,
     val personnelPrenoms: String?,
     val personnelGrade: String?,
-    val createdByUsername: String?
+    val personnelPhoto: String?,
+    val createdByUsername: String?,
+    val createdByFirstname: String?,
+    val createdByPhoto: String?,
+    val createdByPersonnelId: Int?
 )

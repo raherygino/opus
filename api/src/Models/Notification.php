@@ -12,10 +12,16 @@ class Notification
         $db = Database::getInstance()->getConnection();
         $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
                        p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
-                       u.username AS created_by_username
+                       p.photo AS personnel_photo,
+                       u.username AS created_by_username,
+                       cp.firstname AS created_by_firstname,
+                       cp.photo AS created_by_photo,
+                       cu.personnel_id AS created_by_personnel_id
                 FROM notifications n
                 LEFT JOIN personnel p ON n.personnel_id = p.id
                 LEFT JOIN users u ON n.created_by = u.id
+                LEFT JOIN users cu ON n.created_by = cu.id
+                LEFT JOIN personnel cp ON cu.personnel_id = cp.id
                 WHERE 1=1';
         $params = [];
 
@@ -44,10 +50,16 @@ class Notification
         $stmt = $db->prepare(
             'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
                     p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
-                    u.username AS created_by_username
+                    p.photo AS personnel_photo,
+                    u.username AS created_by_username,
+                    cp.firstname AS created_by_firstname,
+                    cp.photo AS created_by_photo,
+                    cu.personnel_id AS created_by_personnel_id
              FROM notifications n
              LEFT JOIN personnel p ON n.personnel_id = p.id
              LEFT JOIN users u ON n.created_by = u.id
+             LEFT JOIN users cu ON n.created_by = cu.id
+             LEFT JOIN personnel cp ON cu.personnel_id = cp.id
              WHERE n.id = ?'
         );
         $stmt->execute([$id]);
@@ -62,19 +74,31 @@ class Notification
         if ($roleCode === 'SUPER_ADMIN' || $roleCode === 'STATION_ADMIN') {
             $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
                            p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
-                           u.username AS created_by_username
+                           p.photo AS personnel_photo,
+                           u.username AS created_by_username,
+                           cp.firstname AS created_by_firstname,
+                           cp.photo AS created_by_photo,
+                           cu.personnel_id AS created_by_personnel_id
                     FROM notifications n
                     LEFT JOIN personnel p ON n.personnel_id = p.id
                     LEFT JOIN users u ON n.created_by = u.id
+                    LEFT JOIN users cu ON n.created_by = cu.id
+                    LEFT JOIN personnel cp ON cu.personnel_id = cp.id
                     ORDER BY n.created_at DESC';
             $stmt = $db->query($sql);
         } else {
             $sql = 'SELECT n.*, p.im AS personnel_im, p.lastname AS personnel_nom,
                            p.firstname AS personnel_prenoms, p.grade AS personnel_grade,
-                           u.username AS created_by_username
+                           p.photo AS personnel_photo,
+                           u.username AS created_by_username,
+                           cp.firstname AS created_by_firstname,
+                           cp.photo AS created_by_photo,
+                           cu.personnel_id AS created_by_personnel_id
                     FROM notifications n
                     LEFT JOIN personnel p ON n.personnel_id = p.id
                     LEFT JOIN users u ON n.created_by = u.id
+                    LEFT JOIN users cu ON n.created_by = cu.id
+                    LEFT JOIN personnel cp ON cu.personnel_id = cp.id
                     WHERE n.user_id = ? OR (n.user_id IS NULL AND (? IS NULL OR n.service = ?))
                     ORDER BY n.created_at DESC';
             $stmt = $db->prepare($sql);
@@ -139,14 +163,36 @@ class Notification
     private static function sendPush(int $id, array $data): void
     {
         try {
+            // Enrich the push payload with the creator's personnel info so the
+            // Android app can display the sender's first name and profile photo
+            // in both the in-app notification list and the status-bar notification.
+            $creatorFirstname = '';
+            $creatorPersonnelId = '';
+            $creatorHasPhoto = '0';
+
+            if (!empty($data['created_by'])) {
+                $creatorUser = \App\Models\User::getById((int) $data['created_by']);
+                if ($creatorUser && !empty($creatorUser['personnel_id'])) {
+                    $creatorPersonnel = \App\Models\Personnel::getById((int) $creatorUser['personnel_id']);
+                    if ($creatorPersonnel) {
+                        $creatorFirstname = (string) ($creatorPersonnel['firstname'] ?? '');
+                        $creatorPersonnelId = (string) $creatorPersonnel['id'];
+                        $creatorHasPhoto = !empty($creatorPersonnel['photo']) ? '1' : '0';
+                    }
+                }
+            }
+
             $payload = [
                 'title' => $data['title'] ?? 'OPUS',
                 'body'  => $data['message'] ?? '',
                 'data'  => [
-                    'notification_id' => (string) $id,
-                    'type'            => (string) ($data['type'] ?? 'info'),
-                    'service'         => (string) ($data['service'] ?? ''),
-                    'click_action'    => 'OPEN_NOTIFICATIONS',
+                    'notification_id'         => (string) $id,
+                    'type'                    => (string) ($data['type'] ?? 'info'),
+                    'service'                 => (string) ($data['service'] ?? ''),
+                    'click_action'            => 'OPEN_NOTIFICATIONS',
+                    'creator_firstname'       => $creatorFirstname,
+                    'creator_personnel_id'    => $creatorPersonnelId,
+                    'creator_has_photo'       => $creatorHasPhoto,
                 ],
             ];
 

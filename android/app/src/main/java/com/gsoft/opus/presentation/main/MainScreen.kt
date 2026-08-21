@@ -6,9 +6,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Business
@@ -39,17 +42,26 @@ import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -66,12 +78,12 @@ import com.gsoft.opus.presentation.contextmenu.ContextMenuItemScreens
 import com.gsoft.opus.presentation.dashboard.DashboardScreen
 import com.gsoft.opus.presentation.home.HomeViewModel
 import com.gsoft.opus.presentation.notifications.NotificationsScreen
+import com.gsoft.opus.presentation.notifications.UnreadBadgeViewModel
 import com.gsoft.opus.presentation.profile.ProfileScreen
 import com.gsoft.opus.presentation.settings.SettingsScreen
 import com.gsoft.opus.presentation.signature.SignaturePairingScreen
 import com.gsoft.opus.presentation.signature.SignaturePadScreen
 import com.gsoft.opus.presentation.photo.PhotoCaptureScreen
-import com.gsoft.opus.presentation.notifications.NotificationsViewModel
 import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
@@ -84,9 +96,7 @@ import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
 import com.gsoft.opus.ui.components.MainScaffold
-import com.gsoft.opus.ui.components.drawer.OpusAnimatedDrawer
 import com.gsoft.opus.ui.components.drawer.OpusDrawerContent
-import com.gsoft.opus.ui.components.drawer.rememberOpusDrawerState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -95,8 +105,9 @@ import kotlinx.coroutines.launch
  *
  * Hosts the bottom navigation bar, an inner [NavHost] with the
  * Dashboard / Notifications / Settings / Profile destinations, and a
- * premium animated navigation drawer: the blue drawer stays fixed on
- * the left while the whole content transforms into a floating card.
+ * standard Material 3 [ModalNavigationDrawer] that slides in from the
+ * left edge with the default Compose drawer animation and gesture
+ * support (edge swipe to open, scrim tap / system back to close).
  */
 @Composable
 fun MainScreen(
@@ -120,14 +131,31 @@ fun MainScreen(
         }
     }
 
-    val drawerState = rememberOpusDrawerState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     val homeViewModel: HomeViewModel = hiltViewModel()
     val homeState by homeViewModel.state.collectAsState()
 
-    val notificationsViewModel: NotificationsViewModel = hiltViewModel()
-    val notificationsUiState by notificationsViewModel.state.collectAsState()
+    // The badge is driven by the app-wide UnreadCountStore (via a thin
+    // ViewModel) so it stays in sync even when the notifications screen has
+    // never been opened. The NotificationsViewModel still syncs the store
+    // whenever the user opens/reads notifications.
+    val unreadBadgeViewModel: UnreadBadgeViewModel = hiltViewModel()
+    val unreadCount by unreadBadgeViewModel.unreadCount.collectAsState()
+
+    // Refresh the unread count from the server whenever the app comes back to
+    // the foreground, so the badge is always current when the user returns.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                unreadBadgeViewModel.refreshFromServer()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val context = LocalContext.current
     val appVersion = remember {
@@ -236,41 +264,49 @@ fun MainScreen(
     }
     val appBarSubtitle = currentRoute?.let { routeTitleMap[it] }
 
-    OpusAnimatedDrawer(
-        state = drawerState,
-        drawerContent = { progress ->
-            OpusDrawerContent(
-                items = drawerItems,
-                selectedId = selectedDrawerId,
-                username = homeState.username,
-                firstName = homeState.firstName,
-                lastName = homeState.lastName,
-                personnelId = homeState.personnelId,
-                photo = homeState.photo,
-                role = homeState.roleName ?: homeState.grade,
-                progress = progress,
-                onItemClick = { item ->
-                    val route = drawerRouteMap[item.id]
-                    scope.launch {
-                        drawerState.close()
-                        route?.let { navController.navigateToDrawerItem(it) }
-                    }
-                },
-                onProfileClick = {
-                    scope.launch {
-                        drawerState.close()
-                        navController.navigateToTab(MainRoutes.Profile.route)
-                    }
-                },
-                onLogout = {
-                    scope.launch {
-                        drawerState.close()
-                        homeViewModel.logout()
-                        onLogout()
-                    }
-                },
-                appVersion = appVersion
-            )
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(280.dp),
+                windowInsets = WindowInsets(0, 0, 0, 0)
+            ) {
+                OpusDrawerContent(
+                    items = drawerItems,
+                    selectedId = selectedDrawerId,
+                    username = homeState.username,
+                    firstName = homeState.firstName,
+                    lastName = homeState.lastName,
+                    personnelId = homeState.personnelId,
+                    photo = homeState.photo,
+                    role = homeState.roleName ?: homeState.grade,
+                    progress = { 1f },
+                    onItemClick = { item ->
+                        val route = drawerRouteMap[item.id]
+                        scope.launch {
+                            drawerState.close()
+                            route?.let { navController.navigateToDrawerItem(it) }
+                        }
+                    },
+                    onProfileClick = {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigateToTab(MainRoutes.Profile.route)
+                        }
+                    },
+                    onLogout = {
+                        scope.launch {
+                            drawerState.close()
+                            homeViewModel.logout()
+                            onLogout()
+                        }
+                    },
+                    appVersion = appVersion
+                )
+            }
         }
     ) {
         Scaffold(
@@ -282,7 +318,7 @@ fun MainScreen(
                     onItemSelected = { item ->
                         navController.navigateToTab(item.route)
                     },
-                    notificationBadgeCount = notificationsUiState.unreadCount,
+                    notificationBadgeCount = unreadCount,
                     modifier = Modifier.navigationBarsPadding()
                 )
             }

@@ -30,10 +30,16 @@ data class NotificationsUiState(
 ) {
     val unreadCount: Int get() = notifications.count { !it.isRead }
 
+    /** Unread notifications, newest first. */
+    val unread: List<AppNotification> get() = notifications.filter { !it.isRead }
+
+    /** Read notifications, newest first. */
+    val read: List<AppNotification> get() = notifications.filter { it.isRead }
+
     val filtered: List<AppNotification>
         get() = when (activeFilter) {
             NotificationFilter.ALL -> notifications
-            NotificationFilter.UNREAD -> notifications.filter { !it.isRead }
+            NotificationFilter.UNREAD -> unread
             NotificationFilter.PJ -> notifications.filter { it.service == "PJ" }
             NotificationFilter.SG -> notifications.filter { it.service == "SG" }
             NotificationFilter.SEDENTAIRE -> notifications.filter { it.service == "Sedentaire" }
@@ -44,7 +50,8 @@ data class NotificationsUiState(
 class NotificationsViewModel @Inject constructor(
     private val notificationRepository: NotificationRepository,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val navigationBus: NotificationNavigationBus
+    private val navigationBus: NotificationNavigationBus,
+    private val unreadCountStore: UnreadCountStore
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(NotificationsUiState())
@@ -77,8 +84,12 @@ class NotificationsViewModel @Inject constructor(
                 )
             }
             when (val result = notificationRepository.getNotifications()) {
-                is Resource.Success -> _state.update {
-                    it.copy(notifications = result.data, isLoading = false, isRefreshing = false)
+                is Resource.Success -> {
+                    _state.update {
+                        it.copy(notifications = result.data, isLoading = false, isRefreshing = false)
+                    }
+                    // Keep the global badge in sync with the freshly loaded list.
+                    unreadCountStore.setCount(result.data.count { !it.isRead })
                 }
                 is Resource.Error -> _state.update {
                     it.copy(
@@ -96,14 +107,34 @@ class NotificationsViewModel @Inject constructor(
         _state.update { it.copy(activeFilter = filter) }
     }
 
+    /**
+     * Mark a single notification as read.
+     *
+     * Called automatically when the user taps/views a notification card (like
+     * social-media apps) and also from the explicit "mark as read" button.
+     * The local state and the global [UnreadCountStore] are updated
+     * optimistically so the badge disappears immediately, then the server is
+     * notified.
+     */
     fun markAsRead(id: Int) {
+        // Optimistic local update — immediate UI feedback.
+        _state.update { s ->
+            s.copy(notifications = s.notifications.map {
+                if (it.id == id) it.copy(isRead = true) else it
+            })
+        }
+        unreadCountStore.setCount(_state.value.unreadCount)
+
         viewModelScope.launch {
-            if (notificationRepository.markAsRead(id)) {
+            if (!notificationRepository.markAsRead(id)) {
+                // Revert on failure so the user sees the notification is still
+                // unread, and refresh from the server to get the true state.
                 _state.update { s ->
                     s.copy(notifications = s.notifications.map {
-                        if (it.id == id) it.copy(isRead = true) else it
+                        if (it.id == id) it.copy(isRead = false) else it
                     })
                 }
+                unreadCountStore.setCount(_state.value.unreadCount)
             }
         }
     }
@@ -119,6 +150,7 @@ class NotificationsViewModel @Inject constructor(
                     errorMessage = if (ok) null else "Impossible de tout marquer comme lu"
                 )
             }
+            if (ok) unreadCountStore.setCount(0)
         }
     }
 
@@ -143,6 +175,7 @@ class NotificationsViewModel @Inject constructor(
                     errorMessage = if (ok) null else "Impossible de supprimer la notification"
                 )
             }
+            if (ok) unreadCountStore.setCount(_state.value.unreadCount)
         }
     }
 

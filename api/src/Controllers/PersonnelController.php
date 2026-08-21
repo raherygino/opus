@@ -56,8 +56,10 @@ class PersonnelController
             Response::notFound('Personnel not found');
         }
 
-        // Include linked user if exists
-        // (We don't expose password_hash here since it's in users table)
+        // Indicate whether this personnel record belongs to an administrator
+        // so clients can hide edit/delete controls for other admins' profiles.
+        $person['is_admin_profile'] = User::personnelBelongsToAdmin((int) $person['id']);
+
         Response::success($person);
     }
 
@@ -117,7 +119,7 @@ class PersonnelController
             $admins = Notification::getAdminUsers();
             foreach ($admins as $admin) {
                 Notification::create([
-                    'title' => "Nouveau personnel en attente de validation",
+                    'title' => "Nouveau personnel ajouté",
                     'message' => "{$personnelName} (IM: {$person['im']}) a été ajouté et nécessite votre attention.",
                     'type' => 'warning',
                     'service' => self::affectationToCode($person['affectation'] ?? ''),
@@ -142,6 +144,10 @@ class PersonnelController
             Response::notFound('Personnel not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not edit another admin's personnel profile
+        self::guardAdminProfile($person, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = PersonnelValidator::validateCreate($data, $id);
@@ -154,7 +160,6 @@ class PersonnelController
         $person = Personnel::getById($id);
 
         // --- Audit log ---
-        $authUser = AuthController::getAuthenticatedUser();
         AuditLog::create([
             'user_id' => $authUser['sub'] ?? null,
             'action' => 'update',
@@ -166,6 +171,18 @@ class PersonnelController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notify admins that personnel info was modified ---
+        $creatorId = $authUser['sub'] ?? null;
+        $personnelName = $person['firstname'] . ' ' . $person['lastname'];
+        self::notifyAdmins(
+            'Personnel modifié',
+            "{$personnelName} (IM: {$person['im']}) a été modifié.",
+            'info',
+            self::affectationToCode($person['affectation'] ?? ''),
+            $id,
+            $creatorId
+        );
 
         Response::success($person, 'Personnel updated successfully');
     }
@@ -179,6 +196,15 @@ class PersonnelController
         $person = Personnel::getById($id);
         if (!$person) {
             Response::notFound('Personnel not found');
+        }
+
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin's personnel profile may never be deleted (even by
+        // another admin). The owner may not delete their own profile either —
+        // deletion of a personnel record that is linked to a user account is
+        // always blocked (see check below).
+        if (User::personnelBelongsToAdmin($id)) {
+            Response::forbidden('Le profil d\'un administrateur ne peut pas être supprimé');
         }
 
         // Check if linked to a user
@@ -216,7 +242,6 @@ class PersonnelController
         Personnel::delete($id);
 
         // --- Audit log ---
-        $authUser = AuthController::getAuthenticatedUser();
         AuditLog::create([
             'user_id' => $authUser['sub'] ?? null,
             'action' => 'delete',
@@ -231,7 +256,7 @@ class PersonnelController
         Response::success(null, 'Personnel deleted successfully');
     }
 
-    private static function affectationToCode(string $affectation): string
+    public static function affectationToCode(string $affectation): string
     {
         if (stripos($affectation, 'PJ') !== false || stripos($affectation, 'Police Judiciaire') !== false) {
             return 'PJ';
@@ -246,6 +271,66 @@ class PersonnelController
     }
 
     /**
+     * Enforce the "admin cannot edit another admin's profile" rule.
+     *
+     * An administrator may always edit their OWN personnel record. They may
+     * NOT edit (or delete) the personnel record of another administrator.
+     * Non-admin personnel records are always editable (subject to RBAC).
+     *
+     * @param array $person   The personnel record being modified.
+     * @param array $authUser The authenticated user from the JWT.
+     * @throws \App\Helpers\Response (sends 403 and exits) when forbidden.
+     */
+    private static function guardAdminProfile(array $person, array $authUser): void
+    {
+        $personnelId = (int) $person['id'];
+        $linkedUser = \App\Models\User::getByPersonnelId($personnelId);
+
+        // Personnel not linked to any user account → free to edit
+        if ($linkedUser === null) {
+            return;
+        }
+
+        // Personnel linked to a non-admin user → free to edit
+        if (!\App\Models\User::isAdminRoleCode($linkedUser['role_code'] ?? '')) {
+            return;
+        }
+
+        // Personnel linked to an admin user → only the owner may edit
+        $currentUserId = (int) ($authUser['sub'] ?? 0);
+        if ((int) $linkedUser['id'] === $currentUserId) {
+            return;
+        }
+
+        Response::forbidden(
+            'Vous ne pouvez pas modifier le profil d\'un autre administrateur'
+        );
+    }
+
+    /**
+     * Broadcast a notification (with FCM push) to every active administrator
+     * except the user who triggered the action.
+     */
+    private static function notifyAdmins(string $title, string $message, string $type, string $service, int $personnelId, ?int $creatorId): void
+    {
+        $admins = Notification::getAdminUsers();
+        foreach ($admins as $admin) {
+            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
+                continue;
+            }
+            Notification::create([
+                'title'        => $title,
+                'message'      => $message,
+                'type'         => $type,
+                'service'      => $service,
+                'user_id'      => $admin['id'],
+                'personnel_id' => $personnelId,
+                'created_by'   => $creatorId,
+            ]);
+        }
+    }
+
+    /**
      * POST /api/personnel/{id}/photo
      * Multipart: photo (file), thumbnail (file, optional)
      */
@@ -256,6 +341,10 @@ class PersonnelController
         if (!$person) {
             Response::notFound('Personnel not found');
         }
+
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not change another admin's photo
+        self::guardAdminProfile($person, $authUser);
 
         if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
             Response::error('Photo file is required', 422, ['photo' => 'Le fichier photo est requis']);
@@ -315,7 +404,6 @@ class PersonnelController
         $person = Personnel::getById($id);
 
         // --- Audit log ---
-        $authUser = AuthController::getAuthenticatedUser();
         AuditLog::create([
             'user_id' => $authUser['sub'] ?? null,
             'action' => 'photo_upload',
@@ -325,6 +413,18 @@ class PersonnelController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notify admins that the personnel photo was updated ---
+        $creatorId = $authUser['sub'] ?? null;
+        $personnelName = $person['firstname'] . ' ' . $person['lastname'];
+        self::notifyAdmins(
+            'Photo mise à jour',
+            "La photo de {$personnelName} (IM: {$person['im']}) a été mise à jour.",
+            'info',
+            self::affectationToCode($person['affectation'] ?? ''),
+            $id,
+            $creatorId
+        );
 
         Response::success($person, 'Photo uploaded successfully');
     }
@@ -344,6 +444,9 @@ class PersonnelController
         if (!$person) {
             Response::notFound('Personnel not found');
         }
+
+        // Enforce: an admin may not delete another admin's photo
+        self::guardAdminProfile($person, $authUser);
 
         if (empty($person['photo'])) {
             Response::error('No photo to delete', 422);
@@ -377,6 +480,18 @@ class PersonnelController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notify admins that the personnel photo was removed ---
+        $creatorId = $authUser['sub'] ?? null;
+        $personnelName = $person['firstname'] . ' ' . $person['lastname'];
+        self::notifyAdmins(
+            'Photo mise à jour',
+            "La photo de {$personnelName} (IM: {$person['im']}) a été supprimée.",
+            'info',
+            self::affectationToCode($person['affectation'] ?? ''),
+            $id,
+            $creatorId
+        );
 
         $person = Personnel::getById($id);
         Response::success($person, 'Photo deleted successfully');
@@ -429,6 +544,10 @@ class PersonnelController
             Response::notFound('Personnel not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not change another admin's signature
+        self::guardAdminProfile($person, $authUser);
+
         if (!isset($_FILES['signature']) || $_FILES['signature']['error'] !== UPLOAD_ERR_OK) {
             Response::error('Signature file is required', 422, ['signature' => 'Le fichier signature est requis']);
         }
@@ -466,7 +585,6 @@ class PersonnelController
         $person = Personnel::getById($id);
 
         // --- Audit log ---
-        $authUser = AuthController::getAuthenticatedUser();
         AuditLog::create([
             'user_id' => $authUser['sub'] ?? null,
             'action' => 'signature_upload',
@@ -530,6 +648,10 @@ class PersonnelController
             Response::notFound('Personnel not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not change another admin's signature
+        self::guardAdminProfile($person, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         if (empty($data['svg'])) {
             Response::error('SVG data is required', 422, ['svg' => 'Les données SVG sont requises']);
@@ -541,7 +663,6 @@ class PersonnelController
         $person = Personnel::getById($id);
 
         // --- Audit log ---
-        $authUser = AuthController::getAuthenticatedUser();
         AuditLog::create([
             'user_id' => $authUser['sub'] ?? null,
             'action' => 'signature_svg_save',

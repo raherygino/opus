@@ -62,11 +62,22 @@ class PersonnelDetailViewModel @Inject constructor(
     private fun loadPermissions() {
         viewModelScope.launch {
             val user = getCurrentUserUseCase().getOrNull()
+            val hasEditPerm = hasPermission(user, "personnel", PermissionAction.EDIT)
+            val hasDeletePerm = hasPermission(user, "personnel", PermissionAction.DELETE)
+            val canViewRecords = hasPermission(user, "personnel", PermissionAction.VIEW)
+
+            // An admin may edit/delete their OWN personnel profile, but must
+            // NOT be able to edit/delete another admin's profile. This mirrors
+            // the backend guard in PersonnelController::guardAdminProfile.
+            val personnel = _state.value.personnel
+            val isOwnProfile = user?.personnelId != null && personnel?.id == user.personnelId
+            val isOtherAdminProfile = personnel?.isAdminProfile == true && !isOwnProfile
+
             _state.update {
                 it.copy(
-                    canEdit = hasPermission(user, "personnel", PermissionAction.EDIT),
-                    canDelete = hasPermission(user, "personnel", PermissionAction.DELETE),
-                    canViewRecords = hasPermission(user, "personnel", PermissionAction.VIEW)
+                    canEdit = hasEditPerm && !isOtherAdminProfile,
+                    canDelete = hasDeletePerm && !isOtherAdminProfile,
+                    canViewRecords = canViewRecords
                 )
             }
         }
@@ -78,6 +89,9 @@ class PersonnelDetailViewModel @Inject constructor(
             when (val result = personnelRepository.getPersonnel(personnelId)) {
                 is Resource.Success -> {
                     _state.update { it.copy(personnel = result.data) }
+                    // Re-evaluate edit/delete permissions now that we know
+                    // whether this personnel belongs to an admin.
+                    loadPermissions()
                     val attachmentsDeferred = async { personnelRepository.getAttachments(personnelId) }
                     val mouvementsDeferred = async { mouvementRepository.getMouvementList(personnelId) }
                     val comportementsDeferred = async { comportementRepository.getComportementList(personnelId) }

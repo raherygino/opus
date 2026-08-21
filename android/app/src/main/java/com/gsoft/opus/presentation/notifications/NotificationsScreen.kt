@@ -199,6 +199,48 @@ fun NotificationsScreen(
 
             state.filtered.isEmpty() -> EmptyState(filter = state.activeFilter)
 
+            // In the "ALL" view, clearly separate unread and read notifications
+            // into two labelled sections — just like social-media apps.
+            state.activeFilter == NotificationFilter.ALL && state.unread.isNotEmpty() -> {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    item {
+                        SectionHeader(
+                            text = stringResource(R.string.notifications_section_unread),
+                            count = state.unread.size
+                        )
+                    }
+                    items(state.unread, key = { it.id }) { notification ->
+                        NotificationCard(
+                            notification = notification,
+                            onMarkAsRead = { viewModel.markAsRead(notification.id) },
+                            onDelete = { viewModel.requestDelete(notification) },
+                            onPersonnelClick = onPersonnelClick
+                        )
+                    }
+                    if (state.read.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            SectionHeader(
+                                text = stringResource(R.string.notifications_section_read),
+                                count = state.read.size
+                            )
+                        }
+                        items(state.read, key = { it.id }) { notification ->
+                            NotificationCard(
+                                notification = notification,
+                                onMarkAsRead = { viewModel.markAsRead(notification.id) },
+                                onDelete = { viewModel.requestDelete(notification) },
+                                onPersonnelClick = onPersonnelClick
+                            )
+                        }
+                    }
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                }
+            }
+
             else -> LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxSize()
@@ -302,8 +344,19 @@ private fun NotificationCard(
     val hasPersonnel = notification.personnelId != null && notification.personnelId > 0 &&
         !notification.personnelNom.isNullOrBlank()
 
+    // Determine the sender's display name.
+    // Priority: creator's personnel info > related personnel > fallback to "Système"
+    val senderName = notification.createdByFirstname
+        ?: notification.personnelPrenoms
+        ?: notification.createdByUsername
+        ?: "Système"
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // Tapping an unread card marks it as read immediately — same
+            // behaviour as social-media apps where viewing = reading.
+            .then(if (unread) Modifier.clickable { onMarkAsRead() } else Modifier),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (unread)
@@ -325,6 +378,7 @@ private fun NotificationCard(
                 .padding(14.dp),
             verticalAlignment = Alignment.Top
         ) {
+            // ─── Type icon ─────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .size(38.dp)
@@ -343,9 +397,10 @@ private fun NotificationCard(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                // ─── Sender name + unread dot ───────────────────────────
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = notification.title,
+                        text = senderName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = if (unread) FontWeight.Bold else FontWeight.SemiBold,
                         modifier = Modifier.weight(1f, fill = false),
@@ -363,28 +418,43 @@ private fun NotificationCard(
                     }
                 }
 
+                // ─── Notification title ────────────────────────────────
+                Text(
+                    text = notification.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (unread) FontWeight.SemiBold else FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 2.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // ─── Notification message ──────────────────────────────
                 notification.message?.takeIf { it.isNotBlank() }?.let {
                     Text(
                         text = it,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 2.dp),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                // ─── Timestamp + service tag ───────────────────────────
                 Row(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = serviceIcon(notification.service),
                             contentDescription = null,
                             tint = serviceColor(notification.service),
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(12.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = serviceLabel(notification.service),
                             style = MaterialTheme.typography.labelSmall,
@@ -396,9 +466,9 @@ private fun NotificationCard(
                             imageVector = Icons.Outlined.Schedule,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(12.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = formatTimeAgo(notification.createdAt),
                             style = MaterialTheme.typography.labelSmall,
@@ -407,19 +477,15 @@ private fun NotificationCard(
                     }
                 }
 
-                val personnelLine = buildString {
-                    if (!notification.personnelNom.isNullOrBlank()) {
+                // ─── Related personnel chip (if applicable) ────────────
+                if (hasPersonnel) {
+                    val personnelLine = buildString {
                         append(
                             listOfNotNull(notification.personnelPrenoms, notification.personnelNom)
                                 .joinToString(" ")
                         )
                         notification.personnelIm?.let { append(" (IM: $it)") }
                     }
-                }
-                val creatorLine = notification.createdByUsername?.let { "par $it" }
-
-                if (hasPersonnel) {
-                    // Clickable personnel chip — navigates to the personnel detail
                     Row(
                         modifier = Modifier
                             .padding(top = 6.dp)
@@ -443,30 +509,10 @@ private fun NotificationCard(
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                    if (creatorLine != null) {
-                        Text(
-                            text = creatorLine,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                } else {
-                    val metaLine = listOfNotNull(
-                        personnelLine.takeIf { it.isNotBlank() },
-                        creatorLine
-                    ).joinToString(" · ")
-                    if (metaLine.isNotBlank()) {
-                        Text(
-                            text = metaLine,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
                 }
             }
 
+            // ─── Action buttons ───────────────────────────────────────
             Column {
                 if (unread) {
                     IconButton(onClick = onMarkAsRead, modifier = Modifier.size(32.dp)) {
@@ -487,6 +533,36 @@ private fun NotificationCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(text: String, count: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(horizontal = 8.dp, vertical = 2.dp)
+        ) {
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

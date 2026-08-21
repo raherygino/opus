@@ -162,4 +162,56 @@ class User
         $stmt->execute([$personnelId]);
         return $stmt->fetchColumn() > 0;
     }
+
+    /**
+     * Get the user account linked to a personnel record (if any), including
+     * the role code so callers can determine whether the personnel belongs to
+     * an administrator.
+     */
+    public static function getByPersonnelId(int $personnelId): ?array
+    {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare(
+            'SELECT u.id, u.username, u.role_id, u.is_active, r.code AS role_code
+             FROM users u
+             JOIN roles r ON u.role_id = r.id
+             WHERE u.personnel_id = ?'
+        );
+        $stmt->execute([$personnelId]);
+        $user = $stmt->fetch();
+        return $user ?: null;
+    }
+
+    /**
+     * Returns true when the given personnel record is linked to a user account
+     * whose role is an administrator role (SUPER_ADMIN or STATION_ADMIN).
+     */
+    public static function personnelBelongsToAdmin(int $personnelId): bool
+    {
+        $user = self::getByPersonnelId($personnelId);
+        return $user !== null && self::isAdminRoleCode($user['role_code'] ?? '');
+    }
+
+    /**
+     * Returns true when the given user id belongs to an administrator
+     * (SUPER_ADMIN or STATION_ADMIN).
+     */
+    public static function isAdminUser(int $userId): bool
+    {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare(
+            'SELECT r.code FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?'
+        );
+        $stmt->execute([$userId]);
+        $code = $stmt->fetchColumn();
+        return $code && self::isAdminRoleCode($code);
+    }
+
+    /**
+     * Check a role code against the canonical admin role codes.
+     */
+    public static function isAdminRoleCode(string $roleCode): bool
+    {
+        return in_array($roleCode, ['SUPER_ADMIN', 'STATION_ADMIN'], true);
+    }
 }

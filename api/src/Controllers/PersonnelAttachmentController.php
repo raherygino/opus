@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Helpers\Response;
 use App\Models\Personnel;
 use App\Models\PersonnelAttachment;
+use App\Models\Notification;
+use App\Models\User;
 
 class PersonnelAttachmentController
 {
@@ -53,6 +55,10 @@ class PersonnelAttachmentController
             Response::notFound('Personnel not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not add attachments to another admin's profile
+        self::guardAdminProfile($person, $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -84,6 +90,26 @@ class PersonnelAttachmentController
         ]);
 
         $attachment = PersonnelAttachment::getById($id);
+
+        // --- Notify admins that a new attachment was added ---
+        $creatorId = $authUser['sub'] ?? null;
+        $personnelName = $person['firstname'] . ' ' . $person['lastname'];
+        $admins = Notification::getAdminUsers();
+        foreach ($admins as $admin) {
+            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
+                continue;
+            }
+            Notification::create([
+                'title'        => 'Pièce jointe ajoutée',
+                'message'      => "Une nouvelle pièce jointe « {$title} » a été ajoutée à {$personnelName} (IM: {$person['im']}).",
+                'type'         => 'info',
+                'service'      => PersonnelController::affectationToCode($person['affectation'] ?? ''),
+                'user_id'      => $admin['id'],
+                'personnel_id' => $personnelId,
+                'created_by'   => $creatorId,
+            ]);
+        }
+
         Response::created($attachment, 'Attachment added successfully');
     }
 
@@ -102,6 +128,10 @@ class PersonnelAttachmentController
         if (!$person) {
             Response::notFound('Personnel not found');
         }
+
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not modify attachments on another admin's profile
+        self::guardAdminProfile($person, $authUser);
 
         $attachment = PersonnelAttachment::getById($attachId);
         if (!$attachment || !PersonnelAttachment::belongsToPersonnel($attachId, $personnelId)) {
@@ -133,6 +163,10 @@ class PersonnelAttachmentController
             Response::notFound('Personnel not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin may not delete attachments on another admin's profile
+        self::guardAdminProfile($person, $authUser);
+
         $attachment = PersonnelAttachment::getById($attachId);
         if (!$attachment || !PersonnelAttachment::belongsToPersonnel($attachId, $personnelId)) {
             Response::notFound('Attachment not found');
@@ -146,6 +180,32 @@ class PersonnelAttachmentController
 
         PersonnelAttachment::delete($attachId);
         Response::success(null, 'Attachment deleted successfully');
+    }
+
+    /**
+     * Enforce the "admin cannot edit another admin's profile" rule for
+     * attachment operations. Mirrors PersonnelController::guardAdminProfile.
+     */
+    private static function guardAdminProfile(array $person, array $authUser): void
+    {
+        $personnelId = (int) $person['id'];
+        $linkedUser = User::getByPersonnelId($personnelId);
+
+        if ($linkedUser === null) {
+            return;
+        }
+        if (!User::isAdminRoleCode($linkedUser['role_code'] ?? '')) {
+            return;
+        }
+
+        $currentUserId = (int) ($authUser['sub'] ?? 0);
+        if ((int) $linkedUser['id'] === $currentUserId) {
+            return;
+        }
+
+        Response::forbidden(
+            'Vous ne pouvez pas modifier les pièces jointes d\'un autre administrateur'
+        );
     }
 
     /**

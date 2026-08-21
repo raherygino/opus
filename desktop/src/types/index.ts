@@ -120,6 +120,8 @@ export interface Personnel {
   status: string;
   created_at: string;
   updated_at: string;
+  /** True when this personnel record is linked to an admin user account. */
+  is_admin_profile?: boolean;
 }
 
 export interface PersonnelAttachment {

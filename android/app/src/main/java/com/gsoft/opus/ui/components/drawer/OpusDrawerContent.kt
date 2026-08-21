@@ -84,7 +84,7 @@ private const val StaggerWindow = 0.45f
 private val StaggerSlideDp = 24.dp
 
 /**
- * Fixed left pane of [OpusAnimatedDrawer].
+ * Fixed left pane of the navigation drawer.
  *
  * Renders a centered application logo header, the navigation entries (with
  * section headers and expandable groups), and an outlined user profile card

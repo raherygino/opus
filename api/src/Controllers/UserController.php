@@ -92,6 +92,13 @@ class UserController
             Response::notFound('User not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        // Enforce: an admin must not be able to edit another admin's user
+        // account. An admin may edit their own account (e.g. change password).
+        if (User::isAdminRoleCode($user['role_code'] ?? '') && (int) $authUser['sub'] !== $id) {
+            Response::forbidden('Vous ne pouvez pas modifier le compte d\'un autre administrateur');
+        }
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = UserValidator::validateUpdate($data, $id);
@@ -106,7 +113,6 @@ class UserController
         unset($oldUser['password_hash']);
 
         // --- Audit log ---
-        $authUser = AuthController::getAuthenticatedUser();
         AuditLog::create([
             'user_id' => $authUser['sub'] ?? null,
             'action' => 'update',
@@ -132,6 +138,13 @@ class UserController
         $user = User::getById($id);
         if (!$user) {
             Response::notFound('User not found');
+        }
+
+        // Enforce: no user — including another administrator — should be able
+        // to delete an admin user. This is enforced on the backend so that
+        // even a SUPER_ADMIN cannot remove another admin's account.
+        if (User::isAdminRoleCode($user['role_code'] ?? '')) {
+            Response::forbidden('Un compte administrateur ne peut pas être supprimé');
         }
 
         User::delete($id);

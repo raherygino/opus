@@ -21,5 +21,14 @@ data class NotificationDto(
     @SerializedName("personnel_nom") val personnelNom: String? = null,
     @SerializedName("personnel_prenoms") val personnelPrenoms: String? = null,
     @SerializedName("personnel_grade") val personnelGrade: String? = null,
-    @SerializedName("created_by_username") val createdByUsername: String? = null
+    @SerializedName("personnel_photo") val personnelPhoto: String? = null,
+    @SerializedName("created_by_username") val createdByUsername: String? = null,
+    @SerializedName("created_by_firstname") val createdByFirstname: String? = null,
+    @SerializedName("created_by_photo") val createdByPhoto: String? = null,
+    @SerializedName("created_by_personnel_id") val createdByPersonnelId: Int? = null
+)
+
+/** Response body for GET /api/notifications/unread-count */
+data class UnreadCountDto(
+    @SerializedName("count") val count: Int = 0
 )

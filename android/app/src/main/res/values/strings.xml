@@ -63,6 +63,8 @@
     <string name="notifications_delete_title">Supprimer la notification</string>
     <string name="notifications_delete_message">Êtes-vous sûr de vouloir supprimer cette notification ?</string>
     <string name="notifications_delete_confirm">Supprimer</string>
+    <string name="notifications_section_unread">Non lues</string>
+    <string name="notifications_section_read">Lues</string>
 
     <!-- Home -->
     <string name="home_title">Accueil</string>

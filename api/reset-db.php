@@ -88,11 +88,10 @@ foreach ($files as $file) {
         continue;
     }
 
-    // Split by semicolons to execute multi-statement files safely
-    $statements = array_values(array_filter(
-        array_map('trim', explode(';', $sql)),
-        fn($s) => $s !== ''
-    ));
+    // Split into individual statements. Supports the DELIMITER directive so
+    // that multi-statement constructs (triggers, stored procedures) which
+    // contain semicolons inside their BEGIN...END body are kept intact.
+    $statements = splitSqlStatements($sql);
 
     if (empty($statements)) {
         echo "⚠️  Skipping $basename (no statements)\n";
@@ -116,6 +115,66 @@ foreach ($files as $file) {
     } else {
         exit(1);
     }
+}
+
+/**
+ * Split a SQL script into individual executable statements.
+ *
+ * Honors the `DELIMITER` directive (case-insensitive) so that triggers and
+ * stored procedures — whose bodies contain semicolons — are returned as a
+ * single statement. Lines starting with `--` are treated as comments and
+ * stripped.
+ *
+ * @return string[]
+ */
+function splitSqlStatements(string $sql): array
+{
+    // Normalise line endings
+    $sql = str_replace(["\r\n", "\r"], "\n", $sql);
+
+    $delimiter = ';';
+    $statements = [];
+    $buffer = '';
+
+    $lines = explode("\n", $sql);
+    foreach ($lines as $line) {
+        $trimmed = ltrim($line);
+
+        // Skip full-line comments (but keep DELIMITER directives, which are
+        // not prefixed with --).
+        if ($trimmed !== '' && str_starts_with($trimmed, '--')) {
+            continue;
+        }
+
+        // Detect a DELIMITER directive: "DELIMITER $$" changes the delimiter.
+        if (preg_match('/^DELIMITER\s+(\S+)\s*$/i', $trimmed, $m)) {
+            // Flush any buffered statement using the OLD delimiter first.
+            if (trim($buffer) !== '') {
+                $statements[] = trim($buffer);
+                $buffer = '';
+            }
+            $delimiter = $m[1];
+            continue;
+        }
+
+        $buffer .= ($buffer === '' ? '' : "\n") . $line;
+
+        // If the line ends with the current delimiter, cut it off and flush.
+        $pos = strripos($buffer, $delimiter);
+        if ($pos !== false && $pos === strlen($buffer) - strlen($delimiter)) {
+            $stmt = substr($buffer, 0, $pos);
+            if (trim($stmt) !== '') {
+                $statements[] = trim($stmt);
+            }
+            $buffer = '';
+        }
+    }
+
+    if (trim($buffer) !== '') {
+        $statements[] = trim($buffer);
+    }
+
+    return $statements;
 }
 
 echo "\n===========================\n";
