@@ -35,7 +35,6 @@ val AFFECTATIONS = listOf(
     "Service Général (SG)",
     "Police Judiciaire (PJ)",
     "Sédentaire",
-    "Unité Spéciale",
     "Administration"
 )
 

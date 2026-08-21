@@ -31,7 +31,7 @@ data class PersonnelUiState(
     /** Distinct affectations present in the data, for the service tabs. */
     val services: List<String>
         get() = personnel.mapNotNull { it.affectation }
-            .filter { it.isNotBlank() }
+            .filter { it.isNotBlank() && !it.equals("Unité Spéciale", ignoreCase = true) }
             .distinct()
             .sorted()
 
