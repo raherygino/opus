@@ -20,7 +20,7 @@ export async function getComportementById(id: number): Promise<Comportement> {
 }
 
 export async function createComportement(
-  comportement: Omit<Comportement, "id" | "created_at" | "updated_at">,
+  comportement: Partial<Comportement>,
 ): Promise<Comportement> {
   const { data } = await apiClient.post<ApiResponse<Comportement>>(
     "/comportements",
@@ -36,6 +36,24 @@ export async function updateComportement(
   const { data } = await apiClient.put<ApiResponse<Comportement>>(
     `/comportements/${id}`,
     comportement,
+  );
+  return data.data;
+}
+
+export async function confirmComportement(id: number): Promise<Comportement> {
+  const { data } = await apiClient.put<ApiResponse<Comportement>>(
+    `/comportements/${id}/confirm`,
+  );
+  return data.data;
+}
+
+export async function rejectComportement(
+  id: number,
+  reason?: string,
+): Promise<Comportement> {
+  const { data } = await apiClient.put<ApiResponse<Comportement>>(
+    `/comportements/${id}/reject`,
+    reason ? { reason } : undefined,
   );
   return data.data;
 }

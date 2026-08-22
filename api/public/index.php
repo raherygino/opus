@@ -106,11 +106,13 @@ $router->get('/api/mouvements/{id}/attachments/{attachId}/download',   [Mouvemen
 // ========================
 // Comportement Routes
 // ========================
-$router->get('/api/comportements',           [ComportementController::class, 'index']);
-$router->get('/api/comportements/{id}',      [ComportementController::class, 'show']);
-$router->post('/api/comportements',          [ComportementController::class, 'store']);
-$router->put('/api/comportements/{id}',      [ComportementController::class, 'update']);
-$router->delete('/api/comportements/{id}',   [ComportementController::class, 'destroy']);
+$router->get('/api/comportements',               [ComportementController::class, 'index']);
+$router->get('/api/comportements/{id}',          [ComportementController::class, 'show']);
+$router->post('/api/comportements',              [ComportementController::class, 'store']);
+$router->put('/api/comportements/{id}',          [ComportementController::class, 'update']);
+$router->put('/api/comportements/{id}/confirm',  [ComportementController::class, 'confirm']);
+$router->put('/api/comportements/{id}/reject',   [ComportementController::class, 'reject']);
+$router->delete('/api/comportements/{id}',       [ComportementController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

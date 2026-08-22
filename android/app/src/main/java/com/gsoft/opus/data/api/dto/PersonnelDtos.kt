@@ -111,6 +111,13 @@ data class ComportementDto(
     @SerializedName("date_comportement") val dateComportement: String,
     @SerializedName("motif") val motif: String,
     @SerializedName("decision") val decision: String? = null,
+    @SerializedName("status") val status: String = "pending",
+    @SerializedName("confirmed_by") val confirmedBy: Int? = null,
+    @SerializedName("confirmed_at") val confirmedAt: String? = null,
+    @SerializedName("rejected_reason") val rejectedReason: String? = null,
+    @SerializedName("confirmed_by_username") val confirmedByUsername: String? = null,
+    @SerializedName("created_by") val createdBy: Int? = null,
+    @SerializedName("created_by_username") val createdByUsername: String? = null,
     @SerializedName("created_at") val createdAt: String? = null
 )
 
@@ -125,4 +132,8 @@ data class ComportementRequest(
     @SerializedName("date_comportement") val dateComportement: String,
     @SerializedName("motif") val motif: String,
     @SerializedName("decision") val decision: String?
+)
+
+data class ComportementRejectRequest(
+    @SerializedName("reason") val reason: String?
 )

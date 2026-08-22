@@ -710,11 +710,18 @@ private fun ProfileComportementItem(comp: Comportement) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-            Text(
-                text = comp.type,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = comp.type,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
+                )
+                ComportementStatusBadge(status = comp.status)
+            }
             Text(
                 text = "Date: ${formatDateDisplay(comp.dateComportement)}",
                 style = MaterialTheme.typography.bodySmall,

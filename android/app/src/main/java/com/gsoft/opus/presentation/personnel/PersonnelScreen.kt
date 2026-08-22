@@ -185,7 +185,10 @@ fun PersonnelScreen(
                     onSearch = comportementViewModel::setSearchQuery,
                     onRefresh = comportementViewModel::refresh,
                     onOpenDetail = comportementViewModel::openDetail,
-                    onRequestDelete = comportementViewModel::requestDelete
+                    onRequestDelete = comportementViewModel::requestDelete,
+                    onRequestConfirm = comportementViewModel::requestConfirm,
+                    onRequestReject = comportementViewModel::requestReject,
+                    onStatusFilterChange = comportementViewModel::setStatusFilter
                 )
             }
         }
@@ -236,7 +239,15 @@ fun PersonnelScreen(
     if (compState.detailTarget != null) {
         ComportementDetailDialog(
             state = compState,
-            onDismiss = comportementViewModel::closeDetail
+            onDismiss = comportementViewModel::closeDetail,
+            onConfirm = { comp ->
+                comportementViewModel.closeDetail()
+                comportementViewModel.requestConfirm(comp)
+            },
+            onReject = { comp ->
+                comportementViewModel.closeDetail()
+                comportementViewModel.requestReject(comp)
+            }
         )
     }
 
@@ -251,6 +262,30 @@ fun PersonnelScreen(
         cancelText = "Annuler",
         onCancel = comportementViewModel::cancelDelete
     )
+
+    // Comportement confirm confirmation
+    OpusDialog(
+        visible = compState.confirmTarget != null,
+        onDismiss = comportementViewModel::cancelConfirm,
+        title = "Confirmer le comportement",
+        message = "Confirmer ce comportement ? Une fois confirmé, le statut ne pourra plus être modifié.",
+        confirmText = if (compState.isConfirming) "..." else "Confirmer",
+        onConfirm = comportementViewModel::confirmComportement,
+        cancelText = "Annuler",
+        onCancel = comportementViewModel::cancelConfirm,
+        confirmColor = MaterialTheme.colorScheme.primary,
+        cancelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    // Comportement reject dialog (with reason field)
+    if (compState.rejectTarget != null) {
+        ComportementRejectDialog(
+            state = compState,
+            onReasonChange = comportementViewModel::onRejectReasonChange,
+            onConfirm = comportementViewModel::rejectComportement,
+            onDismiss = comportementViewModel::cancelReject
+        )
+    }
 }
 
 @Composable

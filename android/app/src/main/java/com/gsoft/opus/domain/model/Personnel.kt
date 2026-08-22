@@ -72,5 +72,16 @@ data class Comportement(
     val dateComportement: String,
     val motif: String,
     val decision: String?,
+    val status: String,
+    val confirmedBy: Int?,
+    val confirmedAt: String?,
+    val rejectedReason: String?,
+    val confirmedByUsername: String?,
+    val createdBy: Int?,
+    val createdByUsername: String?,
     val createdAt: String?
-)
+) {
+    val isPending: Boolean get() = status == "pending"
+    val isConfirmed: Boolean get() = status == "confirmed"
+    val isRejected: Boolean get() = status == "rejected"
+}

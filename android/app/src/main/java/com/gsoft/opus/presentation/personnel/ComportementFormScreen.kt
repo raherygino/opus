@@ -65,6 +65,7 @@ fun ComportementFormScreen(
 
     LaunchedEffect(state.saved) {
         if (state.saved) {
+            state.successMessage?.let { snackbarHostState.showSnackbar(it) }
             onSaved()
         }
     }

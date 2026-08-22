@@ -3,6 +3,7 @@ package com.gsoft.opus.data.api
 import com.gsoft.opus.data.api.dto.ApiResponse
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
 import com.gsoft.opus.data.api.dto.ComportementDto
+import com.gsoft.opus.data.api.dto.ComportementRejectRequest
 import com.gsoft.opus.data.api.dto.ComportementRequest
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
@@ -198,6 +199,7 @@ interface ApiService {
     suspend fun getComportementList(
         @Query("personnel_id") personnelId: Int? = null,
         @Query("type") type: String? = null,
+        @Query("status") status: String? = null,
         @Query("search") search: String? = null
     ): Response<ApiResponse<List<ComportementDto>>>
 
@@ -206,6 +208,15 @@ interface ApiService {
 
     @POST("api/comportements")
     suspend fun createComportement(@Body request: ComportementRequest): Response<ApiResponse<ComportementDto>>
+
+    @PUT("api/comportements/{id}/confirm")
+    suspend fun confirmComportement(@Path("id") id: Int): Response<ApiResponse<ComportementDto>>
+
+    @PUT("api/comportements/{id}/reject")
+    suspend fun rejectComportement(
+        @Path("id") id: Int,
+        @Body request: ComportementRejectRequest
+    ): Response<ApiResponse<ComportementDto>>
 
     @DELETE("api/comportements/{id}")
     suspend fun deleteComportement(@Path("id") id: Int): Response<ApiResponse<Nothing>>

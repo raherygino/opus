@@ -81,7 +81,12 @@ interface MouvementRepository {
 }
 
 interface ComportementRepository {
-    suspend fun getComportementList(personnelId: Int? = null): Resource<List<Comportement>>
+    suspend fun getComportementList(
+        personnelId: Int? = null,
+        status: String? = null
+    ): Resource<List<Comportement>>
     suspend fun createComportement(data: ComportementFormData): Resource<Comportement>
+    suspend fun confirmComportement(id: Int): Resource<Comportement>
+    suspend fun rejectComportement(id: Int, reason: String?): Resource<Comportement>
     suspend fun deleteComportement(id: Int): Resource<Unit>
 }

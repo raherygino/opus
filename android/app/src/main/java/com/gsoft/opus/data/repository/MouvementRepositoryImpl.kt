@@ -3,6 +3,7 @@ package com.gsoft.opus.data.repository
 import android.util.Log
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.data.api.ApiService
+import com.gsoft.opus.data.api.dto.ComportementRejectRequest
 import com.gsoft.opus.data.api.dto.ComportementRequest
 import com.gsoft.opus.data.api.dto.MouvementRequest
 import com.gsoft.opus.data.api.dto.MouvementRetourRequest
@@ -156,9 +157,15 @@ class ComportementRepositoryImpl @Inject constructor(
         private const val TAG = "ComportementRepo"
     }
 
-    override suspend fun getComportementList(personnelId: Int?): Resource<List<Comportement>> {
+    override suspend fun getComportementList(
+        personnelId: Int?,
+        status: String?
+    ): Resource<List<Comportement>> {
         return try {
-            val response = apiService.getComportementList(personnelId = personnelId)
+            val response = apiService.getComportementList(
+                personnelId = personnelId,
+                status = status
+            )
             if (response.isSuccessful && response.body()?.success == true) {
                 Resource.success(response.body()!!.data?.map { it.toDomain() } ?: emptyList())
             } else {
@@ -197,6 +204,41 @@ class ComportementRepositoryImpl @Inject constructor(
             Resource.error("Erreur réseau. Vérifiez votre connexion.")
         } catch (e: Exception) {
             Log.e(TAG, "createComportement failed", e)
+            Resource.error("Une erreur inattendue s'est produite.")
+        }
+    }
+
+    override suspend fun confirmComportement(id: Int): Resource<Comportement> {
+        return try {
+            val response = apiService.confirmComportement(id)
+            if (response.isSuccessful && response.body()?.success == true && response.body()!!.data != null) {
+                Resource.success(response.body()!!.data!!.toDomain())
+            } else {
+                Resource.error(response.body()?.message ?: "Impossible de confirmer ce comportement", response.code())
+            }
+        } catch (e: IOException) {
+            Resource.error("Erreur réseau. Vérifiez votre connexion.")
+        } catch (e: Exception) {
+            Log.e(TAG, "confirmComportement failed", e)
+            Resource.error("Une erreur inattendue s'est produite.")
+        }
+    }
+
+    override suspend fun rejectComportement(id: Int, reason: String?): Resource<Comportement> {
+        return try {
+            val response = apiService.rejectComportement(
+                id,
+                ComportementRejectRequest(reason = reason?.takeIf { it.isNotBlank() })
+            )
+            if (response.isSuccessful && response.body()?.success == true && response.body()!!.data != null) {
+                Resource.success(response.body()!!.data!!.toDomain())
+            } else {
+                Resource.error(response.body()?.message ?: "Impossible de rejeter ce comportement", response.code())
+            }
+        } catch (e: IOException) {
+            Resource.error("Erreur réseau. Vérifiez votre connexion.")
+        } catch (e: Exception) {
+            Log.e(TAG, "rejectComportement failed", e)
             Resource.error("Une erreur inattendue s'est produite.")
         }
     }

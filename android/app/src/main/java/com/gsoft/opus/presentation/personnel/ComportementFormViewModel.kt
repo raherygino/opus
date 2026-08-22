@@ -8,6 +8,7 @@ import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.ComportementFormData
 import com.gsoft.opus.domain.repository.ComportementRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,14 +32,16 @@ data class ComportementFormUiState(
     val autocomplete: List<Personnel> = emptyList(),
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val successMessage: String? = null
 )
 
 @HiltViewModel
 class ComportementFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val comportementRepository: ComportementRepository,
-    private val personnelRepository: PersonnelRepository
+    private val personnelRepository: PersonnelRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val prefillPersonnelId: Int = savedStateHandle.get<Int>("personnelId") ?: 0
@@ -47,9 +50,18 @@ class ComportementFormViewModel @Inject constructor(
     val state: StateFlow<ComportementFormUiState> = _state.asStateFlow()
 
     private var personnelCache: List<Personnel> = emptyList()
+    private var isAdmin: Boolean = false
 
     init {
+        loadCurrentUser()
         loadPersonnelCache()
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            val user = getCurrentUserUseCase().getOrNull()
+            isAdmin = user?.roleCode == "SUPER_ADMIN" || user?.roleCode == "STATION_ADMIN"
+        }
     }
 
     private fun loadPersonnelCache() {
@@ -143,8 +155,15 @@ class ComportementFormViewModel @Inject constructor(
                 )
             )
             when (result) {
-                is Resource.Success -> _state.update {
-                    it.copy(isSaving = false, saved = true)
+                is Resource.Success -> {
+                    val message = if (isAdmin) {
+                        "Comportement enregistré et confirmé avec succès"
+                    } else {
+                        "Comportement enregistré. En attente de confirmation par un administrateur."
+                    }
+                    _state.update {
+                        it.copy(isSaving = false, saved = true, successMessage = message)
+                    }
                 }
                 is Resource.Error -> _state.update {
                     it.copy(isSaving = false, errorMessage = result.message)

@@ -137,6 +137,13 @@ fun ComportementDto.toDomain(): Comportement = Comportement(
     dateComportement = dateComportement,
     motif = motif,
     decision = decision,
+    status = status,
+    confirmedBy = confirmedBy,
+    confirmedAt = confirmedAt,
+    rejectedReason = rejectedReason,
+    confirmedByUsername = confirmedByUsername,
+    createdBy = createdBy,
+    createdByUsername = createdByUsername,
     createdAt = createdAt
 )
 

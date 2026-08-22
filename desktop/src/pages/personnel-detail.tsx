@@ -404,7 +404,8 @@ export function PersonnelDetail() {
                         <th className="pb-2 pr-4 font-medium">Type</th>
                         <th className="pb-2 pr-4 font-medium">Date</th>
                         <th className="pb-2 pr-4 font-medium">Motif</th>
-                        <th className="pb-2 font-medium">Décision</th>
+                        <th className="pb-2 pr-4 font-medium">Décision</th>
+                        <th className="pb-2 font-medium">Statut</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -427,8 +428,21 @@ export function PersonnelDetail() {
                           <td className="py-2 pr-4 text-muted-foreground max-w-[200px] truncate">
                             {c.motif}
                           </td>
-                          <td className="py-2 text-muted-foreground max-w-[200px] truncate">
+                          <td className="py-2 pr-4 text-muted-foreground max-w-[200px] truncate">
                             {c.decision || "—"}
+                          </td>
+                          <td className="py-2">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${
+                                c.status === "confirmed"
+                                  ? "bg-green-500/10 text-green-500"
+                                  : c.status === "rejected"
+                                    ? "bg-red-500/10 text-red-500"
+                                    : "bg-amber-500/10 text-amber-500"
+                              }`}
+                            >
+                              {c.status === "confirmed" ? "Confirmé" : c.status === "rejected" ? "Rejeté" : "En attente"}
+                            </span>
                           </td>
                         </tr>
                       ))}

@@ -24,8 +24,16 @@ import {
   Paperclip,
   X,
   Download,
+  Check,
+  XCircle,
 } from "lucide-react";
-import type { Personnel, Mouvement, MouvementAttachment, Comportement } from "@/types";
+import type {
+  Personnel,
+  Mouvement,
+  MouvementAttachment,
+  Comportement,
+  ComportementStatus,
+} from "@/types";
 import {
   getMouvementList,
   createMouvement,
@@ -40,6 +48,8 @@ import {
   getComportementList,
   createComportement,
   deleteComportement,
+  confirmComportement,
+  rejectComportement,
 } from "@/lib/api/comportement";
 
 interface PendingFile {
@@ -94,6 +104,8 @@ export function PersonnelTabs() {
   const { addNotification } = useNotificationStore();
   const canCreate = hasPermission(user, "personnel", "can_create");
   const canDelete = hasPermission(user, "personnel", "can_delete");
+  const isAdmin =
+    user?.role_code === "SUPER_ADMIN" || user?.role_code === "STATION_ADMIN";
 
   // Liste tab
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
@@ -146,13 +158,23 @@ export function PersonnelTabs() {
   const [deleteComportTarget, setDeleteComportTarget] = useState<Comportement | null>(null);
   const [deletingComport, setDeletingComport] = useState(false);
   const [comportDetailTarget, setComportDetailTarget] = useState<Comportement | null>(null);
+  const [comportStatusFilter, setComportStatusFilter] = useState<"" | ComportementStatus>("");
+  const [confirmTarget, setConfirmTarget] = useState<Comportement | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<Comportement | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
 
   useEffect(() => {
     loadPersonnel();
     loadMouvements();
-    loadComportements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    loadComportements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comportStatusFilter]);
 
   async function loadPersonnel() {
     setLoadingPersonnel(true);
@@ -189,7 +211,9 @@ export function PersonnelTabs() {
   async function loadComportements() {
     setLoadingComportements(true);
     try {
-      const data = await getComportementList();
+      const filters: Record<string, string> = {};
+      if (comportStatusFilter) filters.status = comportStatusFilter;
+      const data = await getComportementList(filters);
       setComportements(data);
     } catch {
       addNotification(
@@ -490,6 +514,37 @@ export function PersonnelTabs() {
     } finally {
       setDeletingComport(false);
       setDeleteComportTarget(null);
+    }
+  }
+
+  async function handleConfirmComportement(id: number) {
+    setConfirming(true);
+    try {
+      await confirmComportement(id);
+      addNotification("success", "Confirmé", "Comportement confirmé avec succès");
+      setConfirmTarget(null);
+      setComportDetailTarget(null);
+      loadComportements();
+    } catch {
+      addNotification("error", "Erreur", "Impossible de confirmer ce comportement");
+    } finally {
+      setConfirming(false);
+    }
+  }
+
+  async function handleRejectComportement(id: number) {
+    setRejecting(true);
+    try {
+      await rejectComportement(id, rejectReason || undefined);
+      addNotification("success", "Rejeté", "Comportement rejeté");
+      setRejectTarget(null);
+      setRejectReason("");
+      setComportDetailTarget(null);
+      loadComportements();
+    } catch {
+      addNotification("error", "Erreur", "Impossible de rejeter ce comportement");
+    } finally {
+      setRejecting(false);
     }
   }
 
@@ -955,7 +1010,29 @@ export function PersonnelTabs() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Liste des comportements</CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-base">Liste des comportements</CardTitle>
+                  <div className="flex items-center gap-1">
+                    {([
+                      { value: "", label: "Tous" },
+                      { value: "pending", label: "En attente" },
+                      { value: "confirmed", label: "Confirmés" },
+                      { value: "rejected", label: "Rejetés" },
+                    ] as { value: "" | ComportementStatus; label: string }[]).map((f) => (
+                      <button
+                        key={f.value}
+                        onClick={() => setComportStatusFilter(f.value)}
+                        className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                          comportStatusFilter === f.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {canCreate && (
                   <Button
                     size="sm"
@@ -975,8 +1052,8 @@ export function PersonnelTabs() {
               <DataTable
                 columns={[
                   { key: "im", header: "IM", sortable: true },
-                  { key: "nom", header: "Last Name", sortable: true },
-                  { key: "prenoms", header: "First Name", sortable: true },
+                  { key: "nom", header: "Nom", sortable: true },
+                  { key: "prenoms", header: "Prénoms", sortable: true },
                   { key: "grade", header: "Grade", sortable: true },
                   {
                     key: "type",
@@ -996,9 +1073,26 @@ export function PersonnelTabs() {
                   },
                   { key: "date_comportement", header: "Date", sortable: true },
                   {
+                    key: "status",
+                    header: "Statut",
+                    sortable: true,
+                    render: (c) => {
+                      const config = {
+                        pending: { label: "En attente", cls: "bg-amber-500/10 text-amber-500" },
+                        confirmed: { label: "Confirmé", cls: "bg-green-500/10 text-green-500" },
+                        rejected: { label: "Rejeté", cls: "bg-red-500/10 text-red-500" },
+                      }[c.status];
+                      return (
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${config.cls}`}>
+                          {config.label}
+                        </span>
+                      );
+                    },
+                  },
+                  {
                     key: "actions",
                     header: "Actions",
-                    className: "w-[100px]",
+                    className: "w-[140px]",
                     render: (c) => (
                       <div
                         className="flex items-center gap-1"
@@ -1012,6 +1106,28 @@ export function PersonnelTabs() {
                         >
                           <Users className="h-3.5 w-3.5" />
                         </Button>
+                        {isAdmin && c.status === "pending" && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-green-500"
+                              onClick={() => setConfirmTarget(c)}
+                              title="Confirmer"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-red-500"
+                              onClick={() => { setRejectTarget(c); setRejectReason(""); }}
+                              title="Rejeter"
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
                         {canDelete && (
                           <Button
                             variant="ghost"
@@ -1030,7 +1146,7 @@ export function PersonnelTabs() {
                 keyExtractor={(c) => c.id}
                 loading={loadingComportements}
                 searchable
-                searchPlaceholder="Search by IM, name, motif..."
+                searchPlaceholder="Rechercher par IM, nom, motif..."
                 onRowClick={(c) => setComportDetailTarget(c)}
               />
             </CardContent>
@@ -1419,6 +1535,18 @@ export function PersonnelTabs() {
                   </span>
                 </div>
                 <div className="text-sm"><span className="text-muted-foreground">Date :</span> {comportDetailTarget.date_comportement}</div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Statut :</span>{" "}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    comportDetailTarget.status === "confirmed"
+                      ? "bg-green-500/10 text-green-500"
+                      : comportDetailTarget.status === "rejected"
+                        ? "bg-red-500/10 text-red-500"
+                        : "bg-amber-500/10 text-amber-500"
+                  }`}>
+                    {comportDetailTarget.status === "confirmed" ? "Confirmé" : comportDetailTarget.status === "rejected" ? "Rejeté" : "En attente"}
+                  </span>
+                </div>
               </div>
 
               <Separator className="my-2" />
@@ -1434,6 +1562,112 @@ export function PersonnelTabs() {
                   <p className="text-sm text-muted-foreground">{comportDetailTarget.decision}</p>
                 </div>
               )}
+
+              {comportDetailTarget.status === "rejected" && comportDetailTarget.rejected_reason && (
+                <div>
+                  <p className="text-sm font-semibold mb-1 text-red-500">Raison du rejet</p>
+                  <p className="text-sm text-muted-foreground">{comportDetailTarget.rejected_reason}</p>
+                </div>
+              )}
+
+              {comportDetailTarget.confirmed_by_username && (
+                <div className="text-xs text-muted-foreground">
+                  {comportDetailTarget.status === "rejected" ? "Rejeté" : "Confirmé"} par {comportDetailTarget.confirmed_by_username}
+                  {comportDetailTarget.confirmed_at && ` le ${new Date(comportDetailTarget.confirmed_at).toLocaleDateString("fr-FR")}`}
+                </div>
+              )}
+
+              {isAdmin && comportDetailTarget.status === "pending" && (
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-red-500"
+                    onClick={() => { setRejectTarget(comportDetailTarget); setRejectReason(""); }}
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Rejeter
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-green-600 hover:bg-green-700"
+                    onClick={() => setConfirmTarget(comportDetailTarget)}
+                  >
+                    <Check className="h-4 w-4" />
+                    Confirmer
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm comportement dialog */}
+      <ConfirmDialog
+        open={confirmTarget !== null}
+        title="Confirmer le comportement"
+        message={`Confirmer le comportement de ${confirmTarget?.nom} ${confirmTarget?.prenoms} ? Une fois confirmé, le statut ne pourra plus être modifié.`}
+        confirmLabel="Confirmer"
+        loading={confirming}
+        onConfirm={() => confirmTarget && handleConfirmComportement(confirmTarget.id)}
+        onCancel={() => setConfirmTarget(null)}
+      />
+
+      {/* Reject comportement dialog */}
+      {rejectTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => !rejecting && setRejectTarget(null)}
+        >
+          <div className="fixed inset-0 bg-black/60" />
+          <div
+            className="relative z-50 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-base font-semibold">Rejeter le comportement</p>
+                <p className="text-sm text-muted-foreground">
+                  {rejectTarget.nom} {rejectTarget.prenoms}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => !rejecting && setRejectTarget(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="reject-reason">Raison du rejet (optionnel)</Label>
+                <textarea
+                  id="reject-reason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={3}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Indiquer la raison du rejet..."
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRejectTarget(null)}
+                  disabled={rejecting}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleRejectComportement(rejectTarget.id)}
+                  disabled={rejecting}
+                >
+                  {rejecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                  Rejeter
+                </Button>
+              </div>
             </div>
           </div>
         </div>

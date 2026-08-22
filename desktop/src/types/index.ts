@@ -171,6 +171,8 @@ export interface MouvementAttachment {
 // ========================
 // Comportement Types
 // ========================
+export type ComportementStatus = "pending" | "confirmed" | "rejected";
+
 export interface Comportement {
   id: number;
   personnel_id: number;
@@ -183,6 +185,13 @@ export interface Comportement {
   date_comportement: string;
   motif: string;
   decision: string | null;
+  status: ComportementStatus;
+  confirmed_by: number | null;
+  confirmed_at: string | null;
+  rejected_reason: string | null;
+  confirmed_by_username?: string | null;
+  created_by: number | null;
+  created_by_username?: string | null;
   created_at: string;
   updated_at: string;
 }
