@@ -173,11 +173,12 @@ fun CorrespondanceFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OpusDropdown(
-                    label = "Statut",
-                    options = CORRESPONDANCE_STATUTS,
-                    selected = state.statut,
-                    onSelect = viewModel::updateStatut,
+                OutlinedTextField(
+                    value = state.statut,
+                    onValueChange = viewModel::updateStatut,
+                    label = { Text("Statut") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
             }

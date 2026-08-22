@@ -141,11 +141,8 @@ export interface PersonnelAttachment {
 // ========================
 export type CorrespondanceSens = "Entrant" | "Sortant";
 
-export type CorrespondanceStatut =
-  | "Enregistré"
-  | "En traitement"
-  | "Traité"
-  | "Archivé";
+// Statut is free-text; these are only suggested defaults.
+export type CorrespondanceStatut = string;
 
 export interface Correspondance {
   id: number;

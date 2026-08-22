@@ -24,7 +24,6 @@ data class CorrespondanceUiState(
     val errorMessage: String? = null,
     val searchQuery: String = "",
     val sensFilter: String = "",
-    val statutFilter: String = "",
     val canCreate: Boolean = false,
     val canDelete: Boolean = false,
     val deleteTarget: Correspondance? = null,
@@ -36,12 +35,11 @@ data class CorrespondanceUiState(
             val query = searchQuery.trim().lowercase()
             return correspondances.filter { c ->
                 val matchesSens = sensFilter.isEmpty() || c.sens == sensFilter
-                val matchesStatut = statutFilter.isEmpty() || c.statut == statutFilter
                 val matchesQuery = query.isEmpty() ||
                     c.reference.lowercase().contains(query) ||
                     c.emetteurDestinataire.lowercase().contains(query) ||
                     c.objet.lowercase().contains(query)
-                matchesSens && matchesStatut && matchesQuery
+                matchesSens && matchesQuery
             }
         }
 }
@@ -93,10 +91,6 @@ class CorrespondanceViewModel @Inject constructor(
 
     fun setSensFilter(sens: String) {
         _state.update { it.copy(sensFilter = sens) }
-    }
-
-    fun setStatutFilter(statut: String) {
-        _state.update { it.copy(statutFilter = statut) }
     }
 
     fun requestDelete(correspondance: Correspondance) {

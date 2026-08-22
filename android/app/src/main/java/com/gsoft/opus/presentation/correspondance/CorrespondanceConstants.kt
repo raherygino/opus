@@ -8,7 +8,8 @@ val CORRESPONDANCE_SENS = listOf(
     "Sortant"
 )
 
-/** Same statut list as the desktop correspondance page. */
+/** Suggested default statut values. The statut field is free-text, these are
+ *  only used as a sensible default for new correspondances. */
 val CORRESPONDANCE_STATUTS = listOf(
     "Enregistré",
     "En traitement",

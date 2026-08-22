@@ -126,23 +126,6 @@ fun CorrespondanceScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Statut filter chips
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(listOf("" to "Tous") + CORRESPONDANCE_STATUTS.map { it to it }) { (value, label) ->
-                    FilterChip(
-                        selected = state.statutFilter == value,
-                        onClick = { viewModel.setStatutFilter(value) },
-                        label = { Text(label, style = MaterialTheme.typography.labelSmall) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             val loadError = state.errorMessage
             if (state.isLoading) {
                 Box(

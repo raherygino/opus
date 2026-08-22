@@ -75,7 +75,7 @@ class CorrespondanceController
             }
         }
 
-        if (array_key_exists('statut', $data) && !in_array($data['statut'], Correspondance::STATUTS, true)) {
+        if (array_key_exists('statut', $data) && !is_string($data['statut'])) {
             $errors['statut'] = 'Le statut est invalide';
         }
 
@@ -146,8 +146,8 @@ class CorrespondanceController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification to admins (after successful save) ---
-        self::notifyAdmins($correspondance, 'created', (int) $authUser['sub']);
+        // --- Notification to admins (only on first creation) ---
+        self::notifyAdmins($correspondance, (int) $authUser['sub']);
 
         Response::created($correspondance, 'Correspondance enregistrée avec succès');
     }
@@ -206,8 +206,8 @@ class CorrespondanceController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification to admins (after successful update) ---
-        self::notifyAdmins($correspondance, 'updated', (int) $authUser['sub']);
+        // Note: admin notifications are only sent on creation (first time),
+        // not on subsequent modifications.
 
         Response::success($correspondance, 'Correspondance modifiée avec succès');
     }
@@ -259,10 +259,11 @@ class CorrespondanceController
 
     /**
      * Notify every admin (except the actor) that a correspondance was
-     * created or updated. Push delivery failures are isolated inside
+     * created. Only the first creation triggers a notification — subsequent
+     * modifications do not. Push delivery failures are isolated inside
      * Notification::create() and never affect the API response.
      */
-    private static function notifyAdmins(array $correspondance, string $action, ?int $actorId): void
+    private static function notifyAdmins(array $correspondance, ?int $actorId): void
     {
         $date = date('d/m/Y', strtotime($correspondance['date_correspondance']));
         $heure = substr((string) $correspondance['heure_enregistrement'], 0, 5);
@@ -275,13 +276,8 @@ class CorrespondanceController
             . " — Émetteur/Destinataire: {$correspondance['emetteur_destinataire']}"
             . " — le {$date} à {$heure} — Agent secrétariat: {$agent}.";
 
-        if ($action === 'created') {
-            $title = 'Nouvelle correspondance';
-            $message = "Une correspondance {$correspondance['sens']} a été enregistrée. " . $details;
-        } else {
-            $title = 'Correspondance modifiée';
-            $message = "La correspondance {$correspondance['sens']} (Réf: {$correspondance['reference']}) a été modifiée. " . $details;
-        }
+        $title = 'Nouvelle correspondance';
+        $message = "Une correspondance {$correspondance['sens']} a été enregistrée. " . $details;
 
         $admins = Notification::getAdminUsers();
         foreach ($admins as $admin) {

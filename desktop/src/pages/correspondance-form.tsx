@@ -40,13 +40,6 @@ const SENS_OPTIONS = [
   { value: "Sortant", label: "Sortant" },
 ];
 
-const STATUT_OPTIONS = [
-  { value: "Enregistré", label: "Enregistré" },
-  { value: "En traitement", label: "En traitement" },
-  { value: "Traité", label: "Traité" },
-  { value: "Archivé", label: "Archivé" },
-];
-
 interface AttachmentItem {
   id?: number;
   title: string;
@@ -379,13 +372,11 @@ export function CorrespondanceForm() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="statut">Statut</Label>
-                <Select
+                <Input
                   id="statut"
                   value={form.statut}
-                  onChange={(e) =>
-                    setForm({ ...form, statut: e.target.value as Correspondance["statut"] })
-                  }
-                  options={STATUT_OPTIONS}
+                  onChange={(e) => setForm({ ...form, statut: e.target.value })}
+                  placeholder="Ex. Enregistré, En traitement, Traité, Archivé..."
                 />
               </div>
               {isEdit && agent && (

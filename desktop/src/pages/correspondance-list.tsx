@@ -39,7 +39,6 @@ export function CorrespondanceList() {
   const [correspondances, setCorrespondances] = useState<Correspondance[]>([]);
   const [loading, setLoading] = useState(true);
   const [sensFilter, setSensFilter] = useState("");
-  const [statutFilter, setStatutFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Correspondance | null>(null);
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
@@ -51,14 +50,13 @@ export function CorrespondanceList() {
   useEffect(() => {
     loadCorrespondances();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sensFilter, statutFilter]);
+  }, [sensFilter]);
 
   async function loadCorrespondances() {
     setLoading(true);
     try {
       const filters: Record<string, string> = {};
       if (sensFilter) filters.sens = sensFilter;
-      if (statutFilter) filters.statut = statutFilter;
       const data = await getCorrespondanceList(filters);
       setCorrespondances(data);
     } catch {
@@ -195,15 +193,6 @@ export function CorrespondanceList() {
                   { value: "Sortant", label: "Sortant" },
                 ]}
                 className="w-40"
-              />
-              <Select
-                value={statutFilter}
-                onChange={(e) => setStatutFilter(e.target.value)}
-                options={[
-                  { value: "", label: "Tous les statuts" },
-                  ...Object.keys(STATUT_COLORS).map((s) => ({ value: s, label: s })),
-                ]}
-                className="w-44"
               />
             </div>
           </div>
