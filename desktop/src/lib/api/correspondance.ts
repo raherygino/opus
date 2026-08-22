@@ -117,3 +117,14 @@ export function getCorrespondanceAttachmentDownloadUrl(
   const baseUrl = import.meta.env.VITE_API_URL || "/api";
   return `${baseUrl}/correspondances/${correspondanceId}/attachments/${attachId}/download`;
 }
+
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "heif", "svg"];
+
+/** Whether an attachment is an image that can be previewed in-app. */
+export function isImageAttachment(
+  attachment: Pick<CorrespondanceAttachment, "mime_type" | "original_filename">,
+): boolean {
+  if (attachment.mime_type?.startsWith("image/")) return true;
+  const ext = attachment.original_filename?.split(".").pop()?.toLowerCase();
+  return !!ext && IMAGE_EXTENSIONS.includes(ext);
+}

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,7 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,8 +51,10 @@ import com.gsoft.opus.presentation.personnel.DetailRow
 import com.gsoft.opus.presentation.personnel.formatDateDisplay
 import com.gsoft.opus.presentation.personnel.formatFileSize
 import com.gsoft.opus.presentation.personnel.openUrl
+import com.gsoft.opus.domain.model.CorrespondanceAttachment
 import com.gsoft.opus.ui.components.ErrorMessage
 import com.gsoft.opus.ui.components.FormSectionCard
+import com.gsoft.opus.ui.components.ImageViewerDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +66,7 @@ fun CorrespondanceDetailScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    var viewerTarget by remember { mutableStateOf<CorrespondanceAttachment?>(null) }
 
     LaunchedEffect(state.userMessage) {
         state.userMessage?.let {
@@ -185,6 +191,11 @@ fun CorrespondanceDetailScreen(
                                     )
                                 }
                             }
+                            if (isImageAttachment(att.mimeType, att.originalFilename)) {
+                                IconButton(onClick = { viewerTarget = att }) {
+                                    Icon(Icons.Outlined.Visibility, contentDescription = "Aperçu", modifier = Modifier.size(18.dp))
+                                }
+                            }
                             IconButton(onClick = {
                                 val url = correspondanceAttachmentDownloadUrl(corr.id, att.id)
                                 openUrl(context, url)
@@ -197,6 +208,17 @@ fun CorrespondanceDetailScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+
+    // Full-screen zoomable viewer for image attachments
+    viewerTarget?.let { att ->
+        state.correspondance?.let { corr ->
+            ImageViewerDialog(
+                imageUrl = correspondanceAttachmentDownloadUrl(corr.id, att.id),
+                title = att.title,
+                onDismiss = { viewerTarget = null }
+            )
         }
     }
 }

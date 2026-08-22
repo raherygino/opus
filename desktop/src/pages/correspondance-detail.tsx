@@ -7,9 +7,11 @@ import { hasPermission } from "@/lib/permissions";
 import {
   getCorrespondanceById,
   getCorrespondanceAttachmentDownloadUrl,
+  isImageAttachment,
 } from "@/lib/api/correspondance";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import {
   ArrowLeft,
   Loader2,
@@ -17,10 +19,11 @@ import {
   Repeat,
   Paperclip,
   Download,
+  Eye,
   ArrowDownLeft,
   ArrowUpRight,
 } from "lucide-react";
-import type { Correspondance } from "@/types";
+import type { Correspondance, CorrespondanceAttachment } from "@/types";
 import {
   CORRESPONDANCE_MODULE,
   formatDate,
@@ -47,6 +50,7 @@ export function CorrespondanceDetail() {
 
   const [correspondance, setCorrespondance] = useState<Correspondance | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewerTarget, setViewerTarget] = useState<CorrespondanceAttachment | null>(null);
 
   useEffect(() => {
     loadCorrespondance();
@@ -177,11 +181,22 @@ export function CorrespondanceDetail() {
                 <p className="text-sm font-medium">{att.title}</p>
                 <p className="text-xs text-muted-foreground">{att.original_filename}</p>
               </div>
+              {isImageAttachment(att) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  title="Aperçu"
+                  onClick={() => setViewerTarget(att)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              )}
               <a
                 href={getCorrespondanceAttachmentDownloadUrl(correspondance.id, att.id)}
                 download
               >
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger">
                   <Download className="h-4 w-4" />
                 </Button>
               </a>
@@ -189,6 +204,17 @@ export function CorrespondanceDetail() {
           ))}
         </CardContent>
       </Card>
+
+      <ImageViewerDialog
+        open={viewerTarget !== null}
+        src={
+          viewerTarget
+            ? getCorrespondanceAttachmentDownloadUrl(correspondance.id, viewerTarget.id)
+            : ""
+        }
+        title={viewerTarget?.title}
+        onClose={() => setViewerTarget(null)}
+      />
     </motion.div>
   );
 }

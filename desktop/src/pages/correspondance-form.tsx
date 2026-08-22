@@ -11,12 +11,15 @@ import {
   updateCorrespondanceAttachmentTitle,
   deleteCorrespondanceAttachment,
   getCorrespondanceAttachmentDownloadUrl,
+  isImageAttachment,
 } from "@/lib/api/correspondance";
+import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import {
   ArrowLeft,
   Save,
@@ -26,6 +29,8 @@ import {
   Trash2,
   Download,
   Plus,
+  Smartphone,
+  Eye,
 } from "lucide-react";
 import type { Correspondance, CorrespondanceAttachment } from "@/types";
 import type { CorrespondancePayload } from "@/lib/api/correspondance";
@@ -81,6 +86,8 @@ export function CorrespondanceForm() {
   });
   const [agent, setAgent] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+  const [photoPadIndex, setPhotoPadIndex] = useState<number | null>(null);
+  const [viewerTarget, setViewerTarget] = useState<{ id: number; title: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -147,6 +154,33 @@ export function CorrespondanceForm() {
       const updated = [...prev];
       updated[index] = { ...updated[index], ...data };
       return updated;
+    });
+  }
+
+  // Phone photo capture (QR pairing) → the captured photo becomes the
+  // attachment's file, exactly like the personnel photo flow.
+  async function handleAttachmentPhotoComplete(photoData: string) {
+    const index = photoPadIndex;
+    setPhotoPadIndex(null);
+    if (index === null) return;
+
+    const [meta, base64] = photoData.split(",");
+    const mimeType = meta?.match(/:(.*?);/)?.[1] || "image/jpeg";
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    const extension = mimeType === "image/png" ? "png" : "jpg";
+    const file = new File([blob], `photo.${extension}`, { type: mimeType });
+
+    const current = attachments[index];
+    updateAttachment(index, {
+      file,
+      // Pre-fill the title when the row has none yet.
+      ...(current && !current.title.trim() ? { title: file.name.replace(/\.[^.]+$/, "") } : {}),
     });
   }
 
@@ -405,14 +439,34 @@ export function CorrespondanceForm() {
                     className="h-8 text-sm"
                   />
                   {att.id && att.existingFile && id && (
-                    <a
-                      href={getCorrespondanceAttachmentDownloadUrl(Number(id), att.id)}
-                      download
-                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                    >
-                      <Download className="h-3 w-3" />
-                      {att.existingFile}
-                    </a>
+                    <div className="flex items-center gap-1">
+                      <a
+                        href={getCorrespondanceAttachmentDownloadUrl(Number(id), att.id)}
+                        download
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" />
+                        {att.existingFile}
+                      </a>
+                      {isImageAttachment({ mime_type: null, original_filename: att.existingFile }) && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          title="Aperçu"
+                          onClick={() => setViewerTarget({ id: att.id!, title: att.title || att.existingFile! })}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {att.file && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Paperclip className="h-3 w-3" />
+                      {att.file.name}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
@@ -424,6 +478,16 @@ export function CorrespondanceForm() {
                       if (file) updateAttachment(index, { file });
                     }}
                   />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Prendre une photo avec le téléphone"
+                    onClick={() => setPhotoPadIndex(index)}
+                  >
+                    <Smartphone className="h-3.5 w-3.5" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -450,6 +514,24 @@ export function CorrespondanceForm() {
           </Button>
         </CardContent>
       </Card>
+
+      <PhotoCaptureDialog
+        open={photoPadIndex !== null}
+        onClose={() => setPhotoPadIndex(null)}
+        onPhotoComplete={handleAttachmentPhotoComplete}
+        squareCrop={false}
+      />
+
+      <ImageViewerDialog
+        open={viewerTarget !== null}
+        src={
+          viewerTarget && id
+            ? getCorrespondanceAttachmentDownloadUrl(Number(id), viewerTarget.id)
+            : ""
+        }
+        title={viewerTarget?.title}
+        onClose={() => setViewerTarget(null)}
+      />
     </motion.div>
   );
 }

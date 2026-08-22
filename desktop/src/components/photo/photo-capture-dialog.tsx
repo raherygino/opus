@@ -8,6 +8,11 @@ interface PhotoCaptureDialogProps {
   open: boolean;
   onClose: () => void;
   onPhotoComplete: (photoData: string) => void;
+  /**
+   * Square crop is intended for profile photos. Pass false (e.g. for
+   * document attachments) to allow a free rectangular crop.
+   */
+  squareCrop?: boolean;
 }
 
 async function cropToSquareDataUrl(
@@ -21,11 +26,36 @@ async function cropToSquareDataUrl(
   const side = Math.round(sizeFraction * minSide);
   const sx = Math.round(offsetX * img.width);
   const sy = Math.round(offsetY * img.height);
+  return cropRegionToDataUrl(img, sx, sy, side, side);
+}
+
+async function cropToRectDataUrl(
+  dataUrl: string,
+  offsetX: number,
+  offsetY: number,
+  widthFraction: number,
+  heightFraction: number,
+): Promise<string> {
+  const img = await loadImage(dataUrl);
+  const sx = Math.round(offsetX * img.width);
+  const sy = Math.round(offsetY * img.height);
+  const w = Math.round(widthFraction * img.width);
+  const h = Math.round(heightFraction * img.height);
+  return cropRegionToDataUrl(img, sx, sy, w, h);
+}
+
+function cropRegionToDataUrl(
+  img: HTMLImageElement,
+  sx: number,
+  sy: number,
+  w: number,
+  h: number,
+): Promise<string> {
   const canvas = document.createElement("canvas");
-  canvas.width = side;
-  canvas.height = side;
+  canvas.width = w;
+  canvas.height = h;
   const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, sx, sy, side, side, 0, 0, side, side);
+  ctx.drawImage(img, sx, sy, w, h, 0, 0, w, h);
   return new Promise((resolve) => {
     canvas.toBlob(
       (blob) => {
@@ -48,7 +78,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCaptureDialogProps) {
+export function PhotoCaptureDialog({ open, onClose, onPhotoComplete, squareCrop = true }: PhotoCaptureDialogProps) {
   const {
     session,
     device,
@@ -69,12 +99,15 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
   // Crop state — all fractions of the displayed image
   // cropX/cropY: top-left corner position (0..1 of image width/height)
   // cropSize: square side as fraction of min(imgW, imgH), range 0.2..1
+  // cropW/cropH: rectangular crop size (0..1 of image width/height), free mode
   const [cropX, setCropX] = useState(0);
   const [cropY, setCropY] = useState(0);
   const [cropSize, setCropSize] = useState(1);
+  const [cropW, setCropW] = useState(1);
+  const [cropH, setCropH] = useState(1);
   const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ mode: "move" | "resize"; startX: number; startY: number; startCropX: number; startCropY: number; startSize: number } | null>(null);
+  const dragRef = useRef<{ mode: "move" | "resize"; startX: number; startY: number; startCropX: number; startCropY: number; startSize: number; startCropW: number; startCropH: number } | null>(null);
 
   // Compute maximum crop offsets so the square stays inside the image
   // maxCropX (in image-width fraction) = (imgW - side) / imgW
@@ -85,14 +118,22 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
     if (photoReceived && photoData) {
       loadImage(photoData).then((img) => {
         setImgDims({ w: img.width, h: img.height });
-        const minSide = Math.min(img.width, img.height);
-        // center the square, default to full min size
-        setCropSize(1);
-        setCropX((img.width - minSide) / (2 * img.width));
-        setCropY((img.height - minSide) / (2 * img.height));
+        if (squareCrop) {
+          const minSide = Math.min(img.width, img.height);
+          // center the square, default to full min size
+          setCropSize(1);
+          setCropX((img.width - minSide) / (2 * img.width));
+          setCropY((img.height - minSide) / (2 * img.height));
+        } else {
+          // free rectangular crop — default to the full photo
+          setCropX(0);
+          setCropY(0);
+          setCropW(1);
+          setCropH(1);
+        }
       });
     }
-  }, [photoReceived, photoData]);
+  }, [photoReceived, photoData, squareCrop]);
 
   const handleDragStart = useCallback(
     (mode: "move" | "resize") => (e: React.PointerEvent) => {
@@ -106,9 +147,11 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
         startCropX: cropX,
         startCropY: cropY,
         startSize: cropSize,
+        startCropW: cropW,
+        startCropH: cropH,
       };
     },
-    [cropX, cropY, cropSize],
+    [cropX, cropY, cropSize, cropW, cropH],
   );
 
   const handleDragMove = useCallback(
@@ -120,12 +163,17 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
       const minSide = Math.min(imgDims.w, imgDims.h);
 
       if (dragRef.current.mode === "move") {
-        const side = dragRef.current.startSize * minSide;
-        const maxX = (imgDims.w - side) / imgDims.w;
-        const maxY = (imgDims.h - side) / imgDims.h;
-        setCropX(Math.max(0, Math.min(maxX, dragRef.current.startCropX + dx)));
-        setCropY(Math.max(0, Math.min(maxY, dragRef.current.startCropY + dy)));
-      } else {
+        if (squareCrop) {
+          const side = dragRef.current.startSize * minSide;
+          const maxX = (imgDims.w - side) / imgDims.w;
+          const maxY = (imgDims.h - side) / imgDims.h;
+          setCropX(Math.max(0, Math.min(maxX, dragRef.current.startCropX + dx)));
+          setCropY(Math.max(0, Math.min(maxY, dragRef.current.startCropY + dy)));
+        } else {
+          setCropX(Math.max(0, Math.min(1 - dragRef.current.startCropW, dragRef.current.startCropX + dx)));
+          setCropY(Math.max(0, Math.min(1 - dragRef.current.startCropH, dragRef.current.startCropY + dy)));
+        }
+      } else if (squareCrop) {
         // resize — use the larger of dx/dy in image-pixel space to keep square
         const maxIdx = Math.max(
           Math.abs(dx) * imgDims.w,
@@ -146,9 +194,15 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
         setCropSize(newSize);
         setCropX(Math.max(0, Math.min(maxX, dragRef.current.startCropX)));
         setCropY(Math.max(0, Math.min(maxY, dragRef.current.startCropY)));
+      } else {
+        // free rectangular resize — width and height move independently
+        const newW = Math.max(0.1, Math.min(1 - dragRef.current.startCropX, dragRef.current.startCropW + dx));
+        const newH = Math.max(0.1, Math.min(1 - dragRef.current.startCropY, dragRef.current.startCropH + dy));
+        setCropW(newW);
+        setCropH(newH);
       }
     },
-    [imgDims],
+    [imgDims, squareCrop],
   );
 
   const handleDragEnd = useCallback((e: React.PointerEvent) => {
@@ -217,7 +271,9 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
     if (!photoData) return;
     setSaving(true);
     try {
-      const cropped = await cropToSquareDataUrl(photoData, cropX, cropY, cropSize);
+      const cropped = squareCrop
+        ? await cropToSquareDataUrl(photoData, cropX, cropY, cropSize)
+        : await cropToRectDataUrl(photoData, cropX, cropY, cropW, cropH);
       await onPhotoComplete(cropped);
       destroySession();
       onClose();
@@ -366,7 +422,9 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
                 <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3">
                   <Crop className="h-4 w-4 text-green-600" />
                   <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                    Ajustez le cadrage carré, puis cliquez sur "Enregistrer"
+                    {squareCrop
+                      ? 'Ajustez le cadrage carré, puis cliquez sur "Enregistrer"'
+                      : 'Ajustez le cadrage, puis cliquez sur "Enregistrer"'}
                   </p>
                 </div>
 
@@ -383,10 +441,17 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
                   />
                   {(() => {
                     if (!imgDims) return null;
-                    const minSide = Math.min(imgDims.w, imgDims.h);
-                    const sidePx = cropSize * minSide;
-                    const boxWPct = (sidePx / imgDims.w) * 100;
-                    const boxHPct = (sidePx / imgDims.h) * 100;
+                    let boxWPct: number;
+                    let boxHPct: number;
+                    if (squareCrop) {
+                      const minSide = Math.min(imgDims.w, imgDims.h);
+                      const sidePx = cropSize * minSide;
+                      boxWPct = (sidePx / imgDims.w) * 100;
+                      boxHPct = (sidePx / imgDims.h) * 100;
+                    } else {
+                      boxWPct = cropW * 100;
+                      boxHPct = cropH * 100;
+                    }
                     const leftPct = cropX * 100;
                     const topPct = cropY * 100;
 
@@ -441,7 +506,9 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
                 </div>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  Glissez le carré pour déplacer • Glissez le coin pour redimensionner
+                  {squareCrop
+                    ? "Glissez le carré pour déplacer • Glissez le coin pour redimensionner"
+                    : "Glissez le cadre pour déplacer • Glissez le coin pour redimensionner"}
                 </p>
               </>
             ) : (
@@ -455,7 +522,9 @@ export function PhotoCaptureDialog({ open, onClose, onPhotoComplete }: PhotoCapt
 
             <p className="text-xs text-muted-foreground text-center">
               {photoReceived
-                ? "Cadrage carré appliqué automatiquement lors de l'enregistrement."
+                ? squareCrop
+                  ? "Cadrage carré appliqué automatiquement lors de l'enregistrement."
+                  : "Le cadrage est appliqué lors de l'enregistrement."
                 : "L'utilisateur prend une photo sur l'appareil Android. L'image apparaîtra ici après validation."}
             </p>
 
