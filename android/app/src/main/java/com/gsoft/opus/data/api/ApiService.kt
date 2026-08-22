@@ -5,6 +5,9 @@ import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
 import com.gsoft.opus.data.api.dto.ComportementDto
 import com.gsoft.opus.data.api.dto.ComportementRejectRequest
 import com.gsoft.opus.data.api.dto.ComportementRequest
+import com.gsoft.opus.data.api.dto.CorrespondanceAttachmentDto
+import com.gsoft.opus.data.api.dto.CorrespondanceDto
+import com.gsoft.opus.data.api.dto.CorrespondanceRequest
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
 import com.gsoft.opus.data.api.dto.LoginRequestDto
@@ -220,4 +223,53 @@ interface ApiService {
 
     @DELETE("api/comportements/{id}")
     suspend fun deleteComportement(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Correspondances ────────────────────────────────────────────
+
+    @GET("api/correspondances")
+    suspend fun getCorrespondanceList(
+        @Query("sens") sens: String? = null,
+        @Query("statut") statut: String? = null,
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<CorrespondanceDto>>>
+
+    @GET("api/correspondances/{id}")
+    suspend fun getCorrespondance(@Path("id") id: Int): Response<ApiResponse<CorrespondanceDto>>
+
+    @POST("api/correspondances")
+    suspend fun createCorrespondance(@Body request: CorrespondanceRequest): Response<ApiResponse<CorrespondanceDto>>
+
+    @PUT("api/correspondances/{id}")
+    suspend fun updateCorrespondance(@Path("id") id: Int, @Body request: CorrespondanceRequest): Response<ApiResponse<CorrespondanceDto>>
+
+    @DELETE("api/correspondances/{id}")
+    suspend fun deleteCorrespondance(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Correspondance Attachments ─────────────────────────────────
+
+    @GET("api/correspondances/{id}/attachments")
+    suspend fun getCorrespondanceAttachments(@Path("id") id: Int): Response<ApiResponse<List<CorrespondanceAttachmentDto>>>
+
+    @Multipart
+    @POST("api/correspondances/{id}/attachments")
+    suspend fun createCorrespondanceAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<CorrespondanceAttachmentDto>>
+
+    @PUT("api/correspondances/{id}/attachments/{attachId}")
+    suspend fun updateCorrespondanceAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<CorrespondanceAttachmentDto>>
+
+    @DELETE("api/correspondances/{id}/attachments/{attachId}")
+    suspend fun deleteCorrespondanceAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
 }

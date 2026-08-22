@@ -137,6 +137,47 @@ export interface PersonnelAttachment {
 }
 
 // ========================
+// Correspondance Types
+// ========================
+export type CorrespondanceSens = "Entrant" | "Sortant";
+
+export type CorrespondanceStatut =
+  | "Enregistré"
+  | "En traitement"
+  | "Traité"
+  | "Archivé";
+
+export interface Correspondance {
+  id: number;
+  date_correspondance: string;
+  heure_enregistrement: string;
+  sens: CorrespondanceSens;
+  reference: string;
+  emetteur_destinataire: string;
+  objet: string;
+  statut: CorrespondanceStatut;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: CorrespondanceAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CorrespondanceAttachment {
+  id: number;
+  correspondance_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {

@@ -92,4 +92,12 @@ sealed class MainRoutes(val route: String) {
     data object ComportementForm : MainRoutes("comportement_form?personnelId={personnelId}") {
         fun createRoute(personnelId: Int = 0) = "comportement_form?personnelId=$personnelId"
     }
+
+    // Correspondance management
+    data object CorrespondanceDetail : MainRoutes("sed_correspondance_detail/{correspondanceId}") {
+        fun createRoute(correspondanceId: Int) = "sed_correspondance_detail/$correspondanceId"
+    }
+    data object CorrespondanceForm : MainRoutes("sed_correspondance_form?correspondanceId={correspondanceId}") {
+        fun createRoute(correspondanceId: Int = 0) = "sed_correspondance_form?correspondanceId=$correspondanceId"
+    }
 }

@@ -84,6 +84,9 @@ import com.gsoft.opus.presentation.settings.SettingsScreen
 import com.gsoft.opus.presentation.signature.SignaturePairingScreen
 import com.gsoft.opus.presentation.signature.SignaturePadScreen
 import com.gsoft.opus.presentation.photo.PhotoCaptureScreen
+import com.gsoft.opus.presentation.correspondance.CorrespondanceDetailScreen
+import com.gsoft.opus.presentation.correspondance.CorrespondanceFormScreen
+import com.gsoft.opus.presentation.correspondance.CorrespondanceScreen
 import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
@@ -414,7 +417,16 @@ fun MainScreen(
 
                     // Sédentaire – Secrétariat
                     composable(MainRoutes.SedDashboard.route) { ContextMenuItemScreens.SedDashboard() }
-                    composable(MainRoutes.Correspondance.route) { ContextMenuItemScreens.Correspondance() }
+                    composable(MainRoutes.Correspondance.route) {
+                        CorrespondanceScreen(
+                            onCorrespondanceClick = { id ->
+                                navController.navigate(MainRoutes.CorrespondanceDetail.createRoute(id))
+                            },
+                            onCreateCorrespondance = {
+                                navController.navigate(MainRoutes.CorrespondanceForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.GestionPersonnel.route) {
                         PersonnelScreen(
                             onPersonnelClick = { id ->
@@ -615,6 +627,63 @@ fun MainScreen(
                             onBack = { navController.popBackStack() }
                         )
                     }
+                    composable(
+                        route = MainRoutes.CorrespondanceDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("correspondanceId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        CorrespondanceDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.CorrespondanceForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.CorrespondanceForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("correspondanceId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        CorrespondanceFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
 
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
@@ -790,6 +859,17 @@ private fun handleNotificationLink(
     val tab = uri.getQueryParameter("tab")
 
     when {
+        path.startsWith("/sedentaire/secretariat/correspondance/") -> {
+            // e.g. "/sedentaire/secretariat/correspondance/12" → detail screen
+            val id = path.removePrefix("/sedentaire/secretariat/correspondance/")
+                .trim('/')
+                .toIntOrNull()
+            if (id != null) {
+                navController.navigate(MainRoutes.CorrespondanceDetail.createRoute(id))
+            } else {
+                navController.navigateToTab(MainRoutes.Correspondance.route)
+            }
+        }
         path.startsWith("/personnel") -> {
             // Request the tab before navigating so PersonnelScreen can pick
             // it up when it composes.

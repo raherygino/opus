@@ -14,6 +14,8 @@ use App\Router;
 use App\Controllers\AuthController;
 use App\Controllers\MouvementController;
 use App\Controllers\ComportementController;
+use App\Controllers\CorrespondanceController;
+use App\Controllers\CorrespondanceAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -113,6 +115,24 @@ $router->put('/api/comportements/{id}',          [ComportementController::class,
 $router->put('/api/comportements/{id}/confirm',  [ComportementController::class, 'confirm']);
 $router->put('/api/comportements/{id}/reject',   [ComportementController::class, 'reject']);
 $router->delete('/api/comportements/{id}',       [ComportementController::class, 'destroy']);
+
+// ========================
+// Correspondance Routes
+// ========================
+$router->get('/api/correspondances',           [CorrespondanceController::class, 'index']);
+$router->get('/api/correspondances/{id}',      [CorrespondanceController::class, 'show']);
+$router->post('/api/correspondances',          [CorrespondanceController::class, 'store']);
+$router->put('/api/correspondances/{id}',      [CorrespondanceController::class, 'update']);
+$router->delete('/api/correspondances/{id}',   [CorrespondanceController::class, 'destroy']);
+
+// ========================
+// Correspondance Attachment Routes
+// ========================
+$router->get('/api/correspondances/{id}/attachments',                       [CorrespondanceAttachmentController::class, 'index']);
+$router->post('/api/correspondances/{id}/attachments',                      [CorrespondanceAttachmentController::class, 'store']);
+$router->put('/api/correspondances/{id}/attachments/{attachId}',            [CorrespondanceAttachmentController::class, 'update']);
+$router->delete('/api/correspondances/{id}/attachments/{attachId}',         [CorrespondanceAttachmentController::class, 'destroy']);
+$router->get('/api/correspondances/{id}/attachments/{attachId}/download',   [CorrespondanceAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

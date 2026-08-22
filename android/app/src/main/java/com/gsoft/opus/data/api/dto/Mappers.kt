@@ -3,6 +3,8 @@ package com.gsoft.opus.data.api.dto
 import com.gsoft.opus.domain.model.AppNotification
 import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.Comportement
+import com.gsoft.opus.domain.model.Correspondance
+import com.gsoft.opus.domain.model.CorrespondanceAttachment
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.model.QrAuthDeviceType
 import com.gsoft.opus.domain.model.QrAuthRequester
@@ -145,6 +147,34 @@ fun ComportementDto.toDomain(): Comportement = Comportement(
     confirmedByUsername = confirmedByUsername,
     createdBy = createdBy,
     createdByUsername = createdByUsername,
+    createdAt = createdAt
+)
+
+fun CorrespondanceDto.toDomain(): Correspondance = Correspondance(
+    id = id,
+    dateCorrespondance = dateCorrespondance,
+    heureEnregistrement = heureEnregistrement,
+    sens = sens,
+    reference = reference,
+    emetteurDestinataire = emetteurDestinataire,
+    objet = objet,
+    statut = statut,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom
+)
+
+fun CorrespondanceAttachmentDto.toDomain(): CorrespondanceAttachment = CorrespondanceAttachment(
+    id = id,
+    correspondanceId = correspondanceId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
     createdAt = createdAt
 )
 

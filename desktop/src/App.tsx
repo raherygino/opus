@@ -46,6 +46,17 @@ const PersonnelForm = lazy(() =>
   import("@/pages/personnel-form").then((m) => ({ default: m.PersonnelForm })),
 );
 
+// Correspondance (Sédentaire > Secrétariat)
+const CorrespondanceList = lazy(() =>
+  import("@/pages/correspondance-list").then((m) => ({ default: m.CorrespondanceList })),
+);
+const CorrespondanceForm = lazy(() =>
+  import("@/pages/correspondance-form").then((m) => ({ default: m.CorrespondanceForm })),
+);
+const CorrespondanceDetail = lazy(() =>
+  import("@/pages/correspondance-detail").then((m) => ({ default: m.CorrespondanceDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -162,6 +173,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<DashboardSkeleton />}>
                       <SedentaireDashboard />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/correspondance"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <CorrespondanceList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/correspondance/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <CorrespondanceForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/correspondance/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <CorrespondanceDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/correspondance/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <CorrespondanceForm />
                     </Suspense>
                   </ErrorBoundary>
                 }
