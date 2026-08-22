@@ -30,10 +30,10 @@ const stats = [
 ];
 
 const activePatrols = [
-  { sector: "Secteur A", team: "Équipe Alpha", status: "En patrouille", time: "08:00–16:00" },
-  { sector: "Secteur B", team: "Équipe Bravo", status: "Intervention", time: "08:00–16:00" },
-  { sector: "Secteur C", team: "Équipe Charlie", status: "En patrouille", time: "16:00–00:00" },
-  { sector: "Secteur D", team: "Équipe Delta", status: "Repos", time: "16:00–00:00" },
+  { id: "secteur-a", sector: "Secteur A", team: "Équipe Alpha", status: "En patrouille", time: "08:00–16:00" },
+  { id: "secteur-b", sector: "Secteur B", team: "Équipe Bravo", status: "Intervention", time: "08:00–16:00" },
+  { id: "secteur-c", sector: "Secteur C", team: "Équipe Charlie", status: "En patrouille", time: "16:00–00:00" },
+  { id: "secteur-d", sector: "Secteur D", team: "Équipe Delta", status: "Repos", time: "16:00–00:00" },
 ];
 
 export function SgDashboard() {
@@ -110,8 +110,8 @@ export function SgDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
-                  {activePatrols.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between px-6 py-3 text-sm">
+                  {activePatrols.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between px-6 py-3 text-sm">
                       <div>
                         <span className="font-medium">{p.sector}</span>
                         <span className="text-muted-foreground ml-2">— {p.team}</span>

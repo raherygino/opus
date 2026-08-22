@@ -136,83 +136,6 @@ export function NotificationsPage() {
     }
   }
 
-  function renderNotificationCard(n: AppNotification) {
-    const serviceInfo = SERVICE_LABELS[n.service] || SERVICE_LABELS.System;
-    const TypeIcon = TYPE_ICONS[n.type] || Info;
-    const ServiceIcon = serviceInfo.icon;
-
-    return (
-      <Card
-        key={n.id}
-        className={`relative transition-all ${n.is_read === 0 ? "border-primary/30 bg-primary/5" : "opacity-75"}`}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className={`mt-0.5 shrink-0 ${TYPE_COLORS[n.type] || "text-muted-foreground"}`}>
-              <TypeIcon className="h-5 w-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold">{n.title}</p>
-                {n.is_read === 0 && (
-                  <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                )}
-              </div>
-              {n.message && (
-                <p className="text-sm text-muted-foreground mt-1">{n.message}</p>
-              )}
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <span className={`inline-flex items-center gap-1 text-xs ${serviceInfo.color}`}>
-                  <ServiceIcon className="h-3 w-3" />
-                  {serviceInfo.label}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {formatTimeAgo(n.created_at)}
-                </span>
-                {n.personnel_nom && (
-                  <button
-                    className="text-xs text-primary hover:underline"
-                    onClick={() => navigate(`/personnel/${n.personnel_id}`)}
-                  >
-                    {n.personnel_prenoms} {n.personnel_nom} ({n.personnel_im})
-                  </button>
-                )}
-                {n.created_by_username && (
-                  <span className="text-xs text-muted-foreground">
-                    par {n.created_by_username}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              {n.is_read === 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => handleMarkAsRead(n.id)}
-                  title="Marquer comme lu"
-                >
-                  <CheckCheck className="h-3.5 w-3.5" />
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-destructive"
-                onClick={() => setDeleteTarget(n)}
-                title="Supprimer"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const tabs = useMemo(() => {
     const base = [
       { value: "all", label: "Toutes", count: notifications.length },
@@ -285,7 +208,89 @@ export function NotificationsPage() {
                 </CardContent>
               </Card>
             ) : (
-              filtered.map(renderNotificationCard)
+              filtered.map((n) => {
+                const serviceInfo = SERVICE_LABELS[n.service] || SERVICE_LABELS.System;
+                const TypeIcon = TYPE_ICONS[n.type] || Info;
+                const ServiceIcon = serviceInfo.icon;
+                
+                return (
+                  <Card
+                    key={n.id || `notification-${n.title}-${n.created_at}`}
+                    className={`relative transition-all cursor-pointer ${n.is_read === 0 ? "border-primary/30 bg-primary/5" : "opacity-75"}`}
+                    onClick={() => {
+                      if (n.link) {
+                        navigate(n.link);
+                      } else if (n.personnel_id) {
+                        navigate(`/personnel/${n.personnel_id}`);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 shrink-0 ${TYPE_COLORS[n.type] || "text-muted-foreground"}`}>
+                          <TypeIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold">{n.title}</p>
+                            {n.is_read === 0 && (
+                              <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                            )}
+                          </div>
+                          {n.message && (
+                            <p className="text-sm text-muted-foreground mt-1">{n.message}</p>
+                          )}
+                          <div className="flex items-center gap-3 mt-2 flex-wrap">
+                            <span className={`inline-flex items-center gap-1 text-xs ${serviceInfo.color}`}>
+                              <ServiceIcon className="h-3 w-3" />
+                              {serviceInfo.label}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {formatTimeAgo(n.created_at)}
+                            </span>
+                            {n.personnel_nom && (
+                              <button
+                                className="text-xs text-primary hover:underline"
+                                onClick={(e) => { e.stopPropagation(); navigate(`/personnel/${n.personnel_id}`); }}
+                              >
+                                {n.personnel_prenoms} {n.personnel_nom} ({n.personnel_im})
+                              </button>
+                            )}
+                            {n.created_by_username && (
+                              <span className="text-xs text-muted-foreground">
+                                par {n.created_by_username}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {n.is_read === 0 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id); }}
+                              title="Marquer comme lu"
+                            >
+                              <CheckCheck className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive"
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(n); }}
+                            title="Supprimer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </TabsContent>
         ))}

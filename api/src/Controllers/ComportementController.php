@@ -137,6 +137,7 @@ class ComportementController
                     'user_id' => $admin['id'],
                     'personnel_id' => $comportement['personnel_id'],
                     'created_by' => $creatorId,
+                    'link' => '/personnel?tab=comportement',
                 ]);
             }
         }
@@ -331,6 +332,7 @@ class ComportementController
             'user_id' => (int) $creatorId,
             'personnel_id' => $comportement['personnel_id'],
             'created_by' => $actorId,
+            'link' => '/personnel?tab=comportement',
         ]);
     }
 }

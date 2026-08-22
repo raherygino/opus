@@ -30,11 +30,11 @@ const stats = [
 ];
 
 const recentActivity = [
-  { action: "Courrier entrant #024 enregistré", time: "Il y a 10 min", type: "mail" },
-  { action: "Déclaration de perte #008 créée", time: "Il y a 25 min", type: "declaration" },
-  { action: "Rapport journalier soumis", time: "Il y a 1h", type: "report" },
-  { action: "Entrée visiteuse enregistrée", time: "Il y a 2h", type: "event" },
-  { action: "Mouvement personnel enregistré", time: "Il y a 3h", type: "personnel" },
+  { id: "activity-1", action: "Courrier entrant #024 enregistré", time: "Il y a 10 min", type: "mail" },
+  { id: "activity-2", action: "Déclaration de perte #008 créée", time: "Il y a 25 min", type: "declaration" },
+  { id: "activity-3", action: "Rapport journalier soumis", time: "Il y a 1h", type: "report" },
+  { id: "activity-4", action: "Entrée visiteuse enregistrée", time: "Il y a 2h", type: "event" },
+  { id: "activity-5", action: "Mouvement personnel enregistré", time: "Il y a 3h", type: "personnel" },
 ];
 
 export function SedentaireDashboard() {
@@ -99,8 +99,8 @@ export function SedentaireDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
-                  {recentActivity.map((act, i) => (
-                    <div key={i} className="flex items-center gap-3 px-6 py-3 text-sm">
+                  {recentActivity.map((act) => (
+                    <div key={act.id} className="flex items-center gap-3 px-6 py-3 text-sm">
                       <div className="h-2 w-2 rounded-full bg-primary/60 shrink-0" />
                       <span className="flex-1">{act.action}</span>
                       <span className="text-xs text-muted-foreground shrink-0">{act.time}</span>

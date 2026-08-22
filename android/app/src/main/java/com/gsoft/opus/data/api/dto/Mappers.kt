@@ -52,6 +52,7 @@ fun NotificationDto.toDomain(): AppNotification = AppNotification(
     id = id,
     title = title,
     message = message,
+    link = link,
     type = type,
     service = service,
     isRead = isRead == 1,

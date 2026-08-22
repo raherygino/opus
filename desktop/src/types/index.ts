@@ -340,6 +340,7 @@ export interface AppNotification {
   id: number;
   title: string;
   message: string | null;
+  link?: string | null;
   type: NotificationType;
   service: string;
   user_id: number | null;

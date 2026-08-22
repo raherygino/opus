@@ -47,6 +47,7 @@ class NotificationHelper @Inject constructor(
         const val CHANNEL_NAME_HIGH = "OPUS Alerts"
         const val EXTRA_NOTIFICATION_ID = "extra_notification_id"
         const val EXTRA_CLICK_ACTION = "extra_click_action"
+        const val EXTRA_LINK = "extra_link"
         const val ACTION_OPEN_NOTIFICATIONS = "OPEN_NOTIFICATIONS"
 
         private const val GROUP_KEY = "opus_notifications_group"
@@ -171,6 +172,7 @@ class NotificationHelper @Inject constructor(
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra(EXTRA_CLICK_ACTION, clickAction)
             data["notification_id"]?.let { putExtra(EXTRA_NOTIFICATION_ID, it) }
+            data["link"]?.takeIf { it.isNotBlank() }?.let { putExtra(EXTRA_LINK, it) }
         }
 
         val pendingIntent = PendingIntent.getActivity(

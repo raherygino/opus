@@ -201,7 +201,7 @@ export function SignaturePadDialog({ open, onClose, onSignatureComplete }: Signa
               <div className="flex gap-2">
                 {session.pairingCode.split("").map((digit, i) => (
                   <div
-                    key={i}
+                    key={`${i}-${digit}`}
                     className="flex h-10 w-8 items-center justify-center rounded-md border border-border bg-muted text-lg font-bold tracking-wider"
                   >
                     {digit}
@@ -273,7 +273,7 @@ export function SignaturePadDialog({ open, onClose, onSignatureComplete }: Signa
                       .join(" ");
                     return (
                       <path
-                        key={i}
+                        key={`${i}-${d.slice(0, 10)}`}
                         d={d}
                         stroke="#1a1a2e"
                         strokeWidth={2}

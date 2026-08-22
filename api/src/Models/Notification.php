@@ -126,12 +126,13 @@ class Notification
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO notifications (title, message, type, service, user_id, personnel_id, created_by, is_read)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 0)'
+            'INSERT INTO notifications (title, message, link, type, service, user_id, personnel_id, created_by, is_read)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)'
         );
         $stmt->execute([
             $data['title'],
             $data['message'] ?? null,
+            $data['link'] ?? null,
             $data['type'] ?? 'info',
             $data['service'] ?? 'System',
             $data['user_id'] ?? null,
@@ -190,6 +191,7 @@ class Notification
                     'type'                    => (string) ($data['type'] ?? 'info'),
                     'service'                 => (string) ($data['service'] ?? ''),
                     'click_action'            => 'OPEN_NOTIFICATIONS',
+                    'link'                    => (string) ($data['link'] ?? ''),
                     'creator_firstname'       => $creatorFirstname,
                     'creator_personnel_id'    => $creatorPersonnelId,
                     'creator_has_photo'       => $creatorHasPhoto,

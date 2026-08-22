@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UnreadBadgeViewModel @Inject constructor(
     private val unreadCountStore: UnreadCountStore,
-    private val navigationBus: NotificationNavigationBus
+    val navigationBus: NotificationNavigationBus
 ) : ViewModel() {
 
     val unreadCount: StateFlow<Int> = unreadCountStore.count

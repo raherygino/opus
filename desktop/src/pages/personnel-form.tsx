@@ -524,7 +524,7 @@ export function PersonnelForm() {
           {attachments.map((att, index) =>
             att._delete ? null : (
               <div
-                key={index}
+                key={att.id || `attachment-${index}`}
                 className="flex items-center gap-3 rounded-lg border border-border p-3"
               >
                 <div className="flex-1 space-y-1">

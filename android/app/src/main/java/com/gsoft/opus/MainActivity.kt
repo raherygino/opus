@@ -80,6 +80,25 @@ class MainActivity : ComponentActivity() {
     private fun handleNotificationIntent(intent: Intent?) {
         val action = intent?.getStringExtra(NotificationHelper.EXTRA_CLICK_ACTION)
             ?: intent?.getStringExtra("click_action")
+        val link = intent?.getStringExtra(NotificationHelper.EXTRA_LINK)
+            ?: intent?.getStringExtra("link")
+
+        // If the notification carries a deep link, request the corresponding
+        // tab/screen instead of just opening the notifications list.
+        if (!link.isNullOrBlank()) {
+            val tab = android.net.Uri.parse(link).getQueryParameter("tab")
+            val path = android.net.Uri.parse(link).path
+            if (path != null && path.startsWith("/personnel")) {
+                val tabIndex = when (tab) {
+                    "mouvement" -> 1
+                    "comportement" -> 2
+                    else -> 0
+                }
+                notificationNavigationBus.requestOpenPersonnelTab(tabIndex)
+                return
+            }
+        }
+
         if (action == NotificationHelper.ACTION_OPEN_NOTIFICATIONS) {
             notificationNavigationBus.requestOpenNotifications()
         }

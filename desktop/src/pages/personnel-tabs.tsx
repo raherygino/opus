@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -55,6 +55,7 @@ import {
 interface PendingFile {
   file: File;
   title: string;
+  id: string;
 }
 
 const MOUVEMENT_TYPES = [
@@ -100,6 +101,10 @@ const defaultMouvementForm: MouvementForm = {
 
 export function PersonnelTabs() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const validTabs = ["liste", "mouvement", "comportement"];
+  const defaultTab = initialTab && validTabs.includes(initialTab) ? initialTab : "liste";
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
   const canCreate = hasPermission(user, "personnel", "can_create");
@@ -323,11 +328,11 @@ export function PersonnelTabs() {
   }
 
   function addPendingFile(file: File, title: string) {
-    setPendingFiles((prev) => [...prev, { file, title }]);
+    setPendingFiles((prev) => [...prev, { file, title, id: `${Date.now()}-${Math.random()}` }]);
   }
 
-  function removePendingFile(index: number) {
-    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  function removePendingFile(id: string) {
+    setPendingFiles((prev) => prev.filter((pf) => pf.id !== id));
   }
 
   async function handleSaveMouvement() {
@@ -717,7 +722,7 @@ export function PersonnelTabs() {
         </div>
       </div>
 
-      <Tabs defaultValue="liste">
+      <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="liste">Liste</TabsTrigger>
           <TabsTrigger value="mouvement">Mouvement</TabsTrigger>
@@ -946,13 +951,13 @@ export function PersonnelTabs() {
                     </div>
                     {pendingFiles.length > 0 && (
                       <div className="space-y-1 mb-2">
-                        {pendingFiles.map((pf, i) => (
-                          <div key={i} className="flex items-center justify-between rounded-md border border-border px-3 py-1.5 text-sm">
+                        {pendingFiles.map((pf) => (
+                          <div key={pf.id} className="flex items-center justify-between rounded-md border border-border px-3 py-1.5 text-sm">
                             <div className="flex-1 min-w-0">
                               <span className="truncate block">{pf.title}</span>
                               <span className="text-xs text-muted-foreground">{pf.file.name}</span>
                             </div>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removePendingFile(i)}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removePendingFile(pf.id)}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>

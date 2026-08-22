@@ -144,6 +144,16 @@ fun MainScreen(
     val unreadBadgeViewModel: UnreadBadgeViewModel = hiltViewModel()
     val unreadCount by unreadBadgeViewModel.unreadCount.collectAsState()
 
+    // When a push notification with a deep link is tapped (e.g. "comportement
+    // à confirmer"), navigate to the GestionPersonnel screen. The requested
+    // tab index is consumed by PersonnelScreen when it composes.
+    val pendingPersonnelTab by unreadBadgeViewModel.navigationBus.pendingPersonnelTab.collectAsState()
+    LaunchedEffect(pendingPersonnelTab) {
+        if (pendingPersonnelTab != null) {
+            navController.navigateToTab(MainRoutes.GestionPersonnel.route)
+        }
+    }
+
     // Refresh the unread count from the server whenever the app comes back to
     // the foreground, so the badge is always current when the user returns.
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -374,6 +384,9 @@ fun MainScreen(
                         NotificationsScreen(
                             onPersonnelClick = { id ->
                                 navController.navigate(MainRoutes.PersonnelDetail.createRoute(id))
+                            },
+                            onLinkClick = { link ->
+                                handleNotificationLink(link, navController, unreadBadgeViewModel.navigationBus)
                             }
                         )
                     }
@@ -757,6 +770,40 @@ fun MainScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Parse a notification `link` (e.g. "/personnel?tab=comportement") and
+ * navigate to the corresponding screen, requesting the appropriate tab when
+ * applicable.
+ */
+private fun handleNotificationLink(
+    link: String,
+    navController: NavHostController,
+    navigationBus: com.gsoft.opus.notifications.NotificationNavigationBus
+) {
+    // Parse the link as a URI to extract the path and query params.
+    val uri = android.net.Uri.parse(link)
+    val path = uri.path ?: return
+    val tab = uri.getQueryParameter("tab")
+
+    when {
+        path.startsWith("/personnel") -> {
+            // Request the tab before navigating so PersonnelScreen can pick
+            // it up when it composes.
+            val tabIndex = when (tab) {
+                "mouvement" -> 1
+                "comportement" -> 2
+                else -> 0
+            }
+            navigationBus.requestOpenPersonnelTab(tabIndex)
+            navController.navigateToTab(MainRoutes.GestionPersonnel.route)
+        }
+        else -> {
+            // Fallback: open notifications tab.
+            navController.navigateToTab(MainRoutes.Notifications.route)
         }
     }
 }

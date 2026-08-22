@@ -781,15 +781,15 @@ export function Settings() {
                           <div className="flex items-center gap-4">
                             <div className="flex gap-1">
                               {[
-                                ct.colors["--primary"],
-                                ct.colors["--background"],
-                                ct.colors["--accent"],
-                                ct.colors["--sidebar"],
-                              ].map((c, i) => (
+                                { id: "primary", color: ct.colors["--primary"] },
+                                { id: "background", color: ct.colors["--background"] },
+                                { id: "accent", color: ct.colors["--accent"] },
+                                { id: "sidebar", color: ct.colors["--sidebar"] },
+                              ].map((item) => (
                                 <div
-                                  key={i}
+                                  key={item.id}
                                   className="h-6 w-6 rounded border"
-                                  style={{ background: c ? `hsl(${c})` : "#888" }}
+                                  style={{ background: item.color ? `hsl(${item.color})` : "#888" }}
                                 />
                               ))}
                             </div>

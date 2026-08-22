@@ -10,6 +10,7 @@ data class NotificationDto(
     @SerializedName("id") val id: Int = 0,
     @SerializedName("title") val title: String = "",
     @SerializedName("message") val message: String? = null,
+    @SerializedName("link") val link: String? = null,
     @SerializedName("type") val type: String = "info",
     @SerializedName("service") val service: String = "System",
     @SerializedName("user_id") val userId: Int? = null,

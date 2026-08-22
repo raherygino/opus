@@ -69,13 +69,23 @@ fun PersonnelScreen(
     onCreateComportement: () -> Unit,
     viewModel: PersonnelViewModel = hiltViewModel(),
     mouvementViewModel: MouvementViewModel = hiltViewModel(),
-    comportementViewModel: ComportementViewModel = hiltViewModel()
+    comportementViewModel: ComportementViewModel = hiltViewModel(),
+    unreadBadgeViewModel: com.gsoft.opus.presentation.notifications.UnreadBadgeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val mvtState by mouvementViewModel.state.collectAsState()
     val compState by comportementViewModel.state.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Consume any pending personnel tab request (e.g. from a notification link).
+    val pendingTab by unreadBadgeViewModel.navigationBus.pendingPersonnelTab.collectAsState()
+    LaunchedEffect(pendingTab) {
+        if (pendingTab != null) {
+            selectedTab = pendingTab!!
+            unreadBadgeViewModel.navigationBus.consumePendingPersonnelTab()
+        }
+    }
 
     // Refresh data when screen resumes (e.g. returning from form screen)
     val lifecycleOwner = LocalLifecycleOwner.current

@@ -53,7 +53,7 @@ export function SignatureCanvas({
             .join(" ");
           return (
             <path
-              key={i}
+              key={`${i}-${d.slice(0, 10)}`}
               d={d}
               stroke="#1a1a2e"
               strokeWidth={2}

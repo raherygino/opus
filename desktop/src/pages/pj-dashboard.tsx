@@ -30,10 +30,10 @@ const stats = [
 ];
 
 const pendingCases = [
-  { ref: "PJ-2024-001", type: "Plainte directe", assigned: "I. Sow", status: "En cours" },
-  { ref: "PJ-2024-002", type: "Saisine", assigned: "I. Sow", status: "Instruction" },
-  { ref: "PJ-2024-003", type: "ST Parquet", assigned: "M. Kane", status: "Clôture" },
-  { ref: "PJ-2024-004", type: "Plainte directe", assigned: "A. Ba", status: "Suspendue" },
+  { id: "case-001", ref: "PJ-2024-001", type: "Plainte directe", assigned: "I. Sow", status: "En cours" },
+  { id: "case-002", ref: "PJ-2024-002", type: "Saisine", assigned: "I. Sow", status: "Instruction" },
+  { id: "case-003", ref: "PJ-2024-003", type: "ST Parquet", assigned: "M. Kane", status: "Clôture" },
+  { id: "case-004", ref: "PJ-2024-004", type: "Plainte directe", assigned: "A. Ba", status: "Suspendue" },
 ];
 
 export function PjDashboard() {
@@ -98,8 +98,8 @@ export function PjDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
-                  {pendingCases.map((c, i) => (
-                    <div key={i} className="flex items-center justify-between px-6 py-3 text-sm">
+                  {pendingCases.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between px-6 py-3 text-sm">
                       <div>
                         <span className="font-medium">{c.ref}</span>
                         <span className="text-muted-foreground ml-2">— {c.type}</span>

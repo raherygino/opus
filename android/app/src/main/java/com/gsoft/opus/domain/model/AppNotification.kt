@@ -8,6 +8,7 @@ data class AppNotification(
     val id: Int,
     val title: String,
     val message: String?,
+    val link: String?,
     val type: String,     // info | success | warning | error
     val service: String,  // PJ | SG | Sedentaire | System
     val isRead: Boolean,

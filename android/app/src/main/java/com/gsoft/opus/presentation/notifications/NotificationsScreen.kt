@@ -129,6 +129,7 @@ private fun formatTimeAgo(dateStr: String): String {
 @Composable
 fun NotificationsScreen(
     onPersonnelClick: (Int) -> Unit,
+    onLinkClick: (String) -> Unit = {},
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -217,7 +218,8 @@ fun NotificationsScreen(
                             notification = notification,
                             onMarkAsRead = { viewModel.markAsRead(notification.id) },
                             onDelete = { viewModel.requestDelete(notification) },
-                            onPersonnelClick = onPersonnelClick
+                            onPersonnelClick = onPersonnelClick,
+                            onLinkClick = onLinkClick
                         )
                     }
                     if (state.read.isNotEmpty()) {
@@ -233,7 +235,8 @@ fun NotificationsScreen(
                                 notification = notification,
                                 onMarkAsRead = { viewModel.markAsRead(notification.id) },
                                 onDelete = { viewModel.requestDelete(notification) },
-                                onPersonnelClick = onPersonnelClick
+                                onPersonnelClick = onPersonnelClick,
+                                onLinkClick = onLinkClick
                             )
                         }
                     }
@@ -250,7 +253,8 @@ fun NotificationsScreen(
                         notification = notification,
                         onMarkAsRead = { viewModel.markAsRead(notification.id) },
                         onDelete = { viewModel.requestDelete(notification) },
-                        onPersonnelClick = onPersonnelClick
+                        onPersonnelClick = onPersonnelClick,
+                        onLinkClick = onLinkClick
                     )
                 }
                 item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -337,7 +341,8 @@ private fun NotificationCard(
     notification: AppNotification,
     onMarkAsRead: () -> Unit,
     onDelete: () -> Unit,
-    onPersonnelClick: (Int) -> Unit
+    onPersonnelClick: (Int) -> Unit,
+    onLinkClick: (String) -> Unit = {}
 ) {
     val accent = typeColor(notification.type)
     val unread = !notification.isRead
@@ -351,12 +356,21 @@ private fun NotificationCard(
         ?: notification.createdByUsername
         ?: "Système"
 
+    // Tapping the card navigates via the link if present, otherwise to the
+    // related personnel record. Unread cards are also marked as read.
+    val handleCardClick: () -> Unit = {
+        if (unread) onMarkAsRead()
+        if (!notification.link.isNullOrBlank()) {
+            onLinkClick(notification.link)
+        } else if (notification.personnelId != null && notification.personnelId > 0) {
+            onPersonnelClick(notification.personnelId)
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            // Tapping an unread card marks it as read immediately — same
-            // behaviour as social-media apps where viewing = reading.
-            .then(if (unread) Modifier.clickable { onMarkAsRead() } else Modifier),
+            .clickable { handleCardClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (unread)

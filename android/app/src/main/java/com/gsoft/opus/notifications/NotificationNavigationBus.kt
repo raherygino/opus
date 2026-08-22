@@ -29,6 +29,10 @@ class NotificationNavigationBus @Inject constructor() {
     private val _notificationEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
     val notificationEvents: SharedFlow<Unit> = _notificationEvents.asSharedFlow()
 
+    /** Request to open a specific tab within the personnel management screen. */
+    private val _pendingPersonnelTab = MutableStateFlow<Int?>(null)
+    val pendingPersonnelTab: StateFlow<Int?> = _pendingPersonnelTab.asStateFlow()
+
     fun requestOpenNotifications() {
         _openRequests.value = true
     }
@@ -39,5 +43,17 @@ class NotificationNavigationBus @Inject constructor() {
 
     fun notifyNotificationReceived() {
         _notificationEvents.tryEmit(Unit)
+    }
+
+    /**
+     * Request that the personnel management screen opens on a specific tab.
+     * 0 = liste, 1 = mouvement, 2 = comportement.
+     */
+    fun requestOpenPersonnelTab(tabIndex: Int) {
+        _pendingPersonnelTab.value = tabIndex
+    }
+
+    fun consumePendingPersonnelTab() {
+        _pendingPersonnelTab.value = null
     }
 }
