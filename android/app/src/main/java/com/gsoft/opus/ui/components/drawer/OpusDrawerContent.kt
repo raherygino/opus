@@ -31,13 +31,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -45,9 +50,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -117,6 +125,7 @@ fun OpusDrawerContent(
     personnelId: Int?,
     photo: String?,
     role: String?,
+    drawerState: DrawerState,
     progress: () -> Float,
     onItemClick: (ContextMenuItem) -> Unit,
     onProfileClick: () -> Unit,
@@ -125,11 +134,28 @@ fun OpusDrawerContent(
     modifier: Modifier = Modifier
 ) {
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     // Precompute the stagger slide distance in pixels once, instead of
     // calling 24.dp.toPx() inside every StaggeredEntry's per-frame
     // graphicsLayer lambda (one toPx() per item per frame otherwise).
     val staggerSlidePx = with(LocalDensity.current) { StaggerSlideDp.toPx() }
+
+    // Ensure the drawer list always starts at the top when opened. Without
+    // this the LazyColumn can settle at the bottom on first open.
+    val listState = rememberLazyListState()
+    LaunchedEffect(drawerState.currentValue) {
+        if (drawerState.currentValue == DrawerValue.Open) {
+            listState.scrollToItem(0)
+        }
+    }
+
+    // Filter items by the search query. Supports division keywords
+    // (sedentaire, service général / sg, police judiciaire / pj) which
+    // expand to show every entry under the matching section.
+    val filteredItems = remember(items, searchQuery) {
+        if (searchQuery.isBlank()) items else filterDrawerItems(items, searchQuery.trim())
+    }
 
     Column(
         modifier = modifier
@@ -156,28 +182,52 @@ fun OpusDrawerContent(
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
 
+        DrawerSearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
         LazyColumn(
+            state = listState,
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
-                StaggeredEntry(
-                    index = index,
-                    progress = progress,
-                    slidePx = staggerSlidePx
-                ) {
-                    when {
-                        item.isSectionHeader -> DrawerSectionHeader(title = item.title)
-                        item.children != null -> DrawerExpandableItem(
-                            item = item,
-                            selectedId = selectedId,
-                            onItemClick = onItemClick
+            if (filteredItems.isEmpty() && searchQuery.isNotBlank()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Aucun menu trouvé",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        else -> DrawerItem(
-                            item = item,
-                            selected = item.id == selectedId,
-                            onClick = { onItemClick(item) }
-                        )
+                    }
+                }
+            } else {
+                itemsIndexed(filteredItems, key = { _, item -> item.id }) { index, item ->
+                    StaggeredEntry(
+                        index = index,
+                        progress = progress,
+                        slidePx = staggerSlidePx
+                    ) {
+                        when {
+                            item.isSectionHeader -> DrawerSectionHeader(title = item.title)
+                            item.children != null -> DrawerExpandableItem(
+                                item = item,
+                                selectedId = selectedId,
+                                onItemClick = onItemClick
+                            )
+                            else -> DrawerItem(
+                                item = item,
+                                selected = item.id == selectedId,
+                                onClick = { onItemClick(item) }
+                            )
+                        }
                     }
                 }
             }
@@ -289,6 +339,146 @@ private fun DrawerLogoHeader() {
             overflow = TextOverflow.Ellipsis
         )
     }
+}
+
+/**
+ * Search bar for filtering drawer entries.
+ *
+ * Compact, rounded field with a leading search icon and a trailing clear
+ * button that only appears when there is text to clear.
+ */
+@Composable
+private fun DrawerSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Rechercher") },
+        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Effacer")
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Drawer search filtering
+//
+// Supports free-text matching against an item's title/subtitle as well as
+// division keywords that expand to every entry under the matching section:
+//   "sedentaire"           → all Sédentaire entries
+//   "service général" / "sg" → all Service Général entries
+//   "police judiciaire" / "pj" → all Police Judiciaire entries
+// Section keywords are matched case-insensitively and on partial input.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Maps a section header id to the division keywords that select it. */
+private val SECTION_KEYWORDS: Map<String, List<String>> = mapOf(
+    "section_sedentaire" to listOf("sedentaire", "sédentaire"),
+    "section_sg" to listOf("service general", "service général", "sg"),
+    "section_pj" to listOf("police judiciaire", "pj"),
+)
+
+/**
+ * Returns true when [query] matches a division keyword for [sectionId].
+ */
+private fun matchesSectionKeyword(sectionId: String, query: String): Boolean {
+    val keywords = SECTION_KEYWORDS[sectionId] ?: return false
+    val normalized = query.lowercase().trim()
+    return keywords.any { kw -> normalized.contains(kw) || kw.contains(normalized) }
+}
+
+/**
+ * Returns true when [query] appears in the item's title or subtitle
+ * (case-insensitive).
+ */
+private fun matchesText(item: ContextMenuItem, query: String): Boolean {
+    val q = query.lowercase()
+    return item.title.lowercase().contains(q) ||
+        (item.subtitle?.lowercase()?.contains(q) == true)
+}
+
+/**
+ * Filters the flat drawer item list by [query].
+ *
+ * Section headers are kept when their section is selected by a division
+ * keyword or when at least one of the entries that follow them (up to the
+ * next section header) matches the text query. Non-matching entries are
+ * dropped. Expandable groups whose children match are kept with only the
+ * matching children retained.
+ */
+private fun filterDrawerItems(items: List<ContextMenuItem>, query: String): List<ContextMenuItem> {
+    val result = mutableListOf<ContextMenuItem>()
+    var currentSectionId: String? = null
+    var currentSectionKept = false
+    var sectionHasMatch = false
+
+    // First pass: resolve which sections are selected by a division keyword.
+    val keywordSections = mutableSetOf<String>()
+    for (item in items) {
+        if (item.isSectionHeader && matchesSectionKeyword(item.id, query)) {
+            keywordSections.add(item.id)
+        }
+    }
+
+    for (item in items) {
+        if (item.isSectionHeader) {
+            // Flush previous section if it had no matches and isn't keyword-selected.
+            if (currentSectionId != null && !currentSectionKept) {
+                // nothing to flush — we only add when kept
+            }
+            currentSectionId = item.id
+            currentSectionKept = item.id in keywordSections
+            sectionHasMatch = currentSectionKept
+            if (currentSectionKept) {
+                result.add(item)
+            }
+            continue
+        }
+
+        val sectionSelected = currentSectionId != null && currentSectionId in keywordSections
+        val textMatch = matchesText(item, query)
+
+        if (sectionSelected || textMatch) {
+            // Ensure the section header is emitted before the first kept entry.
+            if (!currentSectionKept && currentSectionId != null) {
+                val header = items.first { it.id == currentSectionId }
+                result.add(header)
+                currentSectionKept = true
+            }
+            sectionHasMatch = true
+
+            if (item.children != null) {
+                // Keep the group with only matching children (or all children
+                // when the section is keyword-selected).
+                val keptChildren = if (sectionSelected) {
+                    item.children
+                } else {
+                    item.children.filter { matchesText(it, query) }
+                }
+                if (keptChildren.isNotEmpty()) {
+                    result.add(item.copy(children = keptChildren))
+                }
+            } else {
+                result.add(item)
+            }
+        }
+    }
+
+    return result
 }
 
 /**

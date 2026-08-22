@@ -170,6 +170,7 @@ fun MainScreen(
 
     val drawerRouteMap = remember {
         mapOf(
+            "dashboard" to MainRoutes.Dashboard.route,
             "sed_dashboard" to MainRoutes.SedDashboard.route,
             "sed_correspondance" to MainRoutes.Correspondance.route,
             "sed_gestion_personnel" to MainRoutes.GestionPersonnel.route,
@@ -283,6 +284,7 @@ fun MainScreen(
                     personnelId = homeState.personnelId,
                     photo = homeState.photo,
                     role = homeState.roleName ?: homeState.grade,
+                    drawerState = drawerState,
                     progress = { 1f },
                     onItemClick = { item ->
                         val route = drawerRouteMap[item.id]
@@ -861,6 +863,10 @@ private fun hasVisibleItem(user: User?, item: ContextMenuItem): Boolean {
 
 private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
     val items = mutableListOf<ContextMenuItem>()
+
+    // ── Principal ──
+    items.add(ContextMenuItem(id = "section_principal", title = "Principal", isSectionHeader = true))
+    items.add(ContextMenuItem(id = "dashboard", title = "Dashboard", icon = Icons.Outlined.Dashboard))
 
     // ── Sédentaire ──
     if (userCanAccessDivision(user, "sedentaire")) {
