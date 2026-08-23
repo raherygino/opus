@@ -147,7 +147,16 @@ export default function App() {
       <div className="h-screen w-screen overflow-hidden bg-background text-foreground antialiased">
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login"
+            element={
+              <ErrorBoundary>
+                <Suspense fallback={<DashboardSkeleton />}>
+                  <LoginPage />
+                </Suspense>
+              </ErrorBoundary>
+            }
+          />
 
           {/* Authenticated routes */}
           <Route

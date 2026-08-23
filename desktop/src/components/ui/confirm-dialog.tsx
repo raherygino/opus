@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -38,12 +39,16 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-[1000] flex items-center justify-center"
       onClick={onCancel}
     >
-      <div className="fixed inset-0 bg-black/60" />
-      <div
-        className="relative z-50 w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg"
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        className="relative z-50 w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
@@ -83,7 +88,7 @@ export function ConfirmDialog({
             {confirmLabel}
           </Button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

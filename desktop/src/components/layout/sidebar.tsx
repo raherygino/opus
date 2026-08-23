@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { PhonePairingDialog } from "@/components/auth/phone-pairing-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { hasPermission } from "@/lib/permissions";
 import { getUnreadCount } from "@/lib/api/notifications";
@@ -268,6 +269,7 @@ export function Sidebar() {
   const { user, logout } = useAuthStore();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [phonePairingOpen, setPhonePairingOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnread = useCallback(async () => {
@@ -312,7 +314,12 @@ export function Sidebar() {
   }
 
   function handleLogout() {
+    setLogoutConfirmOpen(true);
+  }
+
+  function confirmLogout() {
     logout();
+    setLogoutConfirmOpen(false);
     navigate("/login");
   }
 
@@ -378,9 +385,11 @@ export function Sidebar() {
   }
 
   return (
+    <>
     <AnimatePresence initial={false}>
       {isOpen && (
         <motion.aside
+          key="sidebar"
           initial={{ width: 0, opacity: 0 }}
           animate={{ width, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
@@ -494,11 +503,22 @@ export function Sidebar() {
           </div>
         </motion.aside>
       )}
-
-      <PhonePairingDialog
-        open={phonePairingOpen}
-        onClose={() => setPhonePairingOpen(false)}
-      />
     </AnimatePresence>
+
+    <PhonePairingDialog
+      open={phonePairingOpen}
+      onClose={() => setPhonePairingOpen(false)}
+    />
+    <ConfirmDialog
+      open={logoutConfirmOpen}
+      title="Déconnexion"
+      message="Voulez-vous vraiment vous déconnecter ?"
+      confirmLabel="Déconnexion"
+      cancelLabel="Annuler"
+      variant="destructive"
+      onConfirm={confirmLogout}
+      onCancel={() => setLogoutConfirmOpen(false)}
+    />
+    </>
   );
 }
