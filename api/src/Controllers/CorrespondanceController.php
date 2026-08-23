@@ -75,7 +75,8 @@ class CorrespondanceController
             }
         }
 
-        if (array_key_exists('statut', $data) && !is_string($data['statut'])) {
+        if (array_key_exists('statut', $data)
+            && (!is_string($data['statut']) || !in_array($data['statut'], Correspondance::STATUTS, true))) {
             $errors['statut'] = 'Le statut est invalide';
         }
 

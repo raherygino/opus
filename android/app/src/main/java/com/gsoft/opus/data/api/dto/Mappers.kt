@@ -5,6 +5,8 @@ import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
+import com.gsoft.opus.domain.model.DeclarationPerte
+import com.gsoft.opus.domain.model.DeclarationPerteAttachment
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.model.QrAuthDeviceType
 import com.gsoft.opus.domain.model.QrAuthRequester
@@ -167,9 +169,39 @@ fun CorrespondanceDto.toDomain(): Correspondance = Correspondance(
     agentNom = agentNom
 )
 
+fun DeclarationPerteDto.toDomain(): DeclarationPerte = DeclarationPerte(
+    id = id,
+    dateDeclaration = dateDeclaration,
+    heureDeclaration = heureDeclaration,
+    identiteDeclarant = identiteDeclarant,
+    natureObjet = natureObjet,
+    descriptionObjet = descriptionObjet,
+    datePerte = datePerte,
+    lieuPerte = lieuPerte,
+    numeroAttestation = numeroAttestation,
+    nomAgent = nomAgent,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom
+)
+
 fun CorrespondanceAttachmentDto.toDomain(): CorrespondanceAttachment = CorrespondanceAttachment(
     id = id,
     correspondanceId = correspondanceId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+fun DeclarationPerteAttachmentDto.toDomain(): DeclarationPerteAttachment = DeclarationPerteAttachment(
+    id = id,
+    declarationId = declarationId,
     title = title,
     filename = filename,
     originalFilename = originalFilename,

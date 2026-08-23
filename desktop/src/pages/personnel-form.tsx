@@ -210,7 +210,7 @@ export function PersonnelForm() {
     if (!isEdit) return;
     setPhotoUploading(true);
     try {
-      const updated = await deletePersonnelPhoto(Number(id));
+      await deletePersonnelPhoto(Number(id));
       setPhotoPreview(null);
       setPhotoFile(null);
       setHasServerPhoto(false);
@@ -233,7 +233,7 @@ export function PersonnelForm() {
         personnelId = Number(id);
         await updatePersonnel(personnelId, form);
       } else {
-        const created = await createPersonnel({ ...form, thumbnail: null });
+        const created = await createPersonnel({ ...form, thumbnail: null, signature_svg: null });
         personnelId = created.id;
       }
 

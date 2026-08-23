@@ -3,6 +3,7 @@ package com.gsoft.opus.di
 import com.gsoft.opus.data.repository.AuthRepositoryImpl
 import com.gsoft.opus.data.repository.ComportementRepositoryImpl
 import com.gsoft.opus.data.repository.CorrespondanceRepositoryImpl
+import com.gsoft.opus.data.repository.DeclarationPerteRepositoryImpl
 import com.gsoft.opus.data.repository.DeviceTokenRepositoryImpl
 import com.gsoft.opus.data.repository.MouvementRepositoryImpl
 import com.gsoft.opus.data.repository.NotificationRepositoryImpl
@@ -12,6 +13,7 @@ import com.gsoft.opus.data.repository.SettingsRepositoryImpl
 import com.gsoft.opus.domain.repository.AuthRepository
 import com.gsoft.opus.domain.repository.ComportementRepository
 import com.gsoft.opus.domain.repository.CorrespondanceRepository
+import com.gsoft.opus.domain.repository.DeclarationPerteRepository
 import com.gsoft.opus.domain.repository.DeviceTokenRepository
 import com.gsoft.opus.domain.repository.MouvementRepository
 import com.gsoft.opus.domain.repository.NotificationRepository
@@ -59,6 +61,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCorrespondanceRepository(impl: CorrespondanceRepositoryImpl): CorrespondanceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDeclarationPerteRepository(impl: DeclarationPerteRepositoryImpl): DeclarationPerteRepository
 
     @Binds
     @Singleton

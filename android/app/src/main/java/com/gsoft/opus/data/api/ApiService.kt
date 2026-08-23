@@ -8,6 +8,9 @@ import com.gsoft.opus.data.api.dto.ComportementRequest
 import com.gsoft.opus.data.api.dto.CorrespondanceAttachmentDto
 import com.gsoft.opus.data.api.dto.CorrespondanceDto
 import com.gsoft.opus.data.api.dto.CorrespondanceRequest
+import com.gsoft.opus.data.api.dto.DeclarationPerteAttachmentDto
+import com.gsoft.opus.data.api.dto.DeclarationPerteDto
+import com.gsoft.opus.data.api.dto.DeclarationPerteRequest
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
 import com.gsoft.opus.data.api.dto.LoginRequestDto
@@ -269,6 +272,53 @@ interface ApiService {
 
     @DELETE("api/correspondances/{id}/attachments/{attachId}")
     suspend fun deleteCorrespondanceAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ─── Déclarations de perte ──────────────────────────────────────
+
+    @GET("api/declarations-perte")
+    suspend fun getDeclarationPerteList(
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<DeclarationPerteDto>>>
+
+    @GET("api/declarations-perte/{id}")
+    suspend fun getDeclarationPerte(@Path("id") id: Int): Response<ApiResponse<DeclarationPerteDto>>
+
+    @POST("api/declarations-perte")
+    suspend fun createDeclarationPerte(@Body request: DeclarationPerteRequest): Response<ApiResponse<DeclarationPerteDto>>
+
+    @PUT("api/declarations-perte/{id}")
+    suspend fun updateDeclarationPerte(@Path("id") id: Int, @Body request: DeclarationPerteRequest): Response<ApiResponse<DeclarationPerteDto>>
+
+    @DELETE("api/declarations-perte/{id}")
+    suspend fun deleteDeclarationPerte(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Déclaration de perte Attachments ───────────────────────────
+
+    @GET("api/declarations-perte/{id}/attachments")
+    suspend fun getDeclarationPerteAttachments(@Path("id") id: Int): Response<ApiResponse<List<DeclarationPerteAttachmentDto>>>
+
+    @Multipart
+    @POST("api/declarations-perte/{id}/attachments")
+    suspend fun createDeclarationPerteAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<DeclarationPerteAttachmentDto>>
+
+    @PUT("api/declarations-perte/{id}/attachments/{attachId}")
+    suspend fun updateDeclarationPerteAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<DeclarationPerteAttachmentDto>>
+
+    @DELETE("api/declarations-perte/{id}/attachments/{attachId}")
+    suspend fun deleteDeclarationPerteAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>

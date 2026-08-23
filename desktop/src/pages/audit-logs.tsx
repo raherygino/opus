@@ -339,7 +339,7 @@ export function AuditLogPage() {
           4: { cellWidth: "auto" },
           5: { cellWidth: 25 },
         },
-        didDrawPage: (data) => {
+        didDrawPage: () => {
           const str = `Page ${doc.getNumberOfPages()}`;
           doc.setFontSize(8);
           doc.setTextColor(150);

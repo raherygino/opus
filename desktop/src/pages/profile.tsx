@@ -45,7 +45,7 @@ export function ProfilePage() {
   const [photoViewOpen, setPhotoViewOpen] = useState(false);
   const [photoPadOpen, setPhotoPadOpen] = useState(false);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
-  const [photoKey, setPhotoKey] = useState(0);
+  const [, setPhotoKey] = useState(0);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // Password form

@@ -42,7 +42,7 @@ import logoPn from "@/assets/img/logo-pn.png";
 import logoCsp from "@/assets/img/logo-csp.png";
 import logoOpus from "@/assets/img/logo-opus.png";
 import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
-import { useSignaturePadStore, strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
+import { strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
 import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail, cropFileToSquare, deletePersonnelPhoto } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -73,7 +73,7 @@ export function PersonnelDetail() {
   const [sigPadOpen, setSigPadOpen] = useState(false);
   const [photoPadOpen, setPhotoPadOpen] = useState(false);
   const [photoViewOpen, setPhotoViewOpen] = useState(false);
-  const [photoKey, setPhotoKey] = useState(0);
+  const [, setPhotoKey] = useState(0);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);

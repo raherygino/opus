@@ -87,6 +87,9 @@ import com.gsoft.opus.presentation.photo.PhotoCaptureScreen
 import com.gsoft.opus.presentation.correspondance.CorrespondanceDetailScreen
 import com.gsoft.opus.presentation.correspondance.CorrespondanceFormScreen
 import com.gsoft.opus.presentation.correspondance.CorrespondanceScreen
+import com.gsoft.opus.presentation.declarationperte.DeclarationPerteDetailScreen
+import com.gsoft.opus.presentation.declarationperte.DeclarationPerteFormScreen
+import com.gsoft.opus.presentation.declarationperte.DeclarationPerteScreen
 import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
@@ -443,7 +446,16 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.DeclarationPerte.route) { ContextMenuItemScreens.DeclarationPerte() }
+                    composable(MainRoutes.DeclarationPerte.route) {
+                        DeclarationPerteScreen(
+                            onDeclarationClick = { id ->
+                                navController.navigate(MainRoutes.DeclarationPerteDetail.createRoute(id))
+                            },
+                            onCreateDeclaration = {
+                                navController.navigate(MainRoutes.DeclarationPerteForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Rapport.route) { ContextMenuItemScreens.Rapport() }
                     composable(MainRoutes.MainCouranteSec.route) { ContextMenuItemScreens.MainCouranteSec() }
 
@@ -684,6 +696,63 @@ fun MainScreen(
                             onBack = { navController.popBackStack() }
                         )
                     }
+                    composable(
+                        route = MainRoutes.DeclarationPerteDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("declarationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        DeclarationPerteDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.DeclarationPerteForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.DeclarationPerteForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("declarationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        DeclarationPerteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
 
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
@@ -868,6 +937,17 @@ private fun handleNotificationLink(
                 navController.navigate(MainRoutes.CorrespondanceDetail.createRoute(id))
             } else {
                 navController.navigateToTab(MainRoutes.Correspondance.route)
+            }
+        }
+        path.startsWith("/sedentaire/secretariat/declaration-perte/") -> {
+            // e.g. "/sedentaire/secretariat/declaration-perte/12" → detail screen
+            val id = path.removePrefix("/sedentaire/secretariat/declaration-perte/")
+                .trim('/')
+                .toIntOrNull()
+            if (id != null) {
+                navController.navigate(MainRoutes.DeclarationPerteDetail.createRoute(id))
+            } else {
+                navController.navigateToTab(MainRoutes.DeclarationPerte.route)
             }
         }
         path.startsWith("/personnel") -> {

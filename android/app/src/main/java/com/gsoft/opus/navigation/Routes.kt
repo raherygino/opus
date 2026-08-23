@@ -100,4 +100,12 @@ sealed class MainRoutes(val route: String) {
     data object CorrespondanceForm : MainRoutes("sed_correspondance_form?correspondanceId={correspondanceId}") {
         fun createRoute(correspondanceId: Int = 0) = "sed_correspondance_form?correspondanceId=$correspondanceId"
     }
+
+    // Déclaration de perte management
+    data object DeclarationPerteDetail : MainRoutes("sed_declaration_perte_detail/{declarationId}") {
+        fun createRoute(declarationId: Int) = "sed_declaration_perte_detail/$declarationId"
+    }
+    data object DeclarationPerteForm : MainRoutes("sed_declaration_perte_form?declarationId={declarationId}") {
+        fun createRoute(declarationId: Int = 0) = "sed_declaration_perte_form?declarationId=$declarationId"
+    }
 }

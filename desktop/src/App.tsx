@@ -57,6 +57,17 @@ const CorrespondanceDetail = lazy(() =>
   import("@/pages/correspondance-detail").then((m) => ({ default: m.CorrespondanceDetail })),
 );
 
+// Déclaration de perte (Sédentaire > Secrétariat)
+const DeclarationPerteList = lazy(() =>
+  import("@/pages/declaration-perte-list").then((m) => ({ default: m.DeclarationPerteList })),
+);
+const DeclarationPerteForm = lazy(() =>
+  import("@/pages/declaration-perte-form").then((m) => ({ default: m.DeclarationPerteForm })),
+);
+const DeclarationPerteDetail = lazy(() =>
+  import("@/pages/declaration-perte-detail").then((m) => ({ default: m.DeclarationPerteDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -213,6 +224,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <CorrespondanceForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/declaration-perte"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <DeclarationPerteList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/declaration-perte/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <DeclarationPerteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/declaration-perte/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <DeclarationPerteDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/declaration-perte/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <DeclarationPerteForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

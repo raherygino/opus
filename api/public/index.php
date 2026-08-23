@@ -16,6 +16,8 @@ use App\Controllers\MouvementController;
 use App\Controllers\ComportementController;
 use App\Controllers\CorrespondanceController;
 use App\Controllers\CorrespondanceAttachmentController;
+use App\Controllers\DeclarationPerteController;
+use App\Controllers\DeclarationPerteAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -133,6 +135,24 @@ $router->post('/api/correspondances/{id}/attachments',                      [Cor
 $router->put('/api/correspondances/{id}/attachments/{attachId}',            [CorrespondanceAttachmentController::class, 'update']);
 $router->delete('/api/correspondances/{id}/attachments/{attachId}',         [CorrespondanceAttachmentController::class, 'destroy']);
 $router->get('/api/correspondances/{id}/attachments/{attachId}/download',   [CorrespondanceAttachmentController::class, 'download']);
+
+// ========================
+// Déclaration de perte Routes
+// ========================
+$router->get('/api/declarations-perte',           [DeclarationPerteController::class, 'index']);
+$router->get('/api/declarations-perte/{id}',      [DeclarationPerteController::class, 'show']);
+$router->post('/api/declarations-perte',          [DeclarationPerteController::class, 'store']);
+$router->put('/api/declarations-perte/{id}',      [DeclarationPerteController::class, 'update']);
+$router->delete('/api/declarations-perte/{id}',   [DeclarationPerteController::class, 'destroy']);
+
+// ========================
+// Déclaration de perte Attachment Routes
+// ========================
+$router->get('/api/declarations-perte/{id}/attachments',                       [DeclarationPerteAttachmentController::class, 'index']);
+$router->post('/api/declarations-perte/{id}/attachments',                      [DeclarationPerteAttachmentController::class, 'store']);
+$router->put('/api/declarations-perte/{id}/attachments/{attachId}',            [DeclarationPerteAttachmentController::class, 'update']);
+$router->delete('/api/declarations-perte/{id}/attachments/{attachId}',         [DeclarationPerteAttachmentController::class, 'destroy']);
+$router->get('/api/declarations-perte/{id}/attachments/{attachId}/download',   [DeclarationPerteAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

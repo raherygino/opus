@@ -175,6 +175,41 @@ export interface CorrespondanceAttachment {
 }
 
 // ========================
+// Déclaration de perte Types
+// ========================
+export interface DeclarationPerte {
+  id: number;
+  date_declaration: string;
+  heure_declaration: string;
+  identite_declarant: string;
+  nature_objet: string;
+  description_objet: string;
+  date_perte: string;
+  lieu_perte: string;
+  numero_attestation: string;
+  nom_agent: string;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: DeclarationPerteAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeclarationPerteAttachment {
+  id: number;
+  declaration_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {

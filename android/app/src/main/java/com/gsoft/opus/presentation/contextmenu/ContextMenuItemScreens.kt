@@ -7,7 +7,6 @@ import androidx.compose.material.icons.outlined.ViewColumn
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.FileCopy
 import androidx.compose.material.icons.outlined.FilePresent
 import androidx.compose.material.icons.outlined.FindInPage
 import androidx.compose.material.icons.outlined.Gavel
@@ -61,15 +60,6 @@ object ContextMenuItemScreens {
             title = "Gestion du personnel",
             description = "Gestion du personnel",
             icon = Icons.Outlined.People
-        )
-    }
-
-    @Composable
-    fun DeclarationPerte() {
-        PlaceholderScreen(
-            title = "Déclaration de perte",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.FileCopy
         )
     }
 
