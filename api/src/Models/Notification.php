@@ -216,6 +216,21 @@ class Notification
         return $stmt->execute([$id]);
     }
 
+    /**
+     * Mark every notification pointing to $link as read for the given user.
+     * Used to auto-dismiss a notification once the target entity has been
+     * viewed (e.g. a correspondance detail screen opened by an admin).
+     */
+    public static function markAsReadByLink(string $link, int $userId): int
+    {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare(
+            'UPDATE notifications SET is_read = 1 WHERE link = ? AND user_id = ? AND is_read = 0'
+        );
+        $stmt->execute([$link, $userId]);
+        return $stmt->rowCount();
+    }
+
     public static function markAllAsRead(int $userId, ?string $roleCode = null, ?string $service = null): bool
     {
         $db = Database::getInstance()->getConnection();

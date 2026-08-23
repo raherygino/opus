@@ -12,9 +12,11 @@ import {
 } from "@/lib/api/personnel";
 import { getMouvementList } from "@/lib/api/mouvement";
 import { getComportementList } from "@/lib/api/comportement";
+import { isImageFile } from "@/lib/utils/attachment";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import {
   ArrowLeft,
   Pencil,
@@ -31,6 +33,7 @@ import {
   Smartphone,
   X,
   Trash2,
+  Eye,
 } from "lucide-react";
 import type { Personnel, PersonnelAttachment, Mouvement, Comportement } from "@/types";
 import jsPDF from "jspdf";
@@ -74,6 +77,7 @@ export function PersonnelDetail() {
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [viewerTarget, setViewerTarget] = useState<PersonnelAttachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -309,14 +313,27 @@ export function PersonnelDetail() {
                         {att.original_filename}
                       </p>
                     </div>
-                    <a
-                      href={getAttachmentDownloadUrl(person.id, att.id)}
-                      download
-                      className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Télécharger
-                    </a>
+                    <div className="flex items-center gap-1">
+                      {isImageFile(att.mime_type, att.original_filename) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Aperçu"
+                          onClick={() => setViewerTarget(att)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <a
+                        href={getAttachmentDownloadUrl(person.id, att.id)}
+                        download
+                      >
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </a>
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -547,6 +564,17 @@ export function PersonnelDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ImageViewerDialog
+        open={viewerTarget !== null}
+        src={
+          viewerTarget && person
+            ? getAttachmentDownloadUrl(person.id, viewerTarget.id)
+            : ""
+        }
+        title={viewerTarget?.title}
+        onClose={() => setViewerTarget(null)}
+      />
     </motion.div>
   );
 

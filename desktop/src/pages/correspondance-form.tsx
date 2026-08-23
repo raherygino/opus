@@ -11,8 +11,8 @@ import {
   updateCorrespondanceAttachmentTitle,
   deleteCorrespondanceAttachment,
   getCorrespondanceAttachmentDownloadUrl,
-  isImageAttachment,
 } from "@/lib/api/correspondance";
+import { isImageFile } from "@/lib/utils/attachment";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -430,28 +430,14 @@ export function CorrespondanceForm() {
                     className="h-8 text-sm"
                   />
                   {att.id && att.existingFile && id && (
-                    <div className="flex items-center gap-1">
-                      <a
-                        href={getCorrespondanceAttachmentDownloadUrl(Number(id), att.id)}
-                        download
-                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                      >
-                        <Download className="h-3 w-3" />
-                        {att.existingFile}
-                      </a>
-                      {isImageAttachment({ mime_type: null, original_filename: att.existingFile }) && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          title="Aperçu"
-                          onClick={() => setViewerTarget({ id: att.id!, title: att.title || att.existingFile! })}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
+                    <a
+                      href={getCorrespondanceAttachmentDownloadUrl(Number(id), att.id)}
+                      download
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    >
+                      <Download className="h-3 w-3" />
+                      {att.existingFile}
+                    </a>
                   )}
                   {att.file && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -461,6 +447,18 @@ export function CorrespondanceForm() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  {att.id && att.existingFile && id && isImageFile(null, att.existingFile) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Aperçu"
+                      onClick={() => setViewerTarget({ id: att.id!, title: att.title || att.existingFile! })}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                   <Input
                     type="file"
                     className="w-40 h-8 text-xs"

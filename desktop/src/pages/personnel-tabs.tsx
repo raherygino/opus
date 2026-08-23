@@ -26,6 +26,7 @@ import {
   Download,
   Check,
   XCircle,
+  Eye,
 } from "lucide-react";
 import type {
   Personnel,
@@ -44,6 +45,8 @@ import {
   deleteMouvementAttachment,
   getMouvementAttachmentDownloadUrl,
 } from "@/lib/api/mouvement";
+import { isImageFile } from "@/lib/utils/attachment";
+import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import {
   getComportementList,
   createComportement,
@@ -139,6 +142,7 @@ export function PersonnelTabs() {
   const [detailTarget, setDetailTarget] = useState<Mouvement | null>(null);
   const [mouvAttachments, setMouvAttachments] = useState<MouvementAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [mouvViewerTarget, setMouvViewerTarget] = useState<MouvementAttachment | null>(null);
 
   // Comportement tab
   const [comportements, setComportements] = useState<Comportement[]>([]);
@@ -1240,6 +1244,17 @@ export function PersonnelTabs() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      {isImageFile(a.mime_type, a.original_filename) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setMouvViewerTarget(a)}
+                          title="Aperçu"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1677,6 +1692,17 @@ export function PersonnelTabs() {
           </div>
         </div>
       )}
+
+      <ImageViewerDialog
+        open={mouvViewerTarget !== null}
+        src={
+          mouvViewerTarget && detailTarget
+            ? getMouvementAttachmentDownloadUrl(detailTarget.id, mouvViewerTarget.id)
+            : ""
+        }
+        title={mouvViewerTarget?.title}
+        onClose={() => setMouvViewerTarget(null)}
+      />
     </motion.div>
   );
 }

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.ContactPhone
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,7 +65,9 @@ import coil.compose.AsyncImage
 import com.gsoft.opus.ui.components.ErrorMessage
 import com.gsoft.opus.ui.components.FormSectionCard
 import com.gsoft.opus.ui.components.GradientButton
+import com.gsoft.opus.ui.components.ImageViewerDialog
 import com.gsoft.opus.ui.components.OpusDropdown
+import com.gsoft.opus.utils.isImageFile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +98,7 @@ fun PersonnelFormScreen(
     }
 
     var attachmentFilePickerIndex by remember { mutableStateOf(-1) }
+    var viewerAttachmentId by remember { mutableStateOf<Pair<Int, String>?>(null) }
     val attachmentFilePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -240,9 +244,17 @@ fun PersonnelFormScreen(
             ) {
                 state.attachments.filter { !it.isDeleted }.forEachIndexed { _, item ->
                     val realIndex = state.attachments.indexOf(item)
+                    val canView = item.id != null && item.existingFilename != null &&
+                        isImageFile(null, item.existingFilename)
                     AttachmentFieldCard(
                         title = item.title,
                         fileName = item.uploadFile?.fileName ?: item.existingFilename,
+                        canView = canView,
+                        onView = {
+                            if (item.id != null && item.existingFilename != null) {
+                                viewerAttachmentId = item.id to (item.title.ifBlank { item.existingFilename })
+                            }
+                        },
                         onTitleChange = { viewModel.updateAttachmentTitle(realIndex, it) },
                         onPickFile = {
                             attachmentFilePickerIndex = realIndex
@@ -271,6 +283,15 @@ fun PersonnelFormScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    // Full-screen image viewer for existing image attachments
+    viewerAttachmentId?.let { (attId, attTitle) ->
+        ImageViewerDialog(
+            url = personnelAttachmentDownloadUrl(viewModel.editId, attId),
+            title = attTitle,
+            onDismiss = { viewerAttachmentId = null }
+        )
     }
 }
 
@@ -342,6 +363,8 @@ private fun PhotoPickerCard(
 private fun AttachmentFieldCard(
     title: String,
     fileName: String?,
+    canView: Boolean,
+    onView: () -> Unit,
     onTitleChange: (String) -> Unit,
     onPickFile: () -> Unit,
     onRemove: () -> Unit
@@ -366,6 +389,11 @@ private fun AttachmentFieldCard(
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f)
             )
+            if (canView) {
+                IconButton(onClick = onView) {
+                    Icon(Icons.Outlined.RemoveRedEye, contentDescription = "Aperçu")
+                }
+            }
             IconButton(onClick = onRemove) {
                 Icon(Icons.Outlined.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
             }

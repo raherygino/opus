@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Report
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Card
@@ -63,6 +64,8 @@ import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.model.PersonnelAttachment
+import com.gsoft.opus.ui.components.ImageViewerDialog
+import com.gsoft.opus.utils.isImageFile
 
 /**
  * Shared social-profile-style content for both personnel detail screens
@@ -83,6 +86,7 @@ fun PersonnelProfileContent(
 ) {
     val context = LocalContext.current
     var showPhotoViewer by remember { mutableStateOf(false) }
+    var viewerAttachment by remember { mutableStateOf<PersonnelAttachment?>(null) }
 
     // Expandable INFO sections — attachments open by default
     var attachmentsExpanded by remember { mutableStateOf(true) }
@@ -208,6 +212,8 @@ fun PersonnelProfileContent(
                 items(state.attachments, key = { it.id }) { att ->
                     ProfileAttachmentItem(
                         attachment = att,
+                        isImage = isImageFile(att.mimeType, att.originalFilename),
+                        onView = { viewerAttachment = att },
                         onDownload = {
                             val url = personnelAttachmentDownloadUrl(p.id, att.id)
                             openUrl(context, url)
@@ -249,6 +255,15 @@ fun PersonnelProfileContent(
             photoUrl = photoUrl,
             name = "${p.firstname} ${p.lastname}",
             onDismiss = { showPhotoViewer = false }
+        )
+    }
+
+    // Full-screen image viewer for image attachments
+    viewerAttachment?.let { att ->
+        ImageViewerDialog(
+            url = personnelAttachmentDownloadUrl(p.id, att.id),
+            title = att.title,
+            onDismiss = { viewerAttachment = null }
         )
     }
 }
@@ -633,6 +648,8 @@ private fun ProfileEmptySection(text: String) {
 @Composable
 private fun ProfileAttachmentItem(
     attachment: PersonnelAttachment,
+    isImage: Boolean,
+    onView: () -> Unit,
     onDownload: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
@@ -656,6 +673,11 @@ private fun ProfileAttachmentItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+            if (isImage) {
+                IconButton(onClick = onView) {
+                    Icon(Icons.Outlined.RemoveRedEye, contentDescription = "Aperçu", modifier = Modifier.size(20.dp))
+                }
             }
             IconButton(onClick = onDownload) {
                 Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(20.dp))

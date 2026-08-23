@@ -108,6 +108,18 @@ class CorrespondanceController
             Response::notFound('Correspondance not found');
         }
         $row['attachments'] = CorrespondanceAttachment::getByCorrespondanceId((int) $row['id']);
+
+        // Auto-dismiss the "new correspondance" notification for the viewing
+        // admin once they actually open the detail. Notifications are only sent
+        // on creation, so viewing the detail means the admin has now seen it.
+        $authUser = AuthController::getAuthenticatedUser();
+        if ($authUser && !empty($authUser['sub'])) {
+            Notification::markAsReadByLink(
+                '/sedentaire/secretariat/correspondance/' . $row['id'],
+                (int) $authUser['sub']
+            );
+        }
+
         Response::success($row);
     }
 
@@ -146,7 +158,7 @@ class CorrespondanceController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification to admins (only on first creation) ---
+        // --- Notification to admins (after successful save, first time only) ---
         self::notifyAdmins($correspondance, (int) $authUser['sub']);
 
         Response::created($correspondance, 'Correspondance enregistrée avec succès');
@@ -206,8 +218,9 @@ class CorrespondanceController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // Note: admin notifications are only sent on creation (first time),
-        // not on subsequent modifications.
+        // No notification on update — admins are only notified once, when the
+        // correspondance is first created. Once they view it, the notification
+        // is auto-dismissed (see show()).
 
         Response::success($correspondance, 'Correspondance modifiée avec succès');
     }
@@ -259,9 +272,11 @@ class CorrespondanceController
 
     /**
      * Notify every admin (except the actor) that a correspondance was
-     * created. Only the first creation triggers a notification — subsequent
-     * modifications do not. Push delivery failures are isolated inside
-     * Notification::create() and never affect the API response.
+     * created. This is called only on creation — updates do not trigger a
+     * new notification. Once an admin opens the correspondance detail
+     * (show()), the notification is auto-dismissed.
+     * Push delivery failures are isolated inside Notification::create()
+     * and never affect the API response.
      */
     private static function notifyAdmins(array $correspondance, ?int $actorId): void
     {
@@ -272,12 +287,11 @@ class CorrespondanceController
             $agent = $correspondance['agent_username'] ?? 'Inconnu';
         }
 
-        $details = "Réf: {$correspondance['reference']} — {$correspondance['sens']} — {$correspondance['objet']}"
+        $title = 'Nouvelle correspondance';
+        $message = "Une correspondance {$correspondance['sens']} a été enregistrée. "
+            . "Réf: {$correspondance['reference']} — {$correspondance['sens']} — {$correspondance['objet']}"
             . " — Émetteur/Destinataire: {$correspondance['emetteur_destinataire']}"
             . " — le {$date} à {$heure} — Agent secrétariat: {$agent}.";
-
-        $title = 'Nouvelle correspondance';
-        $message = "Une correspondance {$correspondance['sens']} a été enregistrée. " . $details;
 
         $admins = Notification::getAdminUsers();
         foreach ($admins as $admin) {

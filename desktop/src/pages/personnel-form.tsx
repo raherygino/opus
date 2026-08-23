@@ -19,6 +19,8 @@ import {
 } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
+import { isImageFile } from "@/lib/utils/attachment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +38,7 @@ import {
   Camera,
   Smartphone,
   User as UserIcon,
+  Eye,
 } from "lucide-react";
 import type { PersonnelAttachment } from "@/types";
 import gradeData from "@/assets/json/grade.json";
@@ -80,6 +83,7 @@ export function PersonnelForm() {
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [hasServerPhoto, setHasServerPhoto] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [viewerTarget, setViewerTarget] = useState<{ id: number; title: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -548,6 +552,18 @@ export function PersonnelForm() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  {att.id && att.existingFile && id && isImageFile(null, att.existingFile) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Aperçu"
+                      onClick={() => setViewerTarget({ id: att.id!, title: att.title || att.existingFile! })}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                   <Input
                     type="file"
                     className="w-40 h-8 text-xs"
@@ -596,6 +612,17 @@ export function PersonnelForm() {
         open={photoPadOpen}
         onClose={() => setPhotoPadOpen(false)}
         onPhotoComplete={handlePhotoComplete}
+      />
+
+      <ImageViewerDialog
+        open={viewerTarget !== null}
+        src={
+          viewerTarget && id
+            ? getAttachmentDownloadUrl(Number(id), viewerTarget.id)
+            : ""
+        }
+        title={viewerTarget?.title}
+        onClose={() => setViewerTarget(null)}
       />
     </motion.div>
   );

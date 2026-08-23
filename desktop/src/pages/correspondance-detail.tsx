@@ -7,8 +7,8 @@ import { hasPermission } from "@/lib/permissions";
 import {
   getCorrespondanceById,
   getCorrespondanceAttachmentDownloadUrl,
-  isImageAttachment,
 } from "@/lib/api/correspondance";
+import { isImageFile } from "@/lib/utils/attachment";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
@@ -181,25 +181,27 @@ export function CorrespondanceDetail() {
                 <p className="text-sm font-medium">{att.title}</p>
                 <p className="text-xs text-muted-foreground">{att.original_filename}</p>
               </div>
-              {isImageAttachment(att) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  title="Aperçu"
-                  onClick={() => setViewerTarget(att)}
+              <div className="flex items-center gap-1">
+                {isImageFile(att.mime_type, att.original_filename) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Aperçu"
+                    onClick={() => setViewerTarget(att)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                <a
+                  href={getCorrespondanceAttachmentDownloadUrl(correspondance.id, att.id)}
+                  download
                 >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              )}
-              <a
-                href={getCorrespondanceAttachmentDownloadUrl(correspondance.id, att.id)}
-                download
-              >
-                <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger">
-                  <Download className="h-4 w-4" />
-                </Button>
-              </a>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
             </div>
           ))}
         </CardContent>

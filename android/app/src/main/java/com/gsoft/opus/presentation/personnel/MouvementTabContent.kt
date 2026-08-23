@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Undo
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,9 +47,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gsoft.opus.domain.model.Mouvement
+import com.gsoft.opus.domain.model.MouvementAttachment
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.ui.components.ErrorMessage
+import com.gsoft.opus.ui.components.ImageViewerDialog
 import com.gsoft.opus.ui.components.OpusDetailDialog
+import com.gsoft.opus.utils.isImageFile
 
 @Composable
 fun MouvementListTab(
@@ -186,6 +190,7 @@ fun MouvementDetailDialog(
 ) {
     val mvt = state.detailTarget ?: return
     val context = LocalContext.current
+    var viewerAttachment by remember { mutableStateOf<MouvementAttachment?>(null) }
 
     OpusDetailDialog(
         visible = true,
@@ -255,6 +260,11 @@ fun MouvementDetailDialog(
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.weight(1f)
                         )
+                        if (isImageFile(att.mimeType, att.originalFilename)) {
+                            IconButton(onClick = { viewerAttachment = att }) {
+                                Icon(Icons.Outlined.RemoveRedEye, contentDescription = "Aperçu", modifier = Modifier.size(18.dp))
+                            }
+                        }
                         IconButton(onClick = {
                             val url = mouvementAttachmentDownloadUrl(mvt.id, att.id)
                             openUrl(context, url)
@@ -273,6 +283,15 @@ fun MouvementDetailDialog(
                 }
             }
         }
+    }
+
+    // Full-screen image viewer for image attachments
+    viewerAttachment?.let { att ->
+        ImageViewerDialog(
+            url = mouvementAttachmentDownloadUrl(mvt.id, att.id),
+            title = att.title,
+            onDismiss = { viewerAttachment = null }
+        )
     }
 }
 
