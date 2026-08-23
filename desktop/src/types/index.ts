@@ -210,6 +210,50 @@ export interface DeclarationPerteAttachment {
 }
 
 // ========================
+// Passation Types (Sédentaire > Poste)
+// ========================
+export interface Passation {
+  id: number;
+  date_passation: string;
+  heure_passation: string;
+  chef_descendant_user_id: number | null;
+  chef_descendant_grade: string | null;
+  chef_descendant_lastname: string | null;
+  chef_montant_user_id: number | null;
+  chef_montant_grade: string | null;
+  chef_montant_lastname: string | null;
+  instructions_autorite: string | null;
+  incidents_survenus: string | null;
+  created_by: number | null;
+  chef_descendant_username?: string | null;
+  chef_montant_username?: string | null;
+  attachments?: PassationAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PassationAttachment {
+  id: number;
+  passation_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Identity returned by POST /api/auth/verify (chef montant credential check). */
+export interface VerifiedIdentity {
+  id: number;
+  username: string;
+  grade: string | null;
+  firstname: string | null;
+  lastname: string | null;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {

@@ -18,6 +18,8 @@ use App\Controllers\CorrespondanceController;
 use App\Controllers\CorrespondanceAttachmentController;
 use App\Controllers\DeclarationPerteController;
 use App\Controllers\DeclarationPerteAttachmentController;
+use App\Controllers\PassationController;
+use App\Controllers\PassationAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -41,6 +43,7 @@ $router->post('/api/auth/login',    [AuthController::class, 'login']);
 $router->post('/api/auth/refresh',  [AuthController::class, 'refresh']);
 $router->get('/api/auth/me',        [AuthController::class, 'me']);
 $router->put('/api/auth/password',  [AuthController::class, 'password']);
+$router->post('/api/auth/verify',   [AuthController::class, 'verify']);
 $router->post('/api/auth/photo',    [AuthController::class, 'uploadPhoto']);
 $router->delete('/api/auth/photo',    [AuthController::class, 'deletePhoto']);
 
@@ -153,6 +156,24 @@ $router->post('/api/declarations-perte/{id}/attachments',                      [
 $router->put('/api/declarations-perte/{id}/attachments/{attachId}',            [DeclarationPerteAttachmentController::class, 'update']);
 $router->delete('/api/declarations-perte/{id}/attachments/{attachId}',         [DeclarationPerteAttachmentController::class, 'destroy']);
 $router->get('/api/declarations-perte/{id}/attachments/{attachId}/download',   [DeclarationPerteAttachmentController::class, 'download']);
+
+// ========================
+// Passation Routes (Sédentaire > Poste)
+// ========================
+$router->get('/api/passations',           [PassationController::class, 'index']);
+$router->get('/api/passations/{id}',      [PassationController::class, 'show']);
+$router->post('/api/passations',          [PassationController::class, 'store']);
+$router->put('/api/passations/{id}',      [PassationController::class, 'update']);
+$router->delete('/api/passations/{id}',   [PassationController::class, 'destroy']);
+
+// ========================
+// Passation Attachment Routes
+// ========================
+$router->get('/api/passations/{id}/attachments',                       [PassationAttachmentController::class, 'index']);
+$router->post('/api/passations/{id}/attachments',                      [PassationAttachmentController::class, 'store']);
+$router->put('/api/passations/{id}/attachments/{attachId}',            [PassationAttachmentController::class, 'update']);
+$router->delete('/api/passations/{id}/attachments/{attachId}',         [PassationAttachmentController::class, 'destroy']);
+$router->get('/api/passations/{id}/attachments/{attachId}/download',   [PassationAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

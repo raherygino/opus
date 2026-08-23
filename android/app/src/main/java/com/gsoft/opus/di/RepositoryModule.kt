@@ -7,6 +7,7 @@ import com.gsoft.opus.data.repository.DeclarationPerteRepositoryImpl
 import com.gsoft.opus.data.repository.DeviceTokenRepositoryImpl
 import com.gsoft.opus.data.repository.MouvementRepositoryImpl
 import com.gsoft.opus.data.repository.NotificationRepositoryImpl
+import com.gsoft.opus.data.repository.PassationRepositoryImpl
 import com.gsoft.opus.data.repository.PersonnelRepositoryImpl
 import com.gsoft.opus.data.repository.QrAuthRepositoryImpl
 import com.gsoft.opus.data.repository.SettingsRepositoryImpl
@@ -17,6 +18,7 @@ import com.gsoft.opus.domain.repository.DeclarationPerteRepository
 import com.gsoft.opus.domain.repository.DeviceTokenRepository
 import com.gsoft.opus.domain.repository.MouvementRepository
 import com.gsoft.opus.domain.repository.NotificationRepository
+import com.gsoft.opus.domain.repository.PassationRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.QrAuthRepository
 import com.gsoft.opus.domain.repository.SettingsRepository
@@ -65,6 +67,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDeclarationPerteRepository(impl: DeclarationPerteRepositoryImpl): DeclarationPerteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPassationRepository(impl: PassationRepositoryImpl): PassationRepository
 
     @Binds
     @Singleton

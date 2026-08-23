@@ -8,6 +8,9 @@ import com.gsoft.opus.domain.model.CorrespondanceAttachment
 import com.gsoft.opus.domain.model.DeclarationPerte
 import com.gsoft.opus.domain.model.DeclarationPerteAttachment
 import com.gsoft.opus.domain.model.Mouvement
+import com.gsoft.opus.domain.model.Passation
+import com.gsoft.opus.domain.model.PassationAttachment
+import com.gsoft.opus.domain.model.VerifiedIdentity
 import com.gsoft.opus.domain.model.QrAuthDeviceType
 import com.gsoft.opus.domain.model.QrAuthRequester
 import com.gsoft.opus.domain.model.QrAuthRequestInfo
@@ -245,4 +248,42 @@ fun QrAuthStatusResponseDto.toDomain(): QrAuthStatusResult = QrAuthStatusResult(
     accessToken = accessToken,
     refreshToken = refreshToken,
     user = user?.toDomain()
+)
+
+fun PassationDto.toDomain(): Passation = Passation(
+    id = id,
+    datePassation = datePassation,
+    heurePassation = heurePassation,
+    chefDescendantUserId = chefDescendantUserId,
+    chefDescendantGrade = chefDescendantGrade,
+    chefDescendantLastname = chefDescendantLastname,
+    chefMontantUserId = chefMontantUserId,
+    chefMontantGrade = chefMontantGrade,
+    chefMontantLastname = chefMontantLastname,
+    instructionsAutorite = instructionsAutorite,
+    incidentsSurvenus = incidentsSurvenus,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    chefDescendantUsername = chefDescendantUsername,
+    chefMontantUsername = chefMontantUsername
+)
+
+fun PassationAttachmentDto.toDomain(): PassationAttachment = PassationAttachment(
+    id = id,
+    passationId = passationId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+fun VerifiedIdentityDto.toDomain(): VerifiedIdentity = VerifiedIdentity(
+    id = id,
+    username = username,
+    grade = grade,
+    firstname = firstname,
+    lastname = lastname
 )

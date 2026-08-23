@@ -21,6 +21,9 @@ import com.gsoft.opus.data.api.dto.MouvementRequest
 import com.gsoft.opus.data.api.dto.MouvementRetourRequest
 import com.gsoft.opus.data.api.dto.NotificationDto
 import com.gsoft.opus.data.api.dto.UnreadCountDto
+import com.gsoft.opus.data.api.dto.PassationAttachmentDto
+import com.gsoft.opus.data.api.dto.PassationDto
+import com.gsoft.opus.data.api.dto.PassationRequest
 import com.gsoft.opus.data.api.dto.PersonnelAttachmentDto
 import com.gsoft.opus.data.api.dto.PersonnelDto
 import com.gsoft.opus.data.api.dto.PersonnelRequest
@@ -32,6 +35,8 @@ import com.gsoft.opus.data.api.dto.QrAuthStatusResponseDto
 import com.gsoft.opus.data.api.dto.RefreshResponseDto
 import com.gsoft.opus.data.api.dto.RefreshTokenRequestDto
 import com.gsoft.opus.data.api.dto.UserDto
+import com.gsoft.opus.data.api.dto.VerifyIdentityRequest
+import com.gsoft.opus.data.api.dto.VerifiedIdentityDto
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -49,6 +54,9 @@ interface ApiService {
 
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequestDto): Response<ApiResponse<LoginResponseDto>>
+
+    @POST("api/auth/verify")
+    suspend fun verifyIdentity(@Body request: VerifyIdentityRequest): Response<ApiResponse<VerifiedIdentityDto>>
 
     @POST("api/auth/refresh")
     suspend fun refreshToken(@Body request: RefreshTokenRequestDto): Response<ApiResponse<RefreshResponseDto>>
@@ -319,6 +327,53 @@ interface ApiService {
 
     @DELETE("api/declarations-perte/{id}/attachments/{attachId}")
     suspend fun deleteDeclarationPerteAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ─── Passations ─────────────────────────────────────────────────
+
+    @GET("api/passations")
+    suspend fun getPassationList(
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<PassationDto>>>
+
+    @GET("api/passations/{id}")
+    suspend fun getPassation(@Path("id") id: Int): Response<ApiResponse<PassationDto>>
+
+    @POST("api/passations")
+    suspend fun createPassation(@Body request: PassationRequest): Response<ApiResponse<PassationDto>>
+
+    @PUT("api/passations/{id}")
+    suspend fun updatePassation(@Path("id") id: Int, @Body request: PassationRequest): Response<ApiResponse<PassationDto>>
+
+    @DELETE("api/passations/{id}")
+    suspend fun deletePassation(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Passation Attachments ──────────────────────────────────────
+
+    @GET("api/passations/{id}/attachments")
+    suspend fun getPassationAttachments(@Path("id") id: Int): Response<ApiResponse<List<PassationAttachmentDto>>>
+
+    @Multipart
+    @POST("api/passations/{id}/attachments")
+    suspend fun createPassationAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<PassationAttachmentDto>>
+
+    @PUT("api/passations/{id}/attachments/{attachId}")
+    suspend fun updatePassationAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<PassationAttachmentDto>>
+
+    @DELETE("api/passations/{id}/attachments/{attachId}")
+    suspend fun deletePassationAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>

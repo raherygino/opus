@@ -68,6 +68,17 @@ const DeclarationPerteDetail = lazy(() =>
   import("@/pages/declaration-perte-detail").then((m) => ({ default: m.DeclarationPerteDetail })),
 );
 
+// Passation (Sédentaire > Poste)
+const PassationList = lazy(() =>
+  import("@/pages/passation-list").then((m) => ({ default: m.PassationList })),
+);
+const PassationForm = lazy(() =>
+  import("@/pages/passation-form").then((m) => ({ default: m.PassationForm })),
+);
+const PassationDetail = lazy(() =>
+  import("@/pages/passation-detail").then((m) => ({ default: m.PassationDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -273,6 +284,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <DeclarationPerteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/passation"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PassationList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/passation/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <PassationForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/passation/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <PassationDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/passation/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <PassationForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

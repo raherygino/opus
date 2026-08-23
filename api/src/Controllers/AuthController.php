@@ -347,6 +347,61 @@ class AuthController
     }
 
     /**
+     * POST /api/auth/verify
+     * Body: { username, password }
+     *
+     * Verifies a user's credentials WITHOUT creating a session or issuing
+     * tokens. Used by features that need to authenticate a second user
+     * mid-flow (e.g. the "chef de poste montant" in a passation): the caller
+     * is already authenticated (the chef descendant), and we only need to
+     * confirm the montant's identity and retrieve their grade/lastname.
+     *
+     * Reuses the exact same verification logic as login(): User::getByUsername
+     * + password_verify + is_active check. Returns only identity fields —
+     * never the password_hash, never tokens. The password is never persisted
+     * or logged.
+     */
+    public function verify(array $params): void
+    {
+        // The caller must already be authenticated — only an authenticated
+        // user can verify another user's credentials mid-flow.
+        $authUser = self::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        $errors = AuthValidator::validateLogin($data);
+        if (!empty($errors)) {
+            Response::error('Validation failed', 422, $errors);
+        }
+
+        $user = User::getByUsername($data['username']);
+        if (!$user) {
+            Response::unauthorized('Invalid username or password');
+        }
+
+        if (!$user['is_active']) {
+            Response::forbidden('Account is deactivated');
+        }
+
+        if (!password_verify($data['password'], $user['password_hash'])) {
+            Response::unauthorized('Invalid username or password');
+        }
+
+        // Return only the identity fields needed by the calling feature.
+        // No tokens, no password_hash, no session side-effects.
+        Response::success([
+            'id'        => $user['id'],
+            'username'  => $user['username'],
+            'grade'     => $user['grade'] ?? null,
+            'firstname' => $user['firstname'] ?? null,
+            'lastname'  => $user['lastname'] ?? null,
+        ], 'Identity verified');
+    }
+
+    /**
      * Get authenticated user from JWT in Authorization header
      */
     public static function getAuthenticatedUser(): ?array

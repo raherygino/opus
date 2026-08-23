@@ -90,6 +90,9 @@ import com.gsoft.opus.presentation.correspondance.CorrespondanceScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteDetailScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteFormScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteScreen
+import com.gsoft.opus.presentation.passation.PassationDetailScreen
+import com.gsoft.opus.presentation.passation.PassationFormScreen
+import com.gsoft.opus.presentation.passation.PassationScreen
 import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
@@ -460,7 +463,16 @@ fun MainScreen(
                     composable(MainRoutes.MainCouranteSec.route) { ContextMenuItemScreens.MainCouranteSec() }
 
                     // Sédentaire – Poste
-                    composable(MainRoutes.Passation.route) { ContextMenuItemScreens.Passation() }
+                    composable(MainRoutes.Passation.route) {
+                        PassationScreen(
+                            onPassationClick = { id ->
+                                navController.navigate(MainRoutes.PassationDetail.createRoute(id))
+                            },
+                            onCreatePassation = {
+                                navController.navigate(MainRoutes.PassationForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Armement.route) { ContextMenuItemScreens.Armement() }
                     composable(MainRoutes.Materiels.route) { ContextMenuItemScreens.Materiels() }
                     composable(MainRoutes.SituationGav.route) { ContextMenuItemScreens.SituationGav() }
@@ -754,6 +766,64 @@ fun MainScreen(
                         )
                     }
 
+                    composable(
+                        route = MainRoutes.PassationDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("passationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PassationDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PassationForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PassationForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("passationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PassationFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
                         SignaturePairingScreen(
@@ -948,6 +1018,17 @@ private fun handleNotificationLink(
                 navController.navigate(MainRoutes.DeclarationPerteDetail.createRoute(id))
             } else {
                 navController.navigateToTab(MainRoutes.DeclarationPerte.route)
+            }
+        }
+        path.startsWith("/sedentaire/poste/passation/") -> {
+            // e.g. "/sedentaire/poste/passation/12" → detail screen
+            val id = path.removePrefix("/sedentaire/poste/passation/")
+                .trim('/')
+                .toIntOrNull()
+            if (id != null) {
+                navController.navigate(MainRoutes.PassationDetail.createRoute(id))
+            } else {
+                navController.navigateToTab(MainRoutes.Passation.route)
             }
         }
         path.startsWith("/personnel") -> {

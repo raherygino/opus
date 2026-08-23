@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import type { ApiResponse, AuthResponse, User } from "@/types";
+import type { ApiResponse, AuthResponse, User, VerifiedIdentity } from "@/types";
 
 export async function login(
   username: string,
@@ -7,6 +7,24 @@ export async function login(
 ): Promise<AuthResponse> {
   const { data } = await apiClient.post<ApiResponse<AuthResponse>>(
     "/auth/login",
+    { username, password },
+  );
+  return data.data;
+}
+
+/**
+ * Verify a user's credentials WITHOUT creating a session. Used by the
+ * passation flow to authenticate the "chef de poste montant" mid-flow: the
+ * caller (chef descendant) is already authenticated, and we only need to
+ * confirm the montant's identity and retrieve their grade/firstname.
+ * The password is never stored or logged.
+ */
+export async function verifyIdentity(
+  username: string,
+  password: string,
+): Promise<VerifiedIdentity> {
+  const { data } = await apiClient.post<ApiResponse<VerifiedIdentity>>(
+    "/auth/verify",
     { username, password },
   );
   return data.data;
