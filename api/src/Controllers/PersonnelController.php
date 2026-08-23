@@ -92,43 +92,28 @@ class PersonnelController
         ]);
 
         // --- Generate notification ---
+        // Peer-to-peer: regardless of who the actor is (admin or regular
+        // user), every other admin AND every other user with view permission
+        // on the personnel module is notified. The actor is always excluded.
         $authUser = AuthController::getAuthenticatedUser();
-        $creatorRole = $authUser['role_code'] ?? null;
         $creatorId = $authUser['sub'] ?? null;
         $personnelName = $person['firstname'] . ' ' . $person['lastname'];
+        $service = self::affectationToCode($person['affectation'] ?? '');
 
-        if ($creatorRole === 'SUPER_ADMIN' || $creatorRole === 'STATION_ADMIN') {
-            // Admin added personnel → notify all admins
-            $admins = Notification::getAdminUsers();
-            foreach ($admins as $admin) {
-                if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
-                    continue;
-                }
-                Notification::create([
-                    'title' => "Nouveau personnel ajouté",
-                    'message' => "{$personnelName} (IM: {$person['im']}) a été ajouté par un administrateur.",
-                    'type' => 'info',
-                    'service' => self::affectationToCode($person['affectation'] ?? ''),
-                    'user_id' => $admin['id'],
-                    'personnel_id' => $id,
-                    'created_by' => $creatorId,
-                ]);
-            }
-        } else {
-            // Non-admin added personnel → notify all admins
-            $admins = Notification::getAdminUsers();
-            foreach ($admins as $admin) {
-                Notification::create([
-                    'title' => "Nouveau personnel ajouté",
-                    'message' => "{$personnelName} (IM: {$person['im']}) a été ajouté et nécessite votre attention.",
-                    'type' => 'warning',
-                    'service' => self::affectationToCode($person['affectation'] ?? ''),
-                    'user_id' => $admin['id'],
-                    'personnel_id' => $id,
-                    'created_by' => $creatorId,
-                ]);
-            }
-        }
+        Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Nouveau personnel ajouté',
+            'message'      => "{$personnelName} (IM: {$person['im']}) a été ajouté.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+        ], [
+            'title'        => 'Nouveau personnel ajouté',
+            'message'      => "{$personnelName} (IM: {$person['im']}) a été ajouté. Veuillez en prendre connaissance.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+            'link'         => '/personnel',
+        ], $creatorId);
 
         Response::created($person, 'Personnel created successfully');
     }
@@ -172,17 +157,25 @@ class PersonnelController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notify admins that personnel info was modified ---
+        // --- Notify all affected users (admins + peers with personnel view) ---
         $creatorId = $authUser['sub'] ?? null;
         $personnelName = $person['firstname'] . ' ' . $person['lastname'];
-        self::notifyAdmins(
-            'Personnel modifié',
-            "{$personnelName} (IM: {$person['im']}) a été modifié.",
-            'info',
-            self::affectationToCode($person['affectation'] ?? ''),
-            $id,
-            $creatorId
-        );
+        $service = self::affectationToCode($person['affectation'] ?? '');
+
+        Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Personnel modifié',
+            'message'      => "{$personnelName} (IM: {$person['im']}) a été modifié.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+        ], [
+            'title'        => 'Personnel modifié',
+            'message'      => "{$personnelName} (IM: {$person['im']}) a été modifié. Veuillez en prendre connaissance des informations mises à jour.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+            'link'         => '/personnel',
+        ], $creatorId);
 
         Response::success($person, 'Personnel updated successfully');
     }
@@ -308,29 +301,6 @@ class PersonnelController
     }
 
     /**
-     * Broadcast a notification (with FCM push) to every active administrator
-     * except the user who triggered the action.
-     */
-    private static function notifyAdmins(string $title, string $message, string $type, string $service, int $personnelId, ?int $creatorId): void
-    {
-        $admins = Notification::getAdminUsers();
-        foreach ($admins as $admin) {
-            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
-                continue;
-            }
-            Notification::create([
-                'title'        => $title,
-                'message'      => $message,
-                'type'         => $type,
-                'service'      => $service,
-                'user_id'      => $admin['id'],
-                'personnel_id' => $personnelId,
-                'created_by'   => $creatorId,
-            ]);
-        }
-    }
-
-    /**
      * POST /api/personnel/{id}/photo
      * Multipart: photo (file), thumbnail (file, optional)
      */
@@ -414,17 +384,25 @@ class PersonnelController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notify admins that the personnel photo was updated ---
+        // --- Notify all affected users (admins + peers with personnel view) ---
         $creatorId = $authUser['sub'] ?? null;
         $personnelName = $person['firstname'] . ' ' . $person['lastname'];
-        self::notifyAdmins(
-            'Photo mise à jour',
-            "La photo de {$personnelName} (IM: {$person['im']}) a été mise à jour.",
-            'info',
-            self::affectationToCode($person['affectation'] ?? ''),
-            $id,
-            $creatorId
-        );
+        $service = self::affectationToCode($person['affectation'] ?? '');
+
+        Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Photo mise à jour',
+            'message'      => "La photo de {$personnelName} (IM: {$person['im']}) a été mise à jour.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+        ], [
+            'title'        => 'Photo mise à jour',
+            'message'      => "La photo de {$personnelName} (IM: {$person['im']}) a été mise à jour. Veuillez en prendre connaissance.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+            'link'         => '/personnel',
+        ], $creatorId);
 
         Response::success($person, 'Photo uploaded successfully');
     }
@@ -481,17 +459,25 @@ class PersonnelController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notify admins that the personnel photo was removed ---
+        // --- Notify all affected users (admins + peers with personnel view) ---
         $creatorId = $authUser['sub'] ?? null;
         $personnelName = $person['firstname'] . ' ' . $person['lastname'];
-        self::notifyAdmins(
-            'Photo mise à jour',
-            "La photo de {$personnelName} (IM: {$person['im']}) a été supprimée.",
-            'info',
-            self::affectationToCode($person['affectation'] ?? ''),
-            $id,
-            $creatorId
-        );
+        $service = self::affectationToCode($person['affectation'] ?? '');
+
+        Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Photo mise à jour',
+            'message'      => "La photo de {$personnelName} (IM: {$person['im']}) a été supprimée.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+        ], [
+            'title'        => 'Photo mise à jour',
+            'message'      => "La photo de {$personnelName} (IM: {$person['im']}) a été supprimée. Veuillez en prendre connaissance.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $id,
+            'link'         => '/personnel',
+        ], $creatorId);
 
         $person = Personnel::getById($id);
         Response::success($person, 'Photo deleted successfully');

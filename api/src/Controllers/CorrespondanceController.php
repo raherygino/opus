@@ -158,8 +158,11 @@ class CorrespondanceController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification to admins (after successful save, first time only) ---
+        // --- Notification (peer-to-peer: admins + all users with correspondance view) ---
+        // Regardless of who the actor is, every other admin AND every other
+        // user with view permission on the correspondance module is notified.
         self::notifyAdmins($correspondance, (int) $authUser['sub']);
+        self::notifyUsers($correspondance, (int) $authUser['sub']);
 
         Response::created($correspondance, 'Correspondance enregistrée avec succès');
     }
@@ -218,9 +221,23 @@ class CorrespondanceController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // No notification on update — admins are only notified once, when the
-        // correspondance is first created. Once they view it, the notification
-        // is auto-dismissed (see show()).
+        // --- Notification (peer-to-peer: admins + all users with correspondance view) ---
+        $actorId = $authUser['sub'] ?? null;
+        $link = '/sedentaire/secretariat/correspondance/' . $correspondance['id'];
+
+        Notification::notifyFeatureChange('sedentaire_secretariat_correspondance', [
+            'title'   => 'Correspondance modifiée',
+            'message' => "La correspondance {$correspondance['sens']} (Réf: {$correspondance['reference']}) — {$correspondance['objet']} a été modifiée.",
+            'type'    => 'info',
+            'service' => 'Sedentaire',
+            'link'    => $link,
+        ], [
+            'title'   => 'Correspondance modifiée',
+            'message' => "La correspondance {$correspondance['sens']} (Réf: {$correspondance['reference']}) a été modifiée. Objet: {$correspondance['objet']}. Veuillez en prendre connaissance des modifications.",
+            'type'    => 'info',
+            'service' => 'Sedentaire',
+            'link'    => $link,
+        ], $actorId);
 
         Response::success($correspondance, 'Correspondance modifiée avec succès');
     }
@@ -293,21 +310,41 @@ class CorrespondanceController
             . " — Émetteur/Destinataire: {$correspondance['emetteur_destinataire']}"
             . " — le {$date} à {$heure} — Agent secrétariat: {$agent}.";
 
-        $admins = Notification::getAdminUsers();
-        foreach ($admins as $admin) {
-            if ($actorId && (int) $admin['id'] === (int) $actorId) {
-                continue;
-            }
-            Notification::create([
-                'title' => $title,
-                'message' => $message,
-                'type' => 'info',
-                'service' => 'Sedentaire',
-                'user_id' => $admin['id'],
-                'personnel_id' => null,
-                'created_by' => $actorId,
-                'link' => '/sedentaire/secretariat/correspondance/' . $correspondance['id'],
-            ]);
-        }
+        Notification::notifyAdmins([
+            'title'   => $title,
+            'message' => $message,
+            'type'    => 'info',
+            'service' => 'Sedentaire',
+            'link'    => '/sedentaire/secretariat/correspondance/' . $correspondance['id'],
+        ], $actorId);
+    }
+
+    /**
+     * Admin → regular users counterpart of notifyAdmins(): when an
+     * administrator registers a correspondance, every staff member who can
+     * view the correspondance module is informed. The wording mirrors the
+     * user → admin message but is phrased for the admin → user direction
+     * ("enregistrée par un administrateur ... Veuillez en prendre
+     * connaissance").
+     */
+    private static function notifyUsers(array $correspondance, ?int $actorId): void
+    {
+        $date = date('d/m/Y', strtotime($correspondance['date_correspondance']));
+        $heure = substr((string) $correspondance['heure_enregistrement'], 0, 5);
+
+        $title = 'Nouvelle correspondance';
+        $message = "Une correspondance {$correspondance['sens']} a été enregistrée. "
+            . "Réf: {$correspondance['reference']} — {$correspondance['objet']}"
+            . " — Émetteur/Destinataire: {$correspondance['emetteur_destinataire']}"
+            . " — le {$date} à {$heure}. Veuillez en prendre connaissance.";
+
+        Notification::notifyModuleUsers('sedentaire_secretariat_correspondance', [
+            'title'        => $title,
+            'message'      => $message,
+            'type'         => 'info',
+            'service'      => 'Sedentaire',
+            'personnel_id' => null,
+            'link'         => '/sedentaire/secretariat/correspondance/' . $correspondance['id'],
+        ], $actorId);
     }
 }

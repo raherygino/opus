@@ -261,7 +261,7 @@ fun PersonnelProfileContent(
     // Full-screen image viewer for image attachments
     viewerAttachment?.let { att ->
         ImageViewerDialog(
-            url = personnelAttachmentDownloadUrl(p.id, att.id),
+            imageUrl = personnelAttachmentDownloadUrl(p.id, att.id),
             title = att.title,
             onDismiss = { viewerAttachment = null }
         )

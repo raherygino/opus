@@ -288,7 +288,7 @@ fun PersonnelFormScreen(
     // Full-screen image viewer for existing image attachments
     viewerAttachmentId?.let { (attId, attTitle) ->
         ImageViewerDialog(
-            url = personnelAttachmentDownloadUrl(viewModel.editId, attId),
+            imageUrl = personnelAttachmentDownloadUrl(viewModel.editId, attId),
             title = attTitle,
             onDismiss = { viewerAttachmentId = null }
         )

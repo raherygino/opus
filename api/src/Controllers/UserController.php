@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Helpers\Response;
 use App\Models\User;
 use App\Models\AuditLog;
+use App\Models\Notification;
 use App\Validators\UserValidator;
 
 class UserController
@@ -124,6 +125,20 @@ class UserController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notify the affected user ---
+        // When an administrator changes a user's account — especially their
+        // role assignment — the affected user is informed. The admin who made
+        // the change is never notified (handled by notifyRecipients + the
+        // self-notification guard in Notification::create).
+        $actorId = $authUser['sub'] ?? null;
+        Notification::notifyRecipients([$id], [
+            'title'   => 'Compte modifié',
+            'message' => "Votre compte utilisateur a été modifié par un administrateur. Veuillez en prendre connaissance des changements.",
+            'type'    => 'info',
+            'service' => 'System',
+            'link'    => '/profile',
+        ], $actorId);
 
         Response::success($user, 'User updated successfully');
     }

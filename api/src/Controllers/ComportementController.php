@@ -119,27 +119,49 @@ class ComportementController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification ---
-        // Only notify admins when a non-admin creates a record that requires
-        // confirmation. When an administrator creates the record themselves,
-        // no notification is sent (they are already the validator).
+        // --- Notification (peer-to-peer: admins + all users with personnel view) ---
+        // Comportement is a personnel sub-feature, so it shares the "personnel"
+        // permission module. Regardless of who the actor is, every other admin
+        // AND every other user with view permission on personnel is notified.
+        $link = '/personnel?tab=comportement';
+        $service = $comportement['service'] ?? 'System';
+        $personnelId = $comportement['personnel_id'];
+
         if (!$isAdmin) {
-            $admins = \App\Models\Notification::getAdminUsers();
-            foreach ($admins as $admin) {
-                if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
-                    continue;
-                }
-                \App\Models\Notification::create([
-                    'title' => 'Comportement à confirmer',
-                    'message' => "Comportement {$comportement['type']} en attente de confirmation pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}).",
-                    'type' => 'warning',
-                    'service' => $comportement['service'] ?? 'System',
-                    'user_id' => $admin['id'],
-                    'personnel_id' => $comportement['personnel_id'],
-                    'created_by' => $creatorId,
-                    'link' => '/personnel?tab=comportement',
-                ]);
-            }
+            // Non-admin creation → pending confirmation. Admins get a warning
+            // (they need to act); peers get an informational notice.
+            \App\Models\Notification::notifyFeatureChange('personnel', [
+                'title'        => 'Comportement à confirmer',
+                'message'      => "Comportement {$comportement['type']} en attente de confirmation pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}).",
+                'type'         => 'warning',
+                'service'      => $service,
+                'personnel_id' => $personnelId,
+                'link'         => $link,
+            ], [
+                'title'        => 'Nouveau comportement',
+                'message'      => "Un comportement {$comportement['type']} a été enregistré pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}) et est en attente de confirmation. Veuillez en prendre connaissance.",
+                'type'         => 'info',
+                'service'      => $service,
+                'personnel_id' => $personnelId,
+                'link'         => $link,
+            ], $creatorId);
+        } else {
+            // Admin creation → already confirmed. Everyone gets an info notice.
+            \App\Models\Notification::notifyFeatureChange('personnel', [
+                'title'        => 'Nouveau comportement',
+                'message'      => "Un comportement {$comportement['type']} a été enregistré pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}).",
+                'type'         => 'info',
+                'service'      => $service,
+                'personnel_id' => $personnelId,
+                'link'         => $link,
+            ], [
+                'title'        => 'Nouveau comportement',
+                'message'      => "Un comportement {$comportement['type']} a été enregistré pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}). Veuillez en prendre connaissance.",
+                'type'         => 'info',
+                'service'      => $service,
+                'personnel_id' => $personnelId,
+                'link'         => $link,
+            ], $creatorId);
         }
 
         $message = $isAdmin
@@ -179,6 +201,28 @@ class ComportementController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
+        // --- Notification (peer-to-peer: admins + all users with personnel view) ---
+        $actorId = $authUser['sub'] ?? null;
+        $link = '/personnel?tab=comportement';
+        $service = $comportement['service'] ?? 'System';
+        $personnelId = $comportement['personnel_id'];
+
+        \App\Models\Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Comportement modifié',
+            'message'      => "Le comportement {$comportement['type']} pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}) a été modifié.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => $link,
+        ], [
+            'title'        => 'Comportement modifié',
+            'message'      => "Le comportement {$comportement['type']} pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}) a été modifié. Veuillez en prendre connaissance des modifications.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => $link,
+        ], $actorId);
+
         Response::success($comportement, 'Comportement updated successfully');
     }
 
@@ -216,7 +260,29 @@ class ComportementController
         ]);
 
         // --- Notify the creator that their record was confirmed ---
+        $creatorId = (int) ($comportement['created_by'] ?? 0);
         $this->notifyCreator($comportement, 'confirmed', null, (int) $authUser['sub']);
+
+        // Also inform all other affected users (admins + peers with personnel
+        // view) so that the creator is never the only recipient. Exclude the
+        // creator from the broadcast to avoid duplicates (they already got the
+        // targeted notifyCreator message).
+        $excludeIds = $creatorId > 0 ? [$creatorId] : [];
+        \App\Models\Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Comportement confirmé',
+            'message'      => "Le comportement {$comportement['type']} pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}) a été confirmé.",
+            'type'         => 'success',
+            'service'      => $comportement['service'] ?? 'System',
+            'personnel_id' => $comportement['personnel_id'],
+            'link'         => '/personnel?tab=comportement',
+        ], [
+            'title'        => 'Comportement confirmé',
+            'message'      => "Le comportement {$comportement['type']} pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}) a été confirmé. Veuillez en prendre connaissance.",
+            'type'         => 'success',
+            'service'      => $comportement['service'] ?? 'System',
+            'personnel_id' => $comportement['personnel_id'],
+            'link'         => '/personnel?tab=comportement',
+        ], (int) $authUser['sub'], $excludeIds);
 
         Response::success($comportement, 'Comportement confirmé avec succès');
     }
@@ -259,7 +325,34 @@ class ComportementController
         ]);
 
         // --- Notify the creator that their record was rejected ---
+        $creatorId = (int) ($comportement['created_by'] ?? 0);
         $this->notifyCreator($comportement, 'rejected', $reason, (int) $authUser['sub']);
+
+        // Also inform all other affected users (admins + peers with personnel
+        // view) so that the creator is never the only recipient. Exclude the
+        // creator from the broadcast to avoid duplicates.
+        $excludeIds = $creatorId > 0 ? [$creatorId] : [];
+        $adminMsg = "Le comportement {$comportement['type']} pour {$comportement['nom']} {$comportement['prenoms']} (IM: {$comportement['im']}) a été rejeté.";
+        $userMsg = $adminMsg . " Veuillez en prendre connaissance.";
+        if ($reason) {
+            $adminMsg .= " Raison: $reason";
+            $userMsg .= " Raison: $reason";
+        }
+        \App\Models\Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Comportement rejeté',
+            'message'      => $adminMsg,
+            'type'         => 'warning',
+            'service'      => $comportement['service'] ?? 'System',
+            'personnel_id' => $comportement['personnel_id'],
+            'link'         => '/personnel?tab=comportement',
+        ], [
+            'title'        => 'Comportement rejeté',
+            'message'      => $userMsg,
+            'type'         => 'warning',
+            'service'      => $comportement['service'] ?? 'System',
+            'personnel_id' => $comportement['personnel_id'],
+            'link'         => '/personnel?tab=comportement',
+        ], (int) $authUser['sub'], $excludeIds);
 
         Response::success($comportement, 'Comportement rejeté');
     }

@@ -6,6 +6,7 @@ use App\Helpers\Response;
 use App\Models\Role;
 use App\Models\RolePermission;
 use App\Models\AuditLog;
+use App\Models\Notification;
 
 class RoleController
 {
@@ -99,6 +100,22 @@ class RoleController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
+        // --- Notify every user who currently has this role ---
+        // When an administrator modifies a role (name, code, description),
+        // every active user with that role is informed — except the admin who
+        // made the change. Recipients are determined dynamically from the
+        // current user↔role relationships at the time of the change.
+        $actorId = $authUser['sub'] ?? null;
+        $usersWithRole = Notification::getUsersByRoleId($id);
+        $recipientIds = array_map(fn($u) => (int) $u['id'], $usersWithRole);
+        Notification::notifyRecipients($recipientIds, [
+            'title'   => 'Rôle modifié',
+            'message' => "Votre rôle « {$role['name']} » a été modifié par un administrateur. Veuillez en prendre connaissance des changements.",
+            'type'    => 'info',
+            'service' => 'System',
+            'link'    => '/roles',
+        ], $actorId);
+
         Response::success($role, 'Role updated successfully');
     }
 
@@ -175,6 +192,23 @@ class RoleController
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
+
+        // --- Notify every user who currently has this role ---
+        // When an administrator changes the permissions of a role, every
+        // active user with that role is informed — except the admin who made
+        // the change. This is the "attribute associated with a role changed"
+        // case: the role↔permission relationship directly affects what these
+        // users can see and do.
+        $actorId = $authUser['sub'] ?? null;
+        $usersWithRole = Notification::getUsersByRoleId($id);
+        $recipientIds = array_map(fn($u) => (int) $u['id'], $usersWithRole);
+        Notification::notifyRecipients($recipientIds, [
+            'title'   => 'Permissions modifiées',
+            'message' => "Les permissions de votre rôle « {$role['name']} » ont été modifiées par un administrateur. Veuillez en prendre connaissance des changements.",
+            'type'    => 'warning',
+            'service' => 'System',
+            'link'    => '/roles',
+        ], $actorId);
 
         Response::success($permissions, 'Permissions updated successfully');
     }

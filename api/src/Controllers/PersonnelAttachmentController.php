@@ -91,24 +91,25 @@ class PersonnelAttachmentController
 
         $attachment = PersonnelAttachment::getById($id);
 
-        // --- Notify admins that a new attachment was added ---
+        // --- Notification (peer-to-peer: admins + all users with personnel view) ---
         $creatorId = $authUser['sub'] ?? null;
         $personnelName = $person['firstname'] . ' ' . $person['lastname'];
-        $admins = Notification::getAdminUsers();
-        foreach ($admins as $admin) {
-            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
-                continue;
-            }
-            Notification::create([
-                'title'        => 'Pièce jointe ajoutée',
-                'message'      => "Une nouvelle pièce jointe « {$title} » a été ajoutée à {$personnelName} (IM: {$person['im']}).",
-                'type'         => 'info',
-                'service'      => PersonnelController::affectationToCode($person['affectation'] ?? ''),
-                'user_id'      => $admin['id'],
-                'personnel_id' => $personnelId,
-                'created_by'   => $creatorId,
-            ]);
-        }
+        $service = PersonnelController::affectationToCode($person['affectation'] ?? '');
+
+        Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Pièce jointe ajoutée',
+            'message'      => "Une nouvelle pièce jointe « {$title} » a été ajoutée à {$personnelName} (IM: {$person['im']}).",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+        ], [
+            'title'        => 'Pièce jointe ajoutée',
+            'message'      => "Une nouvelle pièce jointe « {$title} » a été ajoutée à {$personnelName} (IM: {$person['im']}). Veuillez en prendre connaissance.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => '/personnel',
+        ], $creatorId);
 
         Response::created($attachment, 'Attachment added successfully');
     }

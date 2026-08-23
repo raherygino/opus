@@ -88,23 +88,26 @@ class MouvementController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification ---
+        // --- Notification (peer-to-peer: admins + all users with personnel view) ---
         $creatorId = $authUser['sub'] ?? null;
-        $admins = \App\Models\Notification::getAdminUsers();
-        foreach ($admins as $admin) {
-            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
-                continue;
-            }
-            \App\Models\Notification::create([
-                'title' => 'Nouveau mouvement',
-                'message' => "Mouvement de type '{$mouvement['type_mouvement']}' enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}).",
-                'type' => 'info',
-                'service' => $mouvement['service'] ?? 'System',
-                'user_id' => $admin['id'],
-                'personnel_id' => $mouvement['personnel_id'],
-                'created_by' => $creatorId,
-            ]);
-        }
+        $service = $mouvement['service'] ?? 'System';
+        $personnelId = $mouvement['personnel_id'];
+        $link = '/personnel?tab=mouvement';
+
+        \App\Models\Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Nouveau mouvement',
+            'message'      => "Mouvement de type '{$mouvement['type_mouvement']}' enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}).",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+        ], [
+            'title'        => 'Nouveau mouvement',
+            'message'      => "Un mouvement de type '{$mouvement['type_mouvement']}' a été enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}). Veuillez en prendre connaissance.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => $link,
+        ], $creatorId);
 
         Response::created($mouvement, 'Mouvement created successfully');
     }
@@ -149,6 +152,28 @@ class MouvementController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
+        // --- Notification (peer-to-peer: admins + all users with personnel view) ---
+        $actorId = $authUser['sub'] ?? null;
+        $service = $mouvement['service'] ?? 'System';
+        $personnelId = $mouvement['personnel_id'];
+        $link = '/personnel?tab=mouvement';
+
+        \App\Models\Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Mouvement modifié',
+            'message'      => "Le mouvement de type '{$mouvement['type_mouvement']}' pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}) a été modifié.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => $link,
+        ], [
+            'title'        => 'Mouvement modifié',
+            'message'      => "Le mouvement de type '{$mouvement['type_mouvement']}' pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}) a été modifié. Veuillez en prendre connaissance des modifications.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => $link,
+        ], $actorId);
+
         Response::success($mouvement, 'Mouvement updated successfully');
     }
 
@@ -179,23 +204,26 @@ class MouvementController
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
 
-        // --- Notification ---
+        // --- Notification (peer-to-peer: admins + all users with personnel view) ---
         $creatorId = $authUser['sub'] ?? null;
-        $admins = \App\Models\Notification::getAdminUsers();
-        foreach ($admins as $admin) {
-            if ($creatorId && (int) $admin['id'] === (int) $creatorId) {
-                continue;
-            }
-            \App\Models\Notification::create([
-                'title' => 'Retour de mouvement',
-                'message' => "Retour enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}) — Type: {$mouvement['type_mouvement']}.",
-                'type' => 'info',
-                'service' => $mouvement['service'] ?? 'System',
-                'user_id' => $admin['id'],
-                'personnel_id' => $mouvement['personnel_id'],
-                'created_by' => $creatorId,
-            ]);
-        }
+        $service = $mouvement['service'] ?? 'System';
+        $personnelId = $mouvement['personnel_id'];
+        $link = '/personnel?tab=mouvement';
+
+        \App\Models\Notification::notifyFeatureChange('personnel', [
+            'title'        => 'Retour de mouvement',
+            'message'      => "Retour enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}) — Type: {$mouvement['type_mouvement']}.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+        ], [
+            'title'        => 'Retour de mouvement',
+            'message'      => "Un retour de mouvement a été enregistré pour {$mouvement['nom']} {$mouvement['prenoms']} (IM: {$mouvement['im']}) — Type: {$mouvement['type_mouvement']}. Veuillez en prendre connaissance.",
+            'type'         => 'info',
+            'service'      => $service,
+            'personnel_id' => $personnelId,
+            'link'         => $link,
+        ], $creatorId);
 
         Response::success($mouvement, 'Retour enregistré');
     }

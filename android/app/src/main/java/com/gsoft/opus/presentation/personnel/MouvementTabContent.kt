@@ -288,7 +288,7 @@ fun MouvementDetailDialog(
     // Full-screen image viewer for image attachments
     viewerAttachment?.let { att ->
         ImageViewerDialog(
-            url = mouvementAttachmentDownloadUrl(mvt.id, att.id),
+            imageUrl = mouvementAttachmentDownloadUrl(mvt.id, att.id),
             title = att.title,
             onDismiss = { viewerAttachment = null }
         )
