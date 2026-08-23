@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -90,6 +91,13 @@ fun PassationDetailScreen(
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(Icons.Outlined.Refresh, contentDescription = "Rafraîchir")
+                    }
+                    IconButton(onClick = {
+                        state.passation?.let { passation ->
+                            exportPassationPdf(context, passation, state.attachments)
+                        }
+                    }) {
+                        Icon(Icons.Outlined.PictureAsPdf, contentDescription = "Export PDF")
                     }
                     if (state.canEdit) {
                         IconButton(onClick = {
@@ -235,4 +243,24 @@ fun PassationDetailScreen(
             )
         }
     }
+}
+
+/** Generates the PDF and opens a share/open intent so the user can view it. */
+private fun exportPassationPdf(
+    context: android.content.Context,
+    passation: com.gsoft.opus.domain.model.Passation,
+    attachments: List<com.gsoft.opus.domain.model.PassationAttachment>
+) {
+    val file = PassationPdfExporter.export(context, passation, attachments)
+    val uri = androidx.core.content.FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        file
+    )
+    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/pdf")
+        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { context.startActivity(intent) }
 }
