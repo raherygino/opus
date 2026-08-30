@@ -7,6 +7,21 @@ use PDO;
 
 class Personnel
 {
+    /**
+     * Strip the code_secret_hash from a personnel row (or list of rows)
+     * before returning it to the client. The hash must never be exposed.
+     */
+    public static function stripSecret(array $row): array
+    {
+        unset($row['code_secret_hash']);
+        return $row;
+    }
+
+    public static function stripSecretList(array $rows): array
+    {
+        return array_map([self::class, 'stripSecret'], $rows);
+    }
+
     public static function getAll(array $filters = []): array
     {
         $db = Database::getInstance()->getConnection();
@@ -50,7 +65,8 @@ class Personnel
         $sql .= ' ORDER BY lastname ASC, firstname ASC';
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        return self::stripSecretList($rows);
     }
 
     public static function getById(int $id): ?array
@@ -71,7 +87,8 @@ class Personnel
         );
         $stmt->execute([$id]);
         $person = $stmt->fetch();
-        return $person ?: null;
+        if (!$person) return null;
+        return self::stripSecret($person);
     }
 
     public static function getByIM(string $im): ?array
@@ -92,7 +109,8 @@ class Personnel
         );
         $stmt->execute([$im]);
         $person = $stmt->fetch();
-        return $person ?: null;
+        if (!$person) return null;
+        return self::stripSecret($person);
     }
 
     public static function getAvailableForUser(): array
@@ -102,16 +120,22 @@ class Personnel
                 LEFT JOIN users u ON p.id = u.personnel_id
                 WHERE u.id IS NULL';
         $stmt = $db->query($sql);
-        return $stmt->fetchAll();
+        return self::stripSecretList($stmt->fetchAll());
     }
 
     public static function create(array $data): int
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO personnel (im, grade, lastname, firstname, affectation, phone, address, photo, signature)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO personnel (im, grade, lastname, firstname, affectation, phone, address, photo, signature, code_secret_hash)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
+        $codeSecretHash = null;
+        if (!empty($data['code_secret'])) {
+            $codeSecretHash = password_hash((string) $data['code_secret'], PASSWORD_BCRYPT);
+        } elseif (!empty($data['code_secret_hash'])) {
+            $codeSecretHash = $data['code_secret_hash'];
+        }
         $stmt->execute([
             $data['im'],
             $data['grade'],
@@ -122,8 +146,9 @@ class Personnel
             $data['address'] ?? null,
             $data['photo'] ?? null,
             $data['signature'] ?? null,
+            $codeSecretHash,
         ]);
-        
+
         return (int) $db->lastInsertId();
     }
 
@@ -141,6 +166,8 @@ class Personnel
             }
         }
 
+        // code_secret_hash is handled separately via setCodeSecret() to
+        // ensure it is always hashed — never accept a raw hash from client data.
         if (empty($fields)) {
             return false;
         }
@@ -157,5 +184,47 @@ class Personnel
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare('DELETE FROM personnel WHERE id = ?');
         return $stmt->execute([$id]);
+    }
+
+    // ─── Code secret (Armement identity verification) ───────────────
+
+    /**
+     * Hash and store the personnel's secret code. The plaintext is never
+     * stored — only a bcrypt hash. Pass null to clear the code.
+     */
+    public static function setCodeSecret(int $id, ?string $code): bool
+    {
+        $db = Database::getInstance()->getConnection();
+        $hash = ($code !== null && $code !== '') ? password_hash($code, PASSWORD_BCRYPT) : null;
+        $stmt = $db->prepare('UPDATE personnel SET code_secret_hash = ? WHERE id = ?');
+        return $stmt->execute([$hash, $id]);
+    }
+
+    /**
+     * Verify the given plaintext code against the stored hash.
+     * Returns false when no code is set or the code does not match.
+     */
+    public static function verifyCodeSecret(int $id, string $code): bool
+    {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare('SELECT code_secret_hash FROM personnel WHERE id = ?');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        if (!$row || empty($row['code_secret_hash'])) {
+            return false;
+        }
+        return password_verify($code, $row['code_secret_hash']);
+    }
+
+    /**
+     * Whether this personnel has a code secret set.
+     */
+    public static function hasCodeSecret(int $id): bool
+    {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare('SELECT code_secret_hash FROM personnel WHERE id = ?');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        return $row && !empty($row['code_secret_hash']);
     }
 }

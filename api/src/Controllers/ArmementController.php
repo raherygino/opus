@@ -148,7 +148,11 @@ class ArmementController
      *
      * The agent preneur identity (IM + grade + nom) is snapshotted
      * server-side from the personnel table — the client only sends
-     * agent_preneur_personnel_id.
+     * agent_preneur_personnel_id. The agent's code secret is verified
+     * server-side before the perception is created; a failed verification
+     * rejects the creation. The signature SVG is stored alongside the
+     * verification status so the armement record permanently retains the
+     * proof of identity and the agent's signature for this handover.
      */
     public function store(array $params): void
     {
@@ -162,10 +166,50 @@ class ArmementController
 
         self::snapshotAgentPreneur($data);
 
+        // Verify the agent preneur's code secret before accepting the
+        // perception. The code must be provided and must match the
+        // personnel's stored code_secret_hash.
+        $codeSecret = (string) ($data['code_secret'] ?? '');
+        if ($codeSecret === '') {
+            Response::error('Validation failed', 422, [
+                'code_secret' => "Le code secret de l'agent est requis",
+            ]);
+        }
+
+        $personnelId = (int) ($data['agent_preneur_personnel_id'] ?? 0);
+        if ($personnelId <= 0 || !Personnel::getById($personnelId)) {
+            Response::error('Validation failed', 422, [
+                'agent_preneur' => "L'agent preneur est requis",
+            ]);
+        }
+
+        if (!Personnel::verifyCodeSecret($personnelId, $codeSecret)) {
+            AuditLog::create([
+                'user_id' => $authUser['sub'] ?? null,
+                'action' => 'verify_code_secret',
+                'module' => 'armements',
+                'entity_id' => $personnelId,
+                'description' => "Échec de vérification du code secret lors de la perception d'arme — Personnel ID: {$personnelId}",
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ]);
+            Response::error('Code secret incorrect — la perception ne peut pas être enregistrée', 422, [
+                'code_secret' => 'Le code secret de l\'agent est incorrect',
+            ]);
+        }
+
+        // Verification succeeded — mark the armement as verified.
+        $data['agent_verifie'] = 1;
+        $data['agent_verifie_at'] = date('Y-m-d H:i:s');
+
         $errors = self::validate($data, true);
         if (!empty($errors)) {
             Response::error('Validation failed', 422, $errors);
         }
+
+        // The signature SVG is optional but, when provided, is stored
+        // permanently on the armement record.
+        // $data['signature_svg'] is passed through to Armement::create().
 
         $id = Armement::create($data);
         $armement = Armement::getById($id);
@@ -176,7 +220,7 @@ class ArmementController
             'action' => 'create',
             'module' => 'armements',
             'entity_id' => $id,
-            'description' => "Perception d'arme ({$armement['type_arme']} {$armement['matricule_arme']}) le {$armement['date_perception']} — Agent preneur: {$armement['agent_preneur_grade']} {$armement['agent_preneur_nom']}",
+            'description' => "Perception d'arme ({$armement['type_arme']} {$armement['matricule_arme']}) le {$armement['date_perception']} — Agent preneur: {$armement['agent_preneur_grade']} {$armement['agent_preneur_nom']} (identité vérifiée)",
             'new_values' => $armement,
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
@@ -211,11 +255,16 @@ class ArmementController
 
         // The reintegration fields are NOT editable after the fact — ignore
         // any reintegration fields sent on update to protect the one-way
-        // transition.
+        // transition. The agent verification + signature fields are also
+        // one-way (set at perception time) and cannot be modified here.
         unset(
             $data['heure_reintegration'],
             $data['etat_reintegration'],
-            $data['munitions_consommees']
+            $data['munitions_consommees'],
+            $data['agent_verifie'],
+            $data['agent_verifie_at'],
+            $data['signature_svg'],
+            $data['code_secret']
         );
 
         // Re-snapshot the agent preneur identity when the personnel changes.

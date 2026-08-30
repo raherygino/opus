@@ -25,14 +25,20 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Draw
+import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,6 +58,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gsoft.opus.domain.model.Personnel
@@ -221,7 +229,7 @@ fun ArmementFormScreen(
                 )
             }
 
-            // ─── Agent preneur (personnel picker) ─────────────────────
+            // ─── Agent preneur (personnel picker + verification + signature) ─
             FormSectionCard(
                 title = "Agent preneur",
                 icon = Icons.Outlined.Person,
@@ -248,6 +256,174 @@ fun ArmementFormScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                // Verification status (edit mode) — read-only.
+                if (state.isEdit) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (state.verified) {
+                            Icon(
+                                Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "  Identité vérifiée au moment de la perception",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        } else {
+                            Text(
+                                text = "Identité non vérifiée (enregistrée avant la fonctionnalité de vérification)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Verification step (create mode only).
+                if (!state.isEdit) {
+                    var showCode by remember { mutableStateOf(false) }
+                    Text(
+                        text = "Vérification de l'identité",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                    Text(
+                        text = "L'agent doit fournir son code secret pour confirmer son identité avant la remise de l'arme.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = state.codeSecret,
+                            onValueChange = viewModel::updateCodeSecret,
+                            label = { Text("Code secret de l'agent") },
+                            singleLine = true,
+                            enabled = !state.verified && state.agentPreneurPersonnelId > 0,
+                            leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
+                            trailingIcon = {
+                                IconButton(onClick = { showCode = !showCode }) {
+                                    Icon(
+                                        if (showCode) Icons.Outlined.Close else Icons.Outlined.RemoveRedEye,
+                                        contentDescription = if (showCode) "Masquer" else "Afficher"
+                                    )
+                                }
+                            },
+                            visualTransformation = if (showCode) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (state.verified) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = " Vérifié",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        } else {
+                            GradientButton(
+                                text = "Vérifier",
+                                onClick = { viewModel.verifyCode() },
+                                isLoading = state.verifying,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                    if (state.verifyError != null) {
+                        Text(
+                            text = state.verifyError!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
+                    // Signature capture (after verification).
+                    if (state.verified) {
+                        var showSignatureDialog by remember { mutableStateOf(false) }
+                        Text(
+                            text = "Signature de l'agent",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                        Text(
+                            text = "La signature est capturée après vérification et associée à cette perception.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (state.signatureSvg != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Draw,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = " Signature capturée",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                OutlinedButton(onClick = { showSignatureDialog = true }) {
+                                    Text("Refaire")
+                                }
+                                IconButton(onClick = { viewModel.setSignatureSvg(null) }) {
+                                    Icon(
+                                        Icons.Outlined.Delete,
+                                        contentDescription = "Supprimer",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { showSignatureDialog = true },
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                            ) {
+                                Icon(Icons.Outlined.Draw, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Text("  Capturer la signature")
+                            }
+                        }
+
+                        if (showSignatureDialog) {
+                            SignatureCaptureDialog(
+                                onConfirm = { svg ->
+                                    viewModel.setSignatureSvg(svg)
+                                    showSignatureDialog = false
+                                },
+                                onDismiss = { showSignatureDialog = false }
+                            )
+                        }
+                    }
+                }
             }
 
             // ─── Pièces jointes ────────────────────────────────────────

@@ -60,7 +60,110 @@ class PersonnelController
         // so clients can hide edit/delete controls for other admins' profiles.
         $person['is_admin_profile'] = User::personnelBelongsToAdmin((int) $person['id']);
 
+        // Indicate whether a code secret is set (without revealing the hash).
+        $person['has_code_secret'] = Personnel::hasCodeSecret((int) $person['id']);
+
         Response::success($person);
+    }
+
+    /**
+     * POST /api/personnel/{id}/code-secret
+     * Body: { "code": "1234" }  (pass null/empty to clear)
+     *
+     * Sets or clears the personnel's secret code. The code is hashed with
+     * bcrypt before storage — the plaintext is never persisted.
+     */
+    public function setCodeSecret(array $params): void
+    {
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person) {
+            Response::notFound('Personnel not found');
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $code = $data['code'] ?? null;
+
+        // Basic validation: code must be a non-empty string when provided.
+        if ($code !== null && $code !== '' && (!is_string($code) || strlen($code) < 3)) {
+            Response::error('Validation failed', 422, [
+                'code' => 'Le code secret doit contenir au moins 3 caractères',
+            ]);
+        }
+
+        Personnel::setCodeSecret($id, $code !== '' ? $code : null);
+
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'update',
+            'module' => 'personnel',
+            'entity_id' => $id,
+            'description' => "Code secret du personnel '{$person['firstname']} {$person['lastname']}' (IM: {$person['im']}) " . ($code ? 'défini' : 'effacé'),
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        Response::success(
+            ['has_code_secret' => $code !== null && $code !== ''],
+            'Code secret enregistré'
+        );
+    }
+
+    /**
+     * POST /api/personnel/{id}/verify-code-secret
+     * Body: { "code": "1234" }
+     *
+     * Verifies the personnel's secret code. Returns { verified: true/false }
+     * without revealing the stored hash or the correct code. Used by the
+     * Armement perception workflow to confirm the agent preneur's identity.
+     */
+    public function verifyCodeSecret(array $params): void
+    {
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        $id = (int) $params['id'];
+        $person = Personnel::getById($id);
+        if (!$person) {
+            Response::notFound('Personnel not found');
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $code = (string) ($data['code'] ?? '');
+
+        if ($code === '') {
+            Response::error('Validation failed', 422, [
+                'code' => 'Le code secret est requis',
+            ]);
+        }
+
+        $verified = Personnel::verifyCodeSecret($id, $code);
+
+        // Audit the verification attempt (without recording the code itself).
+        AuditLog::create([
+            'user_id' => $authUser['sub'] ?? null,
+            'action' => 'verify_code_secret',
+            'module' => 'personnel',
+            'entity_id' => $id,
+            'description' => "Vérification du code secret du personnel '{$person['firstname']} {$person['lastname']}' (IM: {$person['im']}) — " . ($verified ? 'succès' : 'échec'),
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        if (!$verified) {
+            // Return 200 with verified=false (not 401/403) so the client can
+            // show a clear "incorrect code" message and allow retry.
+            Response::success(['verified' => false], 'Code secret incorrect');
+        }
+
+        Response::success(['verified' => true], 'Code secret vérifié');
     }
 
     /**
@@ -77,6 +180,12 @@ class PersonnelController
 
         $id = Personnel::create($data);
         $person = Personnel::getById($id);
+
+        // Store the code secret (hashed) if one was provided on create.
+        if (array_key_exists('code_secret', $data) && $data['code_secret'] !== null && $data['code_secret'] !== '') {
+            Personnel::setCodeSecret($id, (string) $data['code_secret']);
+            $person = Personnel::getById($id);
+        }
 
         // --- Audit log ---
         $authUser = AuthController::getAuthenticatedUser();
@@ -143,6 +252,12 @@ class PersonnelController
         $oldPerson = $person;
         Personnel::update($id, $data);
         $person = Personnel::getById($id);
+
+        // Update the code secret if one was provided on update.
+        if (array_key_exists('code_secret', $data)) {
+            Personnel::setCodeSecret($id, $data['code_secret'] !== '' ? (string) $data['code_secret'] : null);
+            $person = Personnel::getById($id);
+        }
 
         // --- Audit log ---
         AuditLog::create([

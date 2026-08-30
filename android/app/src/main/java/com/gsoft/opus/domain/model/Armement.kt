@@ -18,6 +18,12 @@ data class Armement(
     val munitions: Int?,
     val secteurMission: String?,
     val etatPerception: String?,
+    /** Whether the agent preneur identity was verified via code secret. */
+    val agentVerifie: Boolean,
+    /** When the agent identity was verified (timestamp string). */
+    val agentVerifieAt: String?,
+    /** SVG vector data of the agent signature captured at perception. */
+    val signatureSvg: String?,
     val heureReintegration: String?,
     val etatReintegration: String?,
     val munitionsConsommees: Int?,

@@ -4,7 +4,10 @@ import android.util.Log
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.data.api.ApiService
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
+import com.gsoft.opus.data.api.dto.CodeSecretRequest
+import com.gsoft.opus.data.api.dto.CodeSecretResultDto
 import com.gsoft.opus.data.api.dto.PersonnelRequest
+import com.gsoft.opus.data.api.dto.VerifyCodeSecretRequest
 import com.gsoft.opus.data.api.dto.toDomain
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.model.PersonnelAttachment
@@ -175,6 +178,28 @@ class PersonnelRepositoryImpl @Inject constructor(
                 .map { it.toDomain() }
         } catch (e: Exception) {
             Resource.error(failureMessage(e, TAG, "deletePhoto"))
+        }
+    }
+
+    // ─── Code secret (Armement identity verification) ──────────────
+
+    override suspend fun setCodeSecret(personnelId: Int, code: String?): Resource<Boolean> {
+        return try {
+            apiService.setPersonnelCodeSecret(personnelId, CodeSecretRequest(code))
+                .extract("Impossible d'enregistrer le code secret")
+                .map { it.hasCodeSecret ?: false }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, TAG, "setCodeSecret"))
+        }
+    }
+
+    override suspend fun verifyCodeSecret(personnelId: Int, code: String): Resource<Boolean> {
+        return try {
+            apiService.verifyPersonnelCodeSecret(personnelId, VerifyCodeSecretRequest(code))
+                .extract("Impossible de vérifier le code secret")
+                .map { it.verified ?: false }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, TAG, "verifyCodeSecret"))
         }
     }
 }

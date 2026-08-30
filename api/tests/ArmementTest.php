@@ -46,11 +46,14 @@ $migrations = [
     '001_create_roles.sql',
     '002_create_personnel.sql',
     '003_create_users.sql',
+    '007_add_signature_svg.sql',
     '008_create_role_permissions.sql',
     '009_create_notifications.sql',
     '018_add_notification_link.sql',
     '024_create_armement.sql',
     '025_create_attach_armement.sql',
+    '026_add_personnel_code_secret.sql',
+    '027_add_armement_verification_signature.sql',
 ];
 foreach ($migrations as $file) {
     $sql = file_get_contents($root . '/database/' . $file);
@@ -83,6 +86,7 @@ set_exception_handler(function (Throwable $e) {
 use App\Models\Armement;
 use App\Models\ArmementAttachment;
 use App\Models\Notification;
+use App\Models\Personnel;
 
 function sampleRow(array $overrides = []): array
 {
@@ -323,6 +327,90 @@ check(countNotificationsForUser($chef2) === 1, 'other module user (chef2) notifi
 
 // markAsReadByLink auto-dismisses once the detail is opened (show()).
 check(Notification::markAsReadByLink($link, $admin1) === 1, 'markAsReadByLink dismissed the admin notification');
+
+// --- Personnel code secret (Armement identity verification) -------------------
+echo "Personnel code secret\n";
+
+// Create a dedicated personnel for the agent preneur.
+$agentPersonnel = (function (): int {
+    $db = \App\Database::getInstance()->getConnection();
+    $stmt = $db->prepare('INSERT INTO personnel (im, grade, lastname, firstname, affectation) VALUES (?, ?, ?, ?, ?)');
+    $stmt->execute(['IM-AGENT-1', 'Brigadier', 'Rakoto', 'Jean', 'Sédentaire']);
+    return (int) $db->lastInsertId();
+})();
+
+// No code secret set yet.
+check(!Personnel::hasCodeSecret($agentPersonnel), 'hasCodeSecret false before setting');
+check(!Personnel::verifyCodeSecret($agentPersonnel, '1234'), 'verifyCodeSecret false when no code set');
+
+// Set a code secret.
+check(Personnel::setCodeSecret($agentPersonnel, '4321'), 'setCodeSecret succeeds');
+check(Personnel::hasCodeSecret($agentPersonnel), 'hasCodeSecret true after setting');
+check(Personnel::verifyCodeSecret($agentPersonnel, '4321'), 'verifyCodeSecret true with correct code');
+check(!Personnel::verifyCodeSecret($agentPersonnel, '1234'), 'verifyCodeSecret false with wrong code');
+
+// The hash must never appear in any Personnel response.
+$person = Personnel::getById($agentPersonnel);
+check(!array_key_exists('code_secret_hash', $person), 'code_secret_hash stripped from getById');
+$all = Personnel::getAll(['search' => 'Rakoto']);
+check(!array_key_exists('code_secret_hash', $all[0]), 'code_secret_hash stripped from getAll');
+$avail = Personnel::getAvailableForUser();
+$found = false;
+foreach ($avail as $p) {
+    if (array_key_exists('code_secret_hash', $p)) { $found = true; break; }
+}
+check(!$found, 'code_secret_hash stripped from getAvailableForUser');
+
+// Clear the code secret.
+check(Personnel::setCodeSecret($agentPersonnel, null), 'setCodeSecret(null) clears the code');
+check(!Personnel::hasCodeSecret($agentPersonnel), 'hasCodeSecret false after clearing');
+check(!Personnel::verifyCodeSecret($agentPersonnel, '4321'), 'verifyCodeSecret false after clearing');
+
+// Set a new code for the armement verification tests.
+Personnel::setCodeSecret($agentPersonnel, '9876');
+
+// --- Armement verification + signature ----------------------------------------
+echo "Armement verification + signature\n";
+
+// Create an armement with agent_verifie + signature_svg.
+$verifiedId = Armement::create(sampleRow([
+    'agent_preneur_personnel_id' => $agentPersonnel,
+    'agent_verifie' => 1,
+    'agent_verifie_at' => '2026-08-23 18:05:00',
+    'signature_svg' => '<svg xmlns="http://www.w3.org/2000/svg"><path d="M10 10 L100 100" /></svg>',
+]));
+$verifiedRow = Armement::getById($verifiedId);
+check((int) $verifiedRow['agent_verifie'] === 1, 'agent_verifie persisted as 1');
+check(!empty($verifiedRow['agent_verifie_at']), 'agent_verifie_at persisted');
+check($verifiedRow['signature_svg'] !== null && strpos($verifiedRow['signature_svg'], '<svg') !== false, 'signature_svg persisted');
+
+// Create an armement without verification (backward-compatible default).
+$unverifiedId = Armement::create(sampleRow([
+    'agent_preneur_personnel_id' => $agentPersonnel,
+]));
+$unverifiedRow = Armement::getById($unverifiedId);
+check((int) $unverifiedRow['agent_verifie'] === 0, 'agent_verifie defaults to 0 when not provided');
+check($unverifiedRow['agent_verifie_at'] === null, 'agent_verifie_at null when not provided');
+check($unverifiedRow['signature_svg'] === null, 'signature_svg null when not provided');
+
+// The generic update() path must NOT be able to modify the verification or
+// signature fields — they are one-way (set at perception time).
+Armement::update($verifiedId, ['agent_verifie' => 0, 'signature_svg' => '<svg>tampered</svg>']);
+$afterUpdate = Armement::getById($verifiedId);
+check((int) $afterUpdate['agent_verifie'] === 1, 'update() cannot modify agent_verifie');
+check($afterUpdate['signature_svg'] === $verifiedRow['signature_svg'], 'update() cannot modify signature_svg');
+
+// Reintegration still works on a verified armement — the verification data
+// is preserved alongside the reintegration data.
+check(Armement::reintegrate($verifiedId, [
+    'heure_reintegration' => '20:00',
+    'etat_reintegration' => 'Bon état',
+    'munitions_consommees' => 10,
+]), 'reintegration succeeds on verified armement');
+$reintVerified = Armement::getById($verifiedId);
+check((int) $reintVerified['agent_verifie'] === 1, 'agent_verifie preserved after reintegration');
+check($reintVerified['signature_svg'] !== null, 'signature_svg preserved after reintegration');
+check(substr((string) $reintVerified['heure_reintegration'], 0, 5) === '20:00', 'reintegration time persisted on verified armement');
 
 // --- Teardown -------------------------------------------------------------------
 $pdo->exec("DROP DATABASE IF EXISTS `$scratch`");

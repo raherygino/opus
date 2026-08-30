@@ -122,6 +122,8 @@ export interface Personnel {
   updated_at: string;
   /** True when this personnel record is linked to an admin user account. */
   is_admin_profile?: boolean;
+  /** True when a code secret is set (hash never exposed). */
+  has_code_secret?: boolean;
 }
 
 export interface PersonnelAttachment {
@@ -269,6 +271,12 @@ export interface Armement {
   munitions: number | null;
   secteur_mission: string | null;
   etat_perception: string | null;
+  /** Whether the agent preneur identity was verified via code secret. */
+  agent_verifie: number;
+  /** When the agent identity was verified (timestamp string). */
+  agent_verifie_at: string | null;
+  /** SVG vector data of the agent signature captured at perception. */
+  signature_svg: string | null;
   heure_reintegration: string | null;
   etat_reintegration: string | null;
   munitions_consommees: number | null;

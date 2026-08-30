@@ -40,6 +40,10 @@ data class PersonnelFormUiState(
     val photoPreview: String? = null,
     val hasServerPhoto: Boolean = false,
     val attachments: List<AttachmentItem> = emptyList(),
+    // Code secret — used only for Armement identity verification.
+    // Empty string = no change on edit; non-empty = set/replace the code.
+    val codeSecret: String = "",
+    val hasCodeSecret: Boolean = false,
     val errorMessage: String? = null,
     val saved: Boolean = false
 )
@@ -77,7 +81,8 @@ class PersonnelFormViewModel @Inject constructor(
                             phone = p.phone ?: "",
                             address = p.address ?: "",
                             photoPreview = if (p.photo != null) personnelPhotoUrl(personnelId) else null,
-                            hasServerPhoto = p.photo != null
+                            hasServerPhoto = p.photo != null,
+                            hasCodeSecret = p.hasCodeSecret
                         )
                     }
                     when (val atts = personnelRepository.getAttachments(personnelId)) {
@@ -100,6 +105,7 @@ class PersonnelFormViewModel @Inject constructor(
     fun updateAffectation(value: String) { _state.update { it.copy(affectation = value) } }
     fun updatePhone(value: String) { _state.update { it.copy(phone = value) } }
     fun updateAddress(value: String) { _state.update { it.copy(address = value) } }
+    fun updateCodeSecret(value: String) { _state.update { it.copy(codeSecret = value) } }
 
     fun setPhoto(file: UploadFile, previewUri: String) {
         _state.update { it.copy(photoFile = file, photoPreview = previewUri) }
@@ -149,13 +155,24 @@ class PersonnelFormViewModel @Inject constructor(
             )
             if (s.isEdit) {
                 when (val res = personnelRepository.updatePersonnel(personnelId, data)) {
-                    is Resource.Success -> handleAttachmentsAndPhoto(res.data.id)
+                    is Resource.Success -> {
+                        // Save the code secret if one was entered (create or replace).
+                        if (s.codeSecret.isNotBlank()) {
+                            personnelRepository.setCodeSecret(res.data.id, s.codeSecret.trim())
+                        }
+                        handleAttachmentsAndPhoto(res.data.id)
+                    }
                     is Resource.Error -> _state.update { it.copy(isSaving = false, errorMessage = res.message) }
                     is Resource.Loading -> {}
                 }
             } else {
                 when (val res = personnelRepository.createPersonnel(data)) {
-                    is Resource.Success -> handleAttachmentsAndPhoto(res.data.id)
+                    is Resource.Success -> {
+                        if (s.codeSecret.isNotBlank()) {
+                            personnelRepository.setCodeSecret(res.data.id, s.codeSecret.trim())
+                        }
+                        handleAttachmentsAndPhoto(res.data.id)
+                    }
                     is Resource.Error -> _state.update { it.copy(isSaving = false, errorMessage = res.message) }
                     is Resource.Loading -> {}
                 }

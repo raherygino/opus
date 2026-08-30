@@ -34,6 +34,13 @@ data class ArmementFormUiState(
     val munitions: String = "",
     val secteurMission: String = "",
     val etatPerception: String = "",
+    // Agent verification (create only — set at perception time, one-way).
+    val codeSecret: String = "",
+    val verifying: Boolean = false,
+    val verified: Boolean = false,
+    val verifyError: String? = null,
+    // Signature SVG (captured after verification).
+    val signatureSvg: String? = null,
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
     val saved: Boolean = false
@@ -90,7 +97,9 @@ class ArmementFormViewModel @Inject constructor(
                             matriculeArme = a.matriculeArme,
                             munitions = a.munitions?.toString() ?: "",
                             secteurMission = a.secteurMission ?: "",
-                            etatPerception = a.etatPerception ?: ""
+                            etatPerception = a.etatPerception ?: "",
+                            verified = a.agentVerifie,
+                            signatureSvg = a.signatureSvg
                         )
                     }
                     when (val atts = armementRepository.getAttachments(armementId)) {
@@ -108,12 +117,70 @@ class ArmementFormViewModel @Inject constructor(
 
     fun updateDatePerception(value: String) { _state.update { it.copy(datePerception = value) } }
     fun updateHeure(value: String) { _state.update { it.copy(heure = value) } }
-    fun updateAgentPreneur(personnelId: Int) { _state.update { it.copy(agentPreneurPersonnelId = personnelId) } }
+    fun updateAgentPreneur(personnelId: Int) {
+        // Reset verification state when the agent changes.
+        _state.update {
+            it.copy(
+                agentPreneurPersonnelId = personnelId,
+                verified = false,
+                verifyError = null,
+                codeSecret = "",
+                signatureSvg = null
+            )
+        }
+    }
     fun updateTypeArme(value: String) { _state.update { it.copy(typeArme = value) } }
     fun updateMatriculeArme(value: String) { _state.update { it.copy(matriculeArme = value) } }
     fun updateMunitions(value: String) { _state.update { it.copy(munitions = value) } }
     fun updateSecteurMission(value: String) { _state.update { it.copy(secteurMission = value) } }
     fun updateEtatPerception(value: String) { _state.update { it.copy(etatPerception = value) } }
+    fun updateCodeSecret(value: String) { _state.update { it.copy(codeSecret = value) } }
+    fun setSignatureSvg(svg: String?) { _state.update { it.copy(signatureSvg = svg) } }
+
+    /**
+     * Verify the agent preneur's code secret against the server. On success,
+     * the perception can be created. On failure, the verification error is
+     * shown and the perception cannot be submitted.
+     */
+    fun verifyCode() {
+        val s = _state.value
+        if (s.agentPreneurPersonnelId <= 0) {
+            _state.update { it.copy(verifyError = "Sélectionnez d'abord un agent") }
+            return
+        }
+        if (s.codeSecret.isBlank()) {
+            _state.update { it.copy(verifyError = "Saisissez le code secret de l'agent") }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(verifying = true, verifyError = null) }
+            when (val result = personnelRepository.verifyCodeSecret(s.agentPreneurPersonnelId, s.codeSecret.trim())) {
+                is Resource.Success -> {
+                    if (result.data) {
+                        _state.update { it.copy(verifying = false, verified = true, verifyError = null) }
+                    } else {
+                        _state.update {
+                            it.copy(
+                                verifying = false,
+                                verified = false,
+                                verifyError = "Code secret incorrect. L'identité de l'agent n'a pas pu être vérifiée."
+                            )
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    _state.update {
+                        it.copy(
+                            verifying = false,
+                            verified = false,
+                            verifyError = result.message ?: "Erreur lors de la vérification"
+                        )
+                    }
+                }
+                is Resource.Loading -> {}
+            }
+        }
+    }
 
     fun addAttachment() {
         _state.update { it.copy(attachments = it.attachments + AttachmentItem()) }
@@ -157,6 +224,15 @@ class ArmementFormViewModel @Inject constructor(
             _state.update { it.copy(errorMessage = validationError) }
             return
         }
+        // On create, the agent must be verified via code secret before the
+        // perception can be created. On edit, verification was done at
+        // perception time and cannot be modified.
+        if (!s.isEdit && !s.verified) {
+            _state.update {
+                it.copy(errorMessage = "L'identité de l'agent doit être vérifiée via le code secret avant d'enregistrer la perception")
+            }
+            return
+        }
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
             val data = ArmementFormData(
@@ -167,7 +243,11 @@ class ArmementFormViewModel @Inject constructor(
                 matriculeArme = s.matriculeArme,
                 munitions = s.munitions.trim().takeIf { it.isNotEmpty() }?.toIntOrNull(),
                 secteurMission = s.secteurMission,
-                etatPerception = s.etatPerception
+                etatPerception = s.etatPerception,
+                // On create, include the code secret (verified server-side)
+                // and the signature SVG (captured after verification).
+                codeSecret = if (s.isEdit) null else s.codeSecret.trim().takeIf { it.isNotEmpty() },
+                signatureSvg = if (s.isEdit) null else s.signatureSvg
             )
             val result = if (s.isEdit) {
                 armementRepository.updateArmement(armementId, data)

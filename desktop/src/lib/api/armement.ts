@@ -16,6 +16,12 @@ export interface ArmementPayload {
   munitions: number | null;
   secteur_mission: string;
   etat_perception: string;
+  // The agent preneur's code secret — verified server-side before the
+  // perception is created. Required on create, ignored on update.
+  code_secret?: string;
+  // SVG vector data of the agent signature captured after verification.
+  // Optional on create, ignored on update (one-way field).
+  signature_svg?: string | null;
 }
 
 /** The three fields of the reintegration transition. */

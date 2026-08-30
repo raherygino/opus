@@ -16,6 +16,7 @@ import {
   generateThumbnail,
   cropFileToSquare,
   deletePersonnelPhoto,
+  setPersonnelCodeSecret,
 } from "@/lib/api/personnel";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -39,6 +40,7 @@ import {
   Smartphone,
   User as UserIcon,
   Eye,
+  KeyRound,
 } from "lucide-react";
 import type { PersonnelAttachment } from "@/types";
 import gradeData from "@/assets/json/grade.json";
@@ -87,6 +89,11 @@ export function PersonnelForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Code secret — used only for Armement identity verification.
+  // Empty string = no change on edit; non-empty = set/replace the code.
+  const [codeSecret, setCodeSecret] = useState("");
+  const [hasCodeSecret, setHasCodeSecret] = useState(false);
+  const [showCodeSecret, setShowCodeSecret] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -112,6 +119,8 @@ export function PersonnelForm() {
         setPhotoPreview(getPersonnelPhotoUrl(p.id));
         setHasServerPhoto(true);
       }
+
+      setHasCodeSecret(!!p.has_code_secret);
 
       const atts = await getPersonnelAttachments(Number(id));
       setAttachments(
@@ -235,6 +244,12 @@ export function PersonnelForm() {
       } else {
         const created = await createPersonnel({ ...form, thumbnail: null, signature_svg: null });
         personnelId = created.id;
+      }
+
+      // Save the code secret if one was entered (create or replace).
+      // The code is hashed server-side — never stored in plaintext.
+      if (codeSecret.trim()) {
+        await setPersonnelCodeSecret(personnelId, codeSecret.trim());
       }
 
       for (const a of attachments.filter((x) => x._delete && x.id)) {
@@ -488,6 +503,50 @@ export function PersonnelForm() {
                   setForm({ ...form, address: e.target.value })
                 }
               />
+            </div>
+
+            {/* Code secret — used only for Armement identity verification.
+                Independent of the login/password. A personnel without a
+                user account can still have a code secret and receive an arme. */}
+            <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="code_secret" className="text-sm font-medium">
+                  Code secret (vérification Armement)
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="code_secret"
+                  type={showCodeSecret ? "text" : "password"}
+                  value={codeSecret}
+                  onChange={(e) => setCodeSecret(e.target.value)}
+                  placeholder={
+                    isEdit
+                      ? hasCodeSecret
+                        ? "Laisser vide pour ne pas modifier"
+                        : "Définir un code secret"
+                      : "Définir un code secret"
+                  }
+                  autoComplete="off"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowCodeSecret(!showCodeSecret)}
+                  title={showCodeSecret ? "Masquer" : "Afficher"}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isEdit && hasCodeSecret
+                  ? "Un code secret est déjà défini. Saisir un nouveau code pour le remplacer."
+                  : "Ce code est utilisé uniquement pour vérifier l'identité de l'agent lors de la perception d'une arme. Il est indépendant du mot de passe de connexion."}
+              </p>
             </div>
 
             <div className="flex items-center gap-3 pt-4">

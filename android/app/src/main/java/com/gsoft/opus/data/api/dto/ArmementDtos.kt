@@ -17,6 +17,9 @@ data class ArmementDto(
     @SerializedName("munitions") val munitions: Int? = null,
     @SerializedName("secteur_mission") val secteurMission: String? = null,
     @SerializedName("etat_perception") val etatPerception: String? = null,
+    @SerializedName("agent_verifie") val agentVerifie: Int = 0,
+    @SerializedName("agent_verifie_at") val agentVerifieAt: String? = null,
+    @SerializedName("signature_svg") val signatureSvg: String? = null,
     @SerializedName("heure_reintegration") val heureReintegration: String? = null,
     @SerializedName("etat_reintegration") val etatReintegration: String? = null,
     @SerializedName("munitions_consommees") val munitionsConsommees: Int? = null,
@@ -36,7 +39,13 @@ data class ArmementRequest(
     @SerializedName("matricule_arme") val matriculeArme: String,
     @SerializedName("munitions") val munitions: Int? = null,
     @SerializedName("secteur_mission") val secteurMission: String,
-    @SerializedName("etat_perception") val etatPerception: String
+    @SerializedName("etat_perception") val etatPerception: String,
+    // The agent preneur's code secret — verified server-side before the
+    // perception is created. Required on create, ignored on update.
+    @SerializedName("code_secret") val codeSecret: String? = null,
+    // SVG vector data of the agent signature captured after verification.
+    // Optional on create, ignored on update (one-way field).
+    @SerializedName("signature_svg") val signatureSvg: String? = null
 )
 
 /** The three fields of the reintegration transition. */

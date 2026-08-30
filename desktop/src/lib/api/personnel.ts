@@ -231,3 +231,38 @@ export async function deletePersonnelPhoto(
   );
   return data.data;
 }
+
+// ========================
+// Code Secret API (Armement identity verification)
+// ========================
+
+/**
+ * Set or clear the personnel's secret code. The code is hashed server-side
+ * with bcrypt — the plaintext is never stored. Pass null/empty to clear.
+ */
+export async function setPersonnelCodeSecret(
+  personnelId: number,
+  code: string | null,
+): Promise<{ has_code_secret: boolean }> {
+  const { data } = await apiClient.post<ApiResponse<{ has_code_secret: boolean }>>(
+    `/personnel/${personnelId}/code-secret`,
+    { code },
+  );
+  return data.data;
+}
+
+/**
+ * Verify the personnel's secret code. Returns { verified: boolean }.
+ * Used by the Armement perception workflow to confirm the agent preneur's
+ * identity before handing over a weapon.
+ */
+export async function verifyPersonnelCodeSecret(
+  personnelId: number,
+  code: string,
+): Promise<{ verified: boolean }> {
+  const { data } = await apiClient.post<ApiResponse<{ verified: boolean }>>(
+    `/personnel/${personnelId}/verify-code-secret`,
+    { code },
+  );
+  return data.data;
+}

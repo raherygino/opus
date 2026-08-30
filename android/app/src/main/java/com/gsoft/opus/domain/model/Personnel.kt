@@ -17,7 +17,9 @@ data class Personnel(
     val createdAt: String?,
     val updatedAt: String?,
     /** True when this personnel record is linked to an admin user account. */
-    val isAdminProfile: Boolean = false
+    val isAdminProfile: Boolean = false,
+    /** True when a code secret is set (hash never exposed). */
+    val hasCodeSecret: Boolean = false
 )
 
 data class PersonnelAttachment(

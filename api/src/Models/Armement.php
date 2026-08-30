@@ -71,8 +71,9 @@ class Armement
                 (date_perception, heure_perception,
                  agent_preneur_personnel_id, agent_preneur_im, agent_preneur_grade, agent_preneur_nom,
                  type_arme, matricule_arme, munitions, secteur_mission, etat_perception,
+                 agent_verifie, agent_verifie_at, signature_svg,
                  created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['date_perception'],
@@ -86,6 +87,9 @@ class Armement
             $data['munitions'] ?? null,
             $data['secteur_mission'] ?? null,
             $data['etat_perception'] ?? null,
+            !empty($data['agent_verifie']) ? 1 : 0,
+            $data['agent_verifie_at'] ?? null,
+            $data['signature_svg'] ?? null,
             $data['created_by'] ?? null,
         ]);
 

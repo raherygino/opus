@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Person
@@ -168,6 +169,52 @@ fun ArmementDetailScreen(
                 DetailRow("IM", armement.agentPreneurIm ?: "—")
                 DetailRow("Grade", armement.agentPreneurGrade ?: "—")
                 DetailRow("Nom complet", armement.agentPreneurNom ?: "—")
+
+                // Verification status
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (armement.agentVerifie) {
+                        Icon(
+                            Icons.Outlined.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Column(modifier = Modifier.padding(start = 8.dp)) {
+                            Text(
+                                text = "Identité vérifiée",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            armement.agentVerifieAt?.let {
+                                Text(
+                                    text = "Vérifiée le ${formatTimestamp(it)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "Identité non vérifiée (enregistrée avant la fonctionnalité de vérification)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Signature display
+                armement.signatureSvg?.let { svg ->
+                    Text(
+                        text = "Signature de l'agent",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                    SignatureSvgView(svg = svg)
+                }
             }
 
             // ─── Réintégration ─────────────────────────────────────────
@@ -276,4 +323,46 @@ fun ArmementDetailScreen(
             )
         }
     }
+}
+
+/**
+ * Render an SVG signature string using a WebView, since Compose Canvas
+ * does not natively support SVG. The WebView is non-interactive and
+ * sized to fit the signature.
+ */
+@Composable
+private fun SignatureSvgView(svg: String) {
+    val context = LocalContext.current
+    val webView = remember(svg) {
+        android.webkit.WebView(context).apply {
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = true
+            setBackgroundColor(android.graphics.Color.WHITE)
+            loadDataWithBaseURL(null, svg, "image/svg+xml", "UTF-8", null)
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(androidx.compose.ui.graphics.Color.White)
+    ) {
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = { webView },
+            modifier = Modifier.fillMaxWidth().height(120.dp)
+        )
+    }
+}
+
+/** Format an ISO timestamp (e.g. "2026-08-23 18:05:00") for display. */
+private fun formatTimestamp(ts: String): String {
+    return try {
+        val parts = ts.split(" ")
+        if (parts.size >= 2) {
+            val date = parts[0].split("-")
+            val time = parts[1].take(5)
+            "${date[2]}/${date[1]}/${date[0]} $time"
+        } else ts
+    } catch (_: Exception) { ts }
 }

@@ -20,7 +20,8 @@ data class PersonnelDto(
     @SerializedName("status") val status: String = "",
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null,
-    @SerializedName("is_admin_profile") val isAdminProfile: Boolean? = null
+    @SerializedName("is_admin_profile") val isAdminProfile: Boolean? = null,
+    @SerializedName("has_code_secret") val hasCodeSecret: Boolean? = null
 )
 
 data class PersonnelRequest(
@@ -47,6 +48,21 @@ data class PersonnelAttachmentDto(
 
 data class AttachmentTitleRequest(
     @SerializedName("title") val title: String
+)
+
+// ─── Code secret (Armement identity verification) ────────────────────
+
+data class CodeSecretRequest(
+    @SerializedName("code") val code: String?
+)
+
+data class VerifyCodeSecretRequest(
+    @SerializedName("code") val code: String
+)
+
+data class CodeSecretResultDto(
+    @SerializedName("has_code_secret") val hasCodeSecret: Boolean? = null,
+    @SerializedName("verified") val verified: Boolean? = null
 )
 
 // ─── Mouvement ───────────────────────────────────────────────────────

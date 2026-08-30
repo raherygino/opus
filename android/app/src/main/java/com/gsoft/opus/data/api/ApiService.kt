@@ -5,6 +5,8 @@ import com.gsoft.opus.data.api.dto.ArmementAttachmentDto
 import com.gsoft.opus.data.api.dto.ArmementDto
 import com.gsoft.opus.data.api.dto.ArmementRequest
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
+import com.gsoft.opus.data.api.dto.CodeSecretRequest
+import com.gsoft.opus.data.api.dto.CodeSecretResultDto
 import com.gsoft.opus.data.api.dto.ComportementDto
 import com.gsoft.opus.data.api.dto.ComportementRejectRequest
 import com.gsoft.opus.data.api.dto.ComportementRequest
@@ -39,6 +41,7 @@ import com.gsoft.opus.data.api.dto.RefreshResponseDto
 import com.gsoft.opus.data.api.dto.RefreshTokenRequestDto
 import com.gsoft.opus.data.api.dto.ReintegrationRequest
 import com.gsoft.opus.data.api.dto.UserDto
+import com.gsoft.opus.data.api.dto.VerifyCodeSecretRequest
 import com.gsoft.opus.data.api.dto.VerifyIdentityRequest
 import com.gsoft.opus.data.api.dto.VerifiedIdentityDto
 import okhttp3.MultipartBody
@@ -174,6 +177,20 @@ interface ApiService {
 
     @DELETE("api/personnel/{id}/photo")
     suspend fun deletePersonnelPhoto(@Path("id") id: Int): Response<ApiResponse<PersonnelDto>>
+
+    // ─── Personnel Code Secret (Armement identity verification) ──────
+
+    @POST("api/personnel/{id}/code-secret")
+    suspend fun setPersonnelCodeSecret(
+        @Path("id") id: Int,
+        @Body request: CodeSecretRequest
+    ): Response<ApiResponse<CodeSecretResultDto>>
+
+    @POST("api/personnel/{id}/verify-code-secret")
+    suspend fun verifyPersonnelCodeSecret(
+        @Path("id") id: Int,
+        @Body request: VerifyCodeSecretRequest
+    ): Response<ApiResponse<CodeSecretResultDto>>
 
     // ─── Mouvements ─────────────────────────────────────────────────
 

@@ -13,7 +13,11 @@ data class ArmementFormData(
     val matriculeArme: String,
     val munitions: Int?,
     val secteurMission: String,
-    val etatPerception: String
+    val etatPerception: String,
+    /** The agent preneur's code secret — verified server-side on create. */
+    val codeSecret: String? = null,
+    /** SVG vector data of the agent signature captured after verification. */
+    val signatureSvg: String? = null
 )
 
 /** The three fields of the reintegration transition. */

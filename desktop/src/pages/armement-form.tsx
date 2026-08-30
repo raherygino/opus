@@ -12,7 +12,7 @@ import {
   deleteArmementAttachment,
   getArmementAttachmentDownloadUrl,
 } from "@/lib/api/armement";
-import { getPersonnelList } from "@/lib/api/personnel";
+import { getPersonnelList, verifyPersonnelCodeSecret } from "@/lib/api/personnel";
 import { isImageFile } from "@/lib/utils/attachment";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
+import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
+import { strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
 import {
   ArrowLeft,
   Save,
@@ -33,6 +35,10 @@ import {
   Plus,
   Smartphone,
   Eye,
+  KeyRound,
+  CheckCircle2,
+  XCircle,
+  PenTool,
 } from "lucide-react";
 import type { ArmementAttachment, Personnel } from "@/types";
 import type { ArmementPayload } from "@/lib/api/armement";
@@ -81,6 +87,16 @@ export function ArmementForm() {
   const [viewerTarget, setViewerTarget] = useState<{ id: number; title: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Agent verification state — only used on create (the perception workflow).
+  // On edit, the verification was already done at perception time and cannot
+  // be modified.
+  const [codeSecret, setCodeSecret] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [signaturePadOpen, setSignaturePadOpen] = useState(false);
+  const [signatureStrokes, setSignatureStrokes] = useState<Stroke[] | null>(null);
 
   useEffect(() => {
     loadData();
@@ -171,6 +187,55 @@ export function ArmementForm() {
     });
   }
 
+  // ─── Agent verification (code secret) ─────────────────────────────
+  // When the agent preneur is selected, the user must enter the agent's
+  // code secret and verify it before the perception can be created. This
+  // confirms the person receiving the weapon is the actual personnel.
+  async function handleVerifyCode() {
+    if (!form.agent_preneur_personnel_id) {
+      setVerifyError("Sélectionnez d'abord un agent");
+      return;
+    }
+    if (!codeSecret.trim()) {
+      setVerifyError("Saisissez le code secret de l'agent");
+      return;
+    }
+    setVerifying(true);
+    setVerifyError(null);
+    try {
+      const result = await verifyPersonnelCodeSecret(
+        form.agent_preneur_personnel_id,
+        codeSecret.trim(),
+      );
+      if (result.verified) {
+        setVerified(true);
+        setVerifyError(null);
+      } else {
+        setVerified(false);
+        setVerifyError("Code secret incorrect. L'identité de l'agent n'a pas pu être vérifiée.");
+      }
+    } catch {
+      setVerified(false);
+      setVerifyError("Erreur lors de la vérification du code secret");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  // When the agent changes, reset the verification state.
+  function handleAgentChange(personnelId: number) {
+    setForm({ ...form, agent_preneur_personnel_id: personnelId });
+    setVerified(false);
+    setVerifyError(null);
+    setCodeSecret("");
+    setSignatureStrokes(null);
+  }
+
+  function handleSignatureComplete(strokes: Stroke[]) {
+    setSignatureStrokes(strokes);
+    setSignaturePadOpen(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -180,6 +245,13 @@ export function ArmementForm() {
     }
     if (!form.agent_preneur_personnel_id) {
       addNotification("error", "Erreur", "L'agent preneur est requis");
+      return;
+    }
+    // On create, the agent must be verified via code secret before the
+    // perception can be created. On edit, verification was done at
+    // perception time and cannot be modified.
+    if (!isEdit && !verified) {
+      addNotification("error", "Erreur", "L'identité de l'agent doit être vérifiée via le code secret avant d'enregistrer la perception");
       return;
     }
     if (!form.type_arme.trim() || !form.matricule_arme.trim()) {
@@ -206,10 +278,19 @@ export function ArmementForm() {
       if (isEdit) {
         armementId = Number(id);
         // On update, only the perception fields are sent — the reintegration
-        // columns are set once via the dedicated réintégration endpoint.
+        // and verification/signature columns are one-way and cannot be modified.
         await updateArmement(armementId, form);
       } else {
-        const created = await createArmement(form);
+        // On create, include the code secret (verified server-side) and the
+        // signature SVG (captured after verification).
+        const payload: ArmementPayload = {
+          ...form,
+          code_secret: codeSecret.trim(),
+          signature_svg: signatureStrokes && signatureStrokes.length > 0
+            ? strokesToSvg(signatureStrokes)
+            : null,
+        };
+        const created = await createArmement(payload);
         armementId = created.id;
       }
 
@@ -393,7 +474,9 @@ export function ArmementForm() {
           </CardContent>
         </Card>
 
-        {/* Agent preneur — selected from the personnel list */}
+        {/* Agent preneur — selected from the personnel list, with code secret
+            verification and signature capture (create only). On edit, the
+            verification was done at perception time and is read-only. */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -401,29 +484,181 @@ export function ArmementForm() {
               Agent preneur
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="agent_preneur_personnel_id">Agent *</Label>
               <Select
                 id="agent_preneur_personnel_id"
                 value={String(form.agent_preneur_personnel_id || "")}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    agent_preneur_personnel_id: Number(e.target.value),
-                  })
-                }
+                onChange={(e) => handleAgentChange(Number(e.target.value))}
                 options={personnelList.map((p) => ({
                   value: String(p.id),
                   label: `${p.lastname} ${p.firstname} (${p.im}) — ${p.grade}`,
                 }))}
                 placeholder="Sélectionner un agent"
                 required
+                disabled={isEdit}
               />
               <p className="text-xs text-muted-foreground">
                 L'identité de l'agent (IM, grade, nom) est enregistrée au moment de la perception.
               </p>
             </div>
+
+            {/* Verification status (edit mode) */}
+            {isEdit && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-3">
+                {verified ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-sm">Identité de l'agent vérifiée au moment de la perception</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      L'identité de l'agent n'a pas été vérifiée (enregistrée avant la fonctionnalité de vérification)
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Verification step (create mode only) */}
+            {!isEdit && (
+              <>
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Vérification de l'identité</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    L'agent doit fournir son code secret pour confirmer son identité avant la remise de l'arme.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="password"
+                      value={codeSecret}
+                      onChange={(e) => setCodeSecret(e.target.value)}
+                      placeholder="Code secret de l'agent"
+                      autoComplete="off"
+                      disabled={verified || !form.agent_preneur_personnel_id}
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !verified && form.agent_preneur_personnel_id) {
+                          e.preventDefault();
+                          handleVerifyCode();
+                        }
+                      }}
+                    />
+                    {verified ? (
+                      <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Vérifié
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={handleVerifyCode}
+                        disabled={verifying || !form.agent_preneur_personnel_id || !codeSecret.trim()}
+                        className="gap-2"
+                      >
+                        {verifying ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <KeyRound className="h-4 w-4" />
+                        )}
+                        Vérifier
+                      </Button>
+                    )}
+                  </div>
+                  {verifyError && (
+                    <div className="flex items-center gap-2 text-sm text-destructive">
+                      <XCircle className="h-4 w-4" />
+                      {verifyError}
+                    </div>
+                  )}
+                </div>
+
+                {/* Signature capture (after verification) */}
+                {verified && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <PenTool className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Signature de l'agent</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      La signature est capturée après vérification et associée à cette perception.
+                    </p>
+                    {signatureStrokes && signatureStrokes.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="rounded-lg border-2 border-dashed border-border bg-white p-2">
+                          <svg
+                            width="100%"
+                            height="120"
+                            viewBox="0 0 400 200"
+                            preserveAspectRatio="xMidYMid meet"
+                          >
+                            <rect width="400" height="200" fill="white" />
+                            {signatureStrokes.map((stroke, i) => {
+                              if (stroke.points.length === 0) return null;
+                              const d = stroke.points
+                                .map((p, j) =>
+                                  j === 0
+                                    ? `M ${p.x.toFixed(2)} ${p.y.toFixed(2)}`
+                                    : `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
+                                )
+                                .join(" ");
+                              return (
+                                <path
+                                  key={`sig-${i}`}
+                                  d={d}
+                                  stroke="#1a1a2e"
+                                  strokeWidth={2}
+                                  fill="none"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              );
+                            })}
+                          </svg>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSignaturePadOpen(true)}
+                            className="gap-2"
+                          >
+                            <PenTool className="h-3.5 w-3.5" />
+                            Refaire la signature
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSignatureStrokes(null)}
+                            className="text-destructive"
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setSignaturePadOpen(true)}
+                        className="gap-2"
+                      >
+                        <PenTool className="h-4 w-4" />
+                        Capturer la signature
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -547,6 +782,12 @@ export function ArmementForm() {
         onClose={() => setPhotoPadIndex(null)}
         onPhotoComplete={handleAttachmentPhotoComplete}
         squareCrop={false}
+      />
+
+      <SignaturePadDialog
+        open={signaturePadOpen}
+        onClose={() => setSignaturePadOpen(false)}
+        onSignatureComplete={handleSignatureComplete}
       />
 
       <ImageViewerDialog

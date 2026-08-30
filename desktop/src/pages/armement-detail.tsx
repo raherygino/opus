@@ -26,6 +26,9 @@ import {
   Download,
   Eye,
   FileDown,
+  CheckCircle2,
+  XCircle,
+  PenTool,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -205,10 +208,48 @@ export function ArmementDetail() {
             Agent preneur
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          <DetailRow label="IM" value={armement.agent_preneur_im} />
-          <DetailRow label="Grade" value={armement.agent_preneur_grade} />
-          <DetailRow label="Nom complet" value={armement.agent_preneur_nom} />
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <DetailRow label="IM" value={armement.agent_preneur_im} />
+            <DetailRow label="Grade" value={armement.agent_preneur_grade} />
+            <DetailRow label="Nom complet" value={armement.agent_preneur_nom} />
+          </div>
+          {/* Verification status */}
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-3">
+            {armement.agent_verifie ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium">Identité vérifiée</p>
+                  {armement.agent_verifie_at && (
+                    <p className="text-xs text-muted-foreground">
+                      Vérifiée le {new Date(armement.agent_verifie_at).toLocaleString("fr-FR")}
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Identité non vérifiée (enregistrée avant la fonctionnalité de vérification)
+                </p>
+              </>
+            )}
+          </div>
+          {/* Signature */}
+          {armement.signature_svg && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <PenTool className="h-4 w-4 text-muted-foreground" />
+                Signature de l'agent
+              </div>
+              <div
+                className="rounded-lg border-2 border-dashed border-border bg-white p-2"
+                dangerouslySetInnerHTML={{ __html: armement.signature_svg }}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -389,6 +430,7 @@ export function ArmementDetail() {
         ["IM", armement.agent_preneur_im || "—"],
         ["Grade", armement.agent_preneur_grade || "—"],
         ["Nom complet", armement.agent_preneur_nom || "—"],
+        ["Identité vérifiée", armement.agent_verifie ? "Oui" : "Non"],
       ],
       yPos,
     );

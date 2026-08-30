@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContactPhone
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Work
@@ -58,6 +59,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -233,6 +236,48 @@ fun PersonnelFormScreen(
                     leadingIcon = { Icon(Icons.Outlined.Home, contentDescription = null) },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // ─── Code secret section (Armement identity verification) ─────
+            var showCodeSecret by remember { mutableStateOf(false) }
+            FormSectionCard(
+                title = "Code secret (Armement)",
+                icon = Icons.Outlined.Key,
+                subtitle = "Vérification d'identité lors de la perception d'arme"
+            ) {
+                OutlinedTextField(
+                    value = state.codeSecret,
+                    onValueChange = viewModel::updateCodeSecret,
+                    label = {
+                        Text(
+                            if (state.isEdit && state.hasCodeSecret) "Nouveau code (laisser vide pour ne pas modifier)"
+                            else "Code secret"
+                        )
+                    },
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = { showCodeSecret = !showCodeSecret }) {
+                            Icon(
+                                imageVector = if (showCodeSecret) Icons.Outlined.Close else Icons.Outlined.RemoveRedEye,
+                                contentDescription = if (showCodeSecret) "Masquer" else "Afficher"
+                            )
+                        }
+                    },
+                    visualTransformation = if (showCodeSecret) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = if (state.isEdit && state.hasCodeSecret) {
+                        "Un code secret est déjà défini. Saisir un nouveau code pour le remplacer."
+                    } else {
+                        "Ce code est utilisé uniquement pour vérifier l'identité de l'agent lors de la perception d'une arme. Il est indépendant du mot de passe de connexion."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

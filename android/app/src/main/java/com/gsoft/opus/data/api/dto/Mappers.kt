@@ -94,7 +94,8 @@ fun PersonnelDto.toDomain(): Personnel = Personnel(
     status = status,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    isAdminProfile = isAdminProfile ?: false
+    isAdminProfile = isAdminProfile ?: false,
+    hasCodeSecret = hasCodeSecret ?: false
 )
 
 fun PersonnelAttachmentDto.toDomain(): PersonnelAttachment = PersonnelAttachment(
@@ -303,6 +304,9 @@ fun ArmementDto.toDomain(): Armement = Armement(
     munitions = munitions,
     secteurMission = secteurMission,
     etatPerception = etatPerception,
+    agentVerifie = agentVerifie == 1,
+    agentVerifieAt = agentVerifieAt,
+    signatureSvg = signatureSvg,
     heureReintegration = heureReintegration,
     etatReintegration = etatReintegration,
     munitionsConsommees = munitionsConsommees,

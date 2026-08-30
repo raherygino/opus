@@ -67,6 +67,17 @@ interface PersonnelRepository {
 
     suspend fun uploadPhoto(personnelId: Int, photo: UploadFile, thumbnail: UploadFile?): Resource<Personnel>
     suspend fun deletePhoto(personnelId: Int): Resource<Personnel>
+
+    // ─── Code secret (Armement identity verification) ──────────────
+
+    /** Set or clear the personnel's secret code (hashed server-side). */
+    suspend fun setCodeSecret(personnelId: Int, code: String?): Resource<Boolean>
+
+    /**
+     * Verify the personnel's secret code. Returns Resource.success(true)
+     * when the code matches, Resource.success(false) when it does not.
+     */
+    suspend fun verifyCodeSecret(personnelId: Int, code: String): Resource<Boolean>
 }
 
 interface MouvementRepository {

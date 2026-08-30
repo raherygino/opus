@@ -85,6 +85,12 @@ $router->post('/api/personnel/{id}/signature/svg',  [PersonnelController::class,
 $router->get('/api/personnel/{id}/signature',      [PersonnelController::class, 'serveSignature']);
 
 // ========================
+// Personnel Code Secret Routes (Armement identity verification)
+// ========================
+$router->post('/api/personnel/{id}/code-secret',          [PersonnelController::class, 'setCodeSecret']);
+$router->post('/api/personnel/{id}/verify-code-secret',   [PersonnelController::class, 'verifyCodeSecret']);
+
+// ========================
 // Personnel Attachment Routes
 // ========================
 $router->get('/api/personnel/{id}/attachments',                       [PersonnelAttachmentController::class, 'index']);
