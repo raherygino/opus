@@ -90,6 +90,9 @@ import com.gsoft.opus.presentation.correspondance.CorrespondanceScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteDetailScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteFormScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteScreen
+import com.gsoft.opus.presentation.armement.ArmementDetailScreen
+import com.gsoft.opus.presentation.armement.ArmementFormScreen
+import com.gsoft.opus.presentation.armement.ArmementScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -473,7 +476,16 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.Armement.route) { ContextMenuItemScreens.Armement() }
+                    composable(MainRoutes.Armement.route) {
+                        ArmementScreen(
+                            onArmementClick = { id ->
+                                navController.navigate(MainRoutes.ArmementDetail.createRoute(id))
+                            },
+                            onCreateArmement = {
+                                navController.navigate(MainRoutes.ArmementForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Materiels.route) { ContextMenuItemScreens.Materiels() }
                     composable(MainRoutes.SituationGav.route) { ContextMenuItemScreens.SituationGav() }
                     composable(MainRoutes.MainCourantePoste.route) { ContextMenuItemScreens.MainCourantePoste() }
@@ -824,6 +836,64 @@ fun MainScreen(
                         )
                     }
 
+                    composable(
+                        route = MainRoutes.ArmementDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("armementId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArmementDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ArmementForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ArmementForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("armementId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArmementFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
                         SignaturePairingScreen(
@@ -1029,6 +1099,17 @@ private fun handleNotificationLink(
                 navController.navigate(MainRoutes.PassationDetail.createRoute(id))
             } else {
                 navController.navigateToTab(MainRoutes.Passation.route)
+            }
+        }
+        path.startsWith("/sedentaire/poste/armement/") -> {
+            // e.g. "/sedentaire/poste/armement/12" → detail screen
+            val id = path.removePrefix("/sedentaire/poste/armement/")
+                .trim('/')
+                .toIntOrNull()
+            if (id != null) {
+                navController.navigate(MainRoutes.ArmementDetail.createRoute(id))
+            } else {
+                navController.navigateToTab(MainRoutes.Armement.route)
             }
         }
         path.startsWith("/personnel") -> {

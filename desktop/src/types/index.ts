@@ -254,6 +254,44 @@ export interface VerifiedIdentity {
 }
 
 // ========================
+// Armement Types (Sédentaire > Poste)
+// ========================
+export interface Armement {
+  id: number;
+  date_perception: string;
+  heure_perception: string;
+  agent_preneur_personnel_id: number | null;
+  agent_preneur_im: string | null;
+  agent_preneur_grade: string | null;
+  agent_preneur_nom: string | null;
+  type_arme: string;
+  matricule_arme: string;
+  munitions: number | null;
+  secteur_mission: string | null;
+  etat_perception: string | null;
+  heure_reintegration: string | null;
+  etat_reintegration: string | null;
+  munitions_consommees: number | null;
+  created_by: number | null;
+  agent_preneur_personnel_im?: string | null;
+  attachments?: ArmementAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ArmementAttachment {
+  id: number;
+  armement_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {

@@ -13,7 +13,7 @@ Multi-client app: `api/` (pure PHP REST API, no framework), `android/` (Kotlin +
 
 ## Verification commands (Windows)
 
-- API tests: `php api/tests/CorrespondanceTest.php`, `php api/tests/NotificationTest.php`, `php api/tests/DeclarationPerteTest.php`
+- API tests: `php api/tests/CorrespondanceTest.php`, `php api/tests/NotificationTest.php`, `php api/tests/DeclarationPerteTest.php`, `php api/tests/PassationTest.php`, `php api/tests/ArmementTest.php`
 - Desktop: `npm.cmd run build` in `desktop/` (PowerShell blocks `npm.ps1`; use `npm.cmd`). `tsc` runs as part of build.
 - Android: `gradlew.bat compileDebugKotlin testDebugUnitTest --console=plain` in `android/`. JAVA_HOME is not set globally; use `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"` (Android Studio bundled JBR).
 - Apply a single new migration to the dev DB without resetting: run its CREATE/ALTER statements against the `opus` DB (see git history for `api/apply-020.php` pattern).

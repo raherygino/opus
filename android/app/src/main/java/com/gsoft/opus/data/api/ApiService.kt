@@ -1,6 +1,9 @@
 package com.gsoft.opus.data.api
 
 import com.gsoft.opus.data.api.dto.ApiResponse
+import com.gsoft.opus.data.api.dto.ArmementAttachmentDto
+import com.gsoft.opus.data.api.dto.ArmementDto
+import com.gsoft.opus.data.api.dto.ArmementRequest
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
 import com.gsoft.opus.data.api.dto.ComportementDto
 import com.gsoft.opus.data.api.dto.ComportementRejectRequest
@@ -34,6 +37,7 @@ import com.gsoft.opus.data.api.dto.QrAuthScanResponseDto
 import com.gsoft.opus.data.api.dto.QrAuthStatusResponseDto
 import com.gsoft.opus.data.api.dto.RefreshResponseDto
 import com.gsoft.opus.data.api.dto.RefreshTokenRequestDto
+import com.gsoft.opus.data.api.dto.ReintegrationRequest
 import com.gsoft.opus.data.api.dto.UserDto
 import com.gsoft.opus.data.api.dto.VerifyIdentityRequest
 import com.gsoft.opus.data.api.dto.VerifiedIdentityDto
@@ -374,6 +378,57 @@ interface ApiService {
 
     @DELETE("api/passations/{id}/attachments/{attachId}")
     suspend fun deletePassationAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ─── Armements ──────────────────────────────────────────────────
+
+    @GET("api/armements")
+    suspend fun getArmementList(
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null,
+        @Query("statut") statut: String? = null
+    ): Response<ApiResponse<List<ArmementDto>>>
+
+    @GET("api/armements/{id}")
+    suspend fun getArmement(@Path("id") id: Int): Response<ApiResponse<ArmementDto>>
+
+    @POST("api/armements")
+    suspend fun createArmement(@Body request: ArmementRequest): Response<ApiResponse<ArmementDto>>
+
+    @PUT("api/armements/{id}")
+    suspend fun updateArmement(@Path("id") id: Int, @Body request: ArmementRequest): Response<ApiResponse<ArmementDto>>
+
+    @POST("api/armements/{id}/reintegration")
+    suspend fun reintegrateArmement(@Path("id") id: Int, @Body request: ReintegrationRequest): Response<ApiResponse<ArmementDto>>
+
+    @DELETE("api/armements/{id}")
+    suspend fun deleteArmement(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Armement Attachments ───────────────────────────────────────
+
+    @GET("api/armements/{id}/attachments")
+    suspend fun getArmementAttachments(@Path("id") id: Int): Response<ApiResponse<List<ArmementAttachmentDto>>>
+
+    @Multipart
+    @POST("api/armements/{id}/attachments")
+    suspend fun createArmementAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ArmementAttachmentDto>>
+
+    @PUT("api/armements/{id}/attachments/{attachId}")
+    suspend fun updateArmementAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<ArmementAttachmentDto>>
+
+    @DELETE("api/armements/{id}/attachments/{attachId}")
+    suspend fun deleteArmementAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>

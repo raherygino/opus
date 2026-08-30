@@ -1,0 +1,58 @@
+package com.gsoft.opus.data.api.dto
+
+import com.google.gson.annotations.SerializedName
+
+// ─── Armement ─────────────────────────────────────────────────────────
+
+data class ArmementDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("date_perception") val datePerception: String,
+    @SerializedName("heure_perception") val heurePerception: String,
+    @SerializedName("agent_preneur_personnel_id") val agentPreneurPersonnelId: Int? = null,
+    @SerializedName("agent_preneur_im") val agentPreneurIm: String? = null,
+    @SerializedName("agent_preneur_grade") val agentPreneurGrade: String? = null,
+    @SerializedName("agent_preneur_nom") val agentPreneurNom: String? = null,
+    @SerializedName("type_arme") val typeArme: String,
+    @SerializedName("matricule_arme") val matriculeArme: String,
+    @SerializedName("munitions") val munitions: Int? = null,
+    @SerializedName("secteur_mission") val secteurMission: String? = null,
+    @SerializedName("etat_perception") val etatPerception: String? = null,
+    @SerializedName("heure_reintegration") val heureReintegration: String? = null,
+    @SerializedName("etat_reintegration") val etatReintegration: String? = null,
+    @SerializedName("munitions_consommees") val munitionsConsommees: Int? = null,
+    @SerializedName("created_by") val createdBy: Int? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null,
+    @SerializedName("attachments") val attachments: List<ArmementAttachmentDto>? = null
+)
+
+data class ArmementRequest(
+    @SerializedName("date_perception") val datePerception: String,
+    @SerializedName("heure_perception") val heurePerception: String,
+    // The agent preneur identity (IM + grade + nom) is snapshotted
+    // server-side from the personnel table — only the id is sent.
+    @SerializedName("agent_preneur_personnel_id") val agentPreneurPersonnelId: Int,
+    @SerializedName("type_arme") val typeArme: String,
+    @SerializedName("matricule_arme") val matriculeArme: String,
+    @SerializedName("munitions") val munitions: Int? = null,
+    @SerializedName("secteur_mission") val secteurMission: String,
+    @SerializedName("etat_perception") val etatPerception: String
+)
+
+/** The three fields of the reintegration transition. */
+data class ReintegrationRequest(
+    @SerializedName("heure_reintegration") val heureReintegration: String,
+    @SerializedName("etat_reintegration") val etatReintegration: String,
+    @SerializedName("munitions_consommees") val munitionsConsommees: Int
+)
+
+data class ArmementAttachmentDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("armement_id") val armementId: Int,
+    @SerializedName("title") val title: String,
+    @SerializedName("filename") val filename: String,
+    @SerializedName("original_filename") val originalFilename: String,
+    @SerializedName("mime_type") val mimeType: String? = null,
+    @SerializedName("file_size") val fileSize: Long? = null,
+    @SerializedName("created_at") val createdAt: String? = null
+)

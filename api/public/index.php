@@ -20,6 +20,8 @@ use App\Controllers\DeclarationPerteController;
 use App\Controllers\DeclarationPerteAttachmentController;
 use App\Controllers\PassationController;
 use App\Controllers\PassationAttachmentController;
+use App\Controllers\ArmementController;
+use App\Controllers\ArmementAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -174,6 +176,25 @@ $router->post('/api/passations/{id}/attachments',                      [Passatio
 $router->put('/api/passations/{id}/attachments/{attachId}',            [PassationAttachmentController::class, 'update']);
 $router->delete('/api/passations/{id}/attachments/{attachId}',         [PassationAttachmentController::class, 'destroy']);
 $router->get('/api/passations/{id}/attachments/{attachId}/download',   [PassationAttachmentController::class, 'download']);
+
+// ========================
+// Armement Routes (Sédentaire > Poste)
+// ========================
+$router->get('/api/armements',                            [ArmementController::class, 'index']);
+$router->get('/api/armements/{id}',                       [ArmementController::class, 'show']);
+$router->post('/api/armements',                           [ArmementController::class, 'store']);
+$router->put('/api/armements/{id}',                       [ArmementController::class, 'update']);
+$router->post('/api/armements/{id}/reintegration',        [ArmementController::class, 'reintegrate']);
+$router->delete('/api/armements/{id}',                    [ArmementController::class, 'destroy']);
+
+// ========================
+// Armement Attachment Routes
+// ========================
+$router->get('/api/armements/{id}/attachments',                       [ArmementAttachmentController::class, 'index']);
+$router->post('/api/armements/{id}/attachments',                      [ArmementAttachmentController::class, 'store']);
+$router->put('/api/armements/{id}/attachments/{attachId}',            [ArmementAttachmentController::class, 'update']);
+$router->delete('/api/armements/{id}/attachments/{attachId}',         [ArmementAttachmentController::class, 'destroy']);
+$router->get('/api/armements/{id}/attachments/{attachId}/download',   [ArmementAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

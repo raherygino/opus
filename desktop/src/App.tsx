@@ -79,6 +79,17 @@ const PassationDetail = lazy(() =>
   import("@/pages/passation-detail").then((m) => ({ default: m.PassationDetail })),
 );
 
+// Armement (Sédentaire > Poste)
+const ArmementList = lazy(() =>
+  import("@/pages/armement-list").then((m) => ({ default: m.ArmementList })),
+);
+const ArmementForm = lazy(() =>
+  import("@/pages/armement-form").then((m) => ({ default: m.ArmementForm })),
+);
+const ArmementDetail = lazy(() =>
+  import("@/pages/armement-detail").then((m) => ({ default: m.ArmementDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -324,6 +335,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <PassationForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/armement"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ArmementList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/armement/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <ArmementForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/armement/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <ArmementDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/armement/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <ArmementForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

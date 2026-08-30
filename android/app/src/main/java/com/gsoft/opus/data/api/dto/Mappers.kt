@@ -1,6 +1,8 @@
 package com.gsoft.opus.data.api.dto
 
 import com.gsoft.opus.domain.model.AppNotification
+import com.gsoft.opus.domain.model.Armement
+import com.gsoft.opus.domain.model.ArmementAttachment
 import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
@@ -286,4 +288,36 @@ fun VerifiedIdentityDto.toDomain(): VerifiedIdentity = VerifiedIdentity(
     grade = grade,
     firstname = firstname,
     lastname = lastname
+)
+
+fun ArmementDto.toDomain(): Armement = Armement(
+    id = id,
+    datePerception = datePerception,
+    heurePerception = heurePerception,
+    agentPreneurPersonnelId = agentPreneurPersonnelId,
+    agentPreneurIm = agentPreneurIm,
+    agentPreneurGrade = agentPreneurGrade,
+    agentPreneurNom = agentPreneurNom,
+    typeArme = typeArme,
+    matriculeArme = matriculeArme,
+    munitions = munitions,
+    secteurMission = secteurMission,
+    etatPerception = etatPerception,
+    heureReintegration = heureReintegration,
+    etatReintegration = etatReintegration,
+    munitionsConsommees = munitionsConsommees,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun ArmementAttachmentDto.toDomain(): ArmementAttachment = ArmementAttachment(
+    id = id,
+    armementId = armementId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
 )
