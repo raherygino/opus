@@ -1,0 +1,39 @@
+Fix blank map: CSP meta tag + native OSMDroid Activity on Android
+
+Root causes:
+  Desktop: The <meta http-equiv="Content-Security-Policy"> tag in
+  index.html lacked frame-src, so its default-src 'self' blocked the
+  OSM iframe. The Electron header CSP was correct, but browsers
+  enforce BOTH the meta tag and the HTTP header — the most
+  restrictive wins. The meta tag was the bottleneck.
+
+  Android: The WebView-based AlertDialog loaded the OSM embed URL,
+  which is unreliable in Android WebView (JS rendering issues, no
+  error handling, blank page on many devices).
+
+Fixes:
+  Desktop:
+  - Added frame-src https://www.openstreetmap.org to the CSP meta
+    tag in index.html (was only in the Electron header)
+  - Added OSM tile servers to img-src so map tiles render
+  - CSP is now consistent between the meta tag and Electron header
+
+  Android:
+  - Replaced the WebView AlertDialog with a native MapActivity
+    using OSMDroid (org.osmdroid:osmdroid-android:6.1.20)
+  - OSMDroid renders OSM tiles natively via Android Canvas — no
+    WebView, no JavaScript dependency, no browser CSP issues
+  - MapActivity shows a MapView with a marker at the GPS coords,
+    zoom controls, multi-touch gestures, and a loading indicator
+  - Registered MapActivity in AndroidManifest.xml
+  - ArmementDetailScreen now launches MapActivity via Intent
+    instead of showing the WebView dialog
+  - Removed unused AlertDialog/TextButton imports
+
+Verification:
+  - Desktop build: success
+  - Android compile: BUILD SUCCESSFUL
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>

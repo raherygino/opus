@@ -79,6 +79,9 @@ dependencies {
     // Google Play Services Location (GPS capture for Armement)
     implementation(libs.play.services.location)
 
+    // OSMDroid (native OpenStreetMap rendering for map view)
+    implementation(libs.osmdroid.android)
+
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
 

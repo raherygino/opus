@@ -34,6 +34,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Native OpenStreetMap map view (OSMDroid) -->
+        <activity
+            android:name=".presentation.map.MapActivity"
+            android:exported="false"
+            android:label="Carte"
+            android:theme="@style/Theme.Opus.Splash" />
+
         <!-- Firebase Cloud Messaging service for push notifications -->
         <service
             android:name=".notifications.OpusMessagingService"
