@@ -1,0 +1,35 @@
+Auto-pull signature from personnel data after verification
+
+After successful code-secret verification, the signature is now
+automatically pulled from the personnel's existing signature_svg
+field. If the personnel has a signature, it becomes the default for
+the armement perception. If they have none, "Capturer la signature"
+is shown. In both cases, the user can choose to draw a new one to
+override, or leave it empty.
+
+Desktop:
+- Replaced signatureStrokes (Stroke[]) with signatureSvg (string)
+  which can hold either the personnel's SVG or a drawn one
+- handleVerifyCode now looks up the selected personnel and pre-fills
+  signatureSvg from their signature_svg
+- Signature preview renders the SVG string directly
+- Description text reflects the source (personnel data vs drawn vs none)
+- "Refaire la signature" always available to override
+
+Android:
+- Added signatureFromPersonnel flag to UI state
+- verifyCode() now pre-fills signatureSvg from the selected
+  personnel's signatureSvg after success
+- Added SignatureSvgPreview composable (WebView-based) to show the
+  signature in the form
+- setSignatureSvg clears signatureFromPersonnel when drawing new
+- Description text reflects the source
+
+Verification:
+- API tests: 76/76 passing
+- Desktop build: success
+- Android compile: BUILD SUCCESSFUL
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>

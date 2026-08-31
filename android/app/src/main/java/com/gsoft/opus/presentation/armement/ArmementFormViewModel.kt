@@ -41,6 +41,8 @@ data class ArmementFormUiState(
     val verifyError: String? = null,
     // Signature SVG (captured after verification).
     val signatureSvg: String? = null,
+    // Whether the current signature came from the personnel's data (vs drawn).
+    val signatureFromPersonnel: Boolean = false,
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
     val saved: Boolean = false
@@ -135,7 +137,9 @@ class ArmementFormViewModel @Inject constructor(
     fun updateSecteurMission(value: String) { _state.update { it.copy(secteurMission = value) } }
     fun updateEtatPerception(value: String) { _state.update { it.copy(etatPerception = value) } }
     fun updateCodeSecret(value: String) { _state.update { it.copy(codeSecret = value) } }
-    fun setSignatureSvg(svg: String?) { _state.update { it.copy(signatureSvg = svg) } }
+    fun setSignatureSvg(svg: String?) {
+        _state.update { it.copy(signatureSvg = svg, signatureFromPersonnel = false) }
+    }
 
     /**
      * Verify the agent preneur's code secret against the server. On success,
@@ -157,7 +161,22 @@ class ArmementFormViewModel @Inject constructor(
             when (val result = personnelRepository.verifyCodeSecret(s.agentPreneurPersonnelId, s.codeSecret.trim())) {
                 is Resource.Success -> {
                     if (result.data) {
-                        _state.update { it.copy(verifying = false, verified = true, verifyError = null) }
+                        // After successful verification, pull the signature
+                        // directly from the personnel's existing data. If
+                        // they have one, it becomes the default signature
+                        // for this perception. The user can still choose to
+                        // draw a new one to override.
+                        val personnel = s.personnelOptions.firstOrNull { it.id == s.agentPreneurPersonnelId }
+                        val existingSvg = personnel?.signatureSvg
+                        _state.update {
+                            it.copy(
+                                verifying = false,
+                                verified = true,
+                                verifyError = null,
+                                signatureSvg = existingSvg,
+                                signatureFromPersonnel = existingSvg != null
+                            )
+                        }
                     } else {
                         _state.update {
                             it.copy(

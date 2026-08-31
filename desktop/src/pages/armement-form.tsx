@@ -96,7 +96,12 @@ export function ArmementForm() {
   const [verified, setVerified] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [signaturePadOpen, setSignaturePadOpen] = useState(false);
-  const [signatureStrokes, setSignatureStrokes] = useState<Stroke[] | null>(null);
+  // The signature SVG — either pulled from the personnel's existing data
+  // after verification, or captured via the signature pad. The user can
+  // always choose to draw a new one to override.
+  const [signatureSvg, setSignatureSvg] = useState<string | null>(null);
+  // Whether the current signature came from the personnel's data (vs drawn).
+  const [signatureFromPersonnel, setSignatureFromPersonnel] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -210,6 +215,20 @@ export function ArmementForm() {
       if (result.verified) {
         setVerified(true);
         setVerifyError(null);
+        // After successful verification, pull the signature directly from
+        // the personnel's existing data. If they have one, it becomes the
+        // default signature for this perception. The user can still choose
+        // to draw a new one to override.
+        const personnel = personnelList.find(
+          (p) => p.id === form.agent_preneur_personnel_id,
+        );
+        if (personnel?.signature_svg) {
+          setSignatureSvg(personnel.signature_svg);
+          setSignatureFromPersonnel(true);
+        } else {
+          setSignatureSvg(null);
+          setSignatureFromPersonnel(false);
+        }
       } else {
         setVerified(false);
         setVerifyError("Code secret incorrect. L'identité de l'agent n'a pas pu être vérifiée.");
@@ -228,11 +247,13 @@ export function ArmementForm() {
     setVerified(false);
     setVerifyError(null);
     setCodeSecret("");
-    setSignatureStrokes(null);
+    setSignatureSvg(null);
+    setSignatureFromPersonnel(false);
   }
 
   function handleSignatureComplete(strokes: Stroke[]) {
-    setSignatureStrokes(strokes);
+    setSignatureSvg(strokesToSvg(strokes));
+    setSignatureFromPersonnel(false);
     setSignaturePadOpen(false);
   }
 
@@ -286,9 +307,7 @@ export function ArmementForm() {
         const payload: ArmementPayload = {
           ...form,
           code_secret: codeSecret.trim(),
-          signature_svg: signatureStrokes && signatureStrokes.length > 0
-            ? strokesToSvg(signatureStrokes)
-            : null,
+          signature_svg: signatureSvg,
         };
         const created = await createArmement(payload);
         armementId = created.id;
@@ -579,7 +598,11 @@ export function ArmementForm() {
                   )}
                 </div>
 
-                {/* Signature capture (after verification) */}
+                {/* Signature capture (after verification).
+                    After verification, the signature is pulled from the
+                    personnel's existing data. If they have none, the user
+                    can capture one. The user can always choose to draw a
+                    new one to override. */}
                 {verified && (
                   <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
                     <div className="flex items-center gap-2">
@@ -587,41 +610,18 @@ export function ArmementForm() {
                       <span className="text-sm font-medium">Signature de l'agent</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      La signature est capturée après vérification et associée à cette perception.
+                      {signatureFromPersonnel
+                        ? "Signature récupérée depuis les données du personnel. Vous pouvez la garder ou en dessiner une nouvelle."
+                        : signatureSvg
+                          ? "Signature dessinée pour cette perception."
+                          : "Aucune signature dans les données du personnel. Vous pouvez en capturer une ou laisser vide."}
                     </p>
-                    {signatureStrokes && signatureStrokes.length > 0 ? (
+                    {signatureSvg ? (
                       <div className="space-y-2">
-                        <div className="rounded-lg border-2 border-dashed border-border bg-white p-2">
-                          <svg
-                            width="100%"
-                            height="120"
-                            viewBox="0 0 400 200"
-                            preserveAspectRatio="xMidYMid meet"
-                          >
-                            <rect width="400" height="200" fill="white" />
-                            {signatureStrokes.map((stroke, i) => {
-                              if (stroke.points.length === 0) return null;
-                              const d = stroke.points
-                                .map((p, j) =>
-                                  j === 0
-                                    ? `M ${p.x.toFixed(2)} ${p.y.toFixed(2)}`
-                                    : `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
-                                )
-                                .join(" ");
-                              return (
-                                <path
-                                  key={`sig-${i}`}
-                                  d={d}
-                                  stroke="#1a1a2e"
-                                  strokeWidth={2}
-                                  fill="none"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              );
-                            })}
-                          </svg>
-                        </div>
+                        <div
+                          className="rounded-lg border-2 border-dashed border-border bg-white p-2"
+                          dangerouslySetInnerHTML={{ __html: signatureSvg }}
+                        />
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -637,7 +637,10 @@ export function ArmementForm() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSignatureStrokes(null)}
+                            onClick={() => {
+                              setSignatureSvg(null);
+                              setSignatureFromPersonnel(false);
+                            }}
                             className="text-destructive"
                           >
                             Supprimer

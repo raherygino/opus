@@ -362,6 +362,10 @@ fun ArmementFormScreen(
                     }
 
                     // Signature capture (after verification).
+                    // After verification, the signature is pulled from the
+                    // personnel's existing data. If they have none, the user
+                    // can capture one. The user can always choose to draw a
+                    // new one to override.
                     if (state.verified) {
                         var showSignatureDialog by remember { mutableStateOf(false) }
                         Text(
@@ -371,29 +375,24 @@ fun ArmementFormScreen(
                             modifier = Modifier.padding(top = 12.dp)
                         )
                         Text(
-                            text = "La signature est capturée après vérification et associée à cette perception.",
+                            text = when {
+                                state.signatureFromPersonnel -> "Signature récupérée depuis les données du personnel. Vous pouvez la garder ou en dessiner une nouvelle."
+                                state.signatureSvg != null -> "Signature dessinée pour cette perception."
+                                else -> "Aucune signature dans les données du personnel. Vous pouvez en capturer une ou laisser vide."
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (state.signatureSvg != null) {
+                            // Show the SVG signature preview.
+                            SignatureSvgPreview(svg = state.signatureSvg!!)
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    Icons.Outlined.Draw,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = " Signature capturée",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.weight(1f)
-                                )
                                 OutlinedButton(onClick = { showSignatureDialog = true }) {
-                                    Text("Refaire")
+                                    Icon(Icons.Outlined.Draw, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Text("  Refaire")
                                 }
                                 IconButton(onClick = { viewModel.setSignatureSvg(null) }) {
                                     Icon(
@@ -558,6 +557,37 @@ private fun AddAttachmentButton(onClick: () -> Unit) {
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+/**
+ * Render an SVG signature string using a WebView preview. Used in the
+ * form to show the signature pulled from personnel data or drawn by
+ * the user.
+ */
+@Composable
+private fun SignatureSvgPreview(svg: String) {
+    val context = LocalContext.current
+    val webView = remember(svg) {
+        android.webkit.WebView(context).apply {
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = true
+            setBackgroundColor(android.graphics.Color.WHITE)
+            loadDataWithBaseURL(null, svg, "image/svg+xml", "UTF-8", null)
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .padding(top = 4.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(androidx.compose.ui.graphics.Color.White)
+    ) {
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = { webView },
+            modifier = Modifier.fillMaxWidth().height(120.dp)
         )
     }
 }
