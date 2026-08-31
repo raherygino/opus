@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gsoft.opus.domain.model.ArmementAttachment
 import com.gsoft.opus.presentation.personnel.DetailRow
@@ -248,6 +251,7 @@ fun ArmementDetailScreen(
 
             // ─── Localisation GPS ─────────────────────────────────────
             if (armement.latitude != null && armement.longitude != null) {
+                var showMapDialog by remember { mutableStateOf(false) }
                 FormSectionCard(
                     title = "Localisation GPS",
                     icon = Icons.Outlined.LocationOn,
@@ -255,18 +259,44 @@ fun ArmementDetailScreen(
                 ) {
                     DetailRow("Latitude", "%.6f".format(armement.latitude))
                     DetailRow("Longitude", "%.6f".format(armement.longitude))
-                    val mapUrl = "https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}"
-                    val context = LocalContext.current
                     OutlinedButton(
-                        onClick = {
-                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(mapUrl))
-                            context.startActivity(intent)
-                        },
+                        onClick = { showMapDialog = true },
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
                     ) {
                         Icon(Icons.Outlined.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text("  Voir sur la carte")
                     }
+                }
+
+                if (showMapDialog) {
+                    val lat = armement.latitude
+                    val lon = armement.longitude
+                    val delta = 0.005
+                    val embedUrl = "https://www.openstreetmap.org/export/embed.html?bbox=${lon - delta}%2C${lat - delta}%2C${lon + delta}%2C${lat + delta}&layer=mapnik&marker=${lat}%2C${lon}"
+                    AlertDialog(
+                        onDismissRequest = { showMapDialog = false },
+                        title = { Text("Localisation GPS") },
+                        text = {
+                            AndroidView(
+                                factory = { ctx ->
+                                    android.webkit.WebView(ctx).apply {
+                                        settings.javaScriptEnabled = true
+                                        settings.loadWithOverviewMode = true
+                                        settings.useWideViewPort = true
+                                        loadUrl(embedUrl)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(400.dp)
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { showMapDialog = false }) {
+                                Text("Fermer")
+                            }
+                        }
+                    )
                 }
             }
 

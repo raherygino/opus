@@ -1,0 +1,27 @@
+Show OpenStreetMap in-app instead of opening browser
+
+Replace the external browser link with an embedded OpenStreetMap
+view in the Armement detail screen on both platforms.
+
+Desktop:
+- "Voir sur la carte" button now toggles an inline iframe showing
+  the OSM embed with a marker at the captured coordinates
+- Updated CSP in electron/main.ts to allow frame-src from
+  openstreetmap.org and img-src from OSM tile servers
+- PDF export keeps the clickable link (can't embed interactive maps)
+
+Android:
+- "Voir sur la carte" button now opens an in-app AlertDialog with
+  a WebView loading the OSM embed (no external browser)
+- Dialog has a "Fermer" button to dismiss
+
+Both use the OpenStreetMap export embed URL format:
+  https://www.openstreetmap.org/export/embed.html?bbox=...&marker=...
+
+Verification:
+- Desktop build: success
+- Android compile: BUILD SUCCESSFUL
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>

@@ -30,7 +30,6 @@ import {
   XCircle,
   PenTool,
   MapPin,
-  ExternalLink,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -70,6 +69,7 @@ export function ArmementDetail() {
   const [viewerTarget, setViewerTarget] = useState<ArmementAttachment | null>(null);
   const [reintOpen, setReintOpen] = useState(false);
   const [reintegrating, setReintegrating] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     loadArmement();
@@ -296,15 +296,27 @@ export function ArmementDetail() {
               <DetailRow label="Latitude" value={armement.latitude} />
               <DetailRow label="Longitude" value={armement.longitude} />
             </div>
-            <a
-              href={`https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMap(!showMap)}
+              className="gap-2"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Voir sur la carte
-            </a>
+              <MapPin className="h-3.5 w-3.5" />
+              {showMap ? "Masquer la carte" : "Voir sur la carte"}
+            </Button>
+            {showMap && (
+              <div className="overflow-hidden rounded-lg border border-border">
+                <iframe
+                  title="Localisation GPS"
+                  width="100%"
+                  height="400"
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(armement.longitude) - 0.005}%2C${Number(armement.latitude) - 0.005}%2C${Number(armement.longitude) + 0.005}%2C${Number(armement.latitude) + 0.005}&layer=mapnik&marker=${armement.latitude}%2C${armement.longitude}`}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
