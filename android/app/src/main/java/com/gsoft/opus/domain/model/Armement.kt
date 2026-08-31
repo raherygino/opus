@@ -24,6 +24,10 @@ data class Armement(
     val agentVerifieAt: String?,
     /** SVG vector data of the agent signature captured at perception. */
     val signatureSvg: String?,
+    /** GPS latitude captured at perception time (mobile only, null on desktop). */
+    val latitude: Double?,
+    /** GPS longitude captured at perception time (mobile only, null on desktop). */
+    val longitude: Double?,
     val heureReintegration: String?,
     val etatReintegration: String?,
     val munitionsConsommees: Int?,

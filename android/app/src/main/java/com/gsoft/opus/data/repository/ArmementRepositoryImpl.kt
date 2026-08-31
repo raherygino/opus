@@ -39,7 +39,9 @@ class ArmementRepositoryImpl @Inject constructor(
         secteurMission = secteurMission.trim(),
         etatPerception = etatPerception.trim(),
         codeSecret = codeSecret,
-        signatureSvg = signatureSvg
+        signatureSvg = signatureSvg,
+        latitude = latitude,
+        longitude = longitude
     )
 
     private fun <T> retrofit2.Response<com.gsoft.opus.data.api.dto.ApiResponse<T>>.extract(defaultError: String): Resource<T> {

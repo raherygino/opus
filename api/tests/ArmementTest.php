@@ -54,6 +54,7 @@ $migrations = [
     '025_create_attach_armement.sql',
     '026_add_personnel_code_secret.sql',
     '027_add_armement_verification_signature.sql',
+    '028_add_armement_location.sql',
 ];
 foreach ($migrations as $file) {
     $sql = file_get_contents($root . '/database/' . $file);
@@ -411,6 +412,35 @@ $reintVerified = Armement::getById($verifiedId);
 check((int) $reintVerified['agent_verifie'] === 1, 'agent_verifie preserved after reintegration');
 check($reintVerified['signature_svg'] !== null, 'signature_svg preserved after reintegration');
 check(substr((string) $reintVerified['heure_reintegration'], 0, 5) === '20:00', 'reintegration time persisted on verified armement');
+
+// --- Location (latitude/longitude) ---------------------------------------------
+echo "Location\n";
+$idLoc = Armement::create(sampleRow([
+    'type_arme' => 'Pistolet',
+    'matricule_arme' => 'P-LOC1',
+    'latitude' => '-18.912345',
+    'longitude' => '47.523456',
+]));
+$row = Armement::getById($idLoc);
+check($row['latitude'] !== null, 'latitude persisted on create');
+check($row['longitude'] !== null, 'longitude persisted on create');
+check((float) $row['latitude'] === -18.912345, 'latitude value correct');
+check((float) $row['longitude'] === 47.523456, 'longitude value correct');
+
+// Null latitude/longitude when not provided (desktop-created armements).
+$idNoLoc = Armement::create(sampleRow([
+    'type_arme' => 'Pistolet',
+    'matricule_arme' => 'P-LOC2',
+]));
+$rowNoLoc = Armement::getById($idNoLoc);
+check($rowNoLoc['latitude'] === null, 'latitude null when not provided');
+check($rowNoLoc['longitude'] === null, 'longitude null when not provided');
+
+// Update latitude/longitude.
+Armement::update($idLoc, ['latitude' => '-19.000000', 'longitude' => '48.000000']);
+$rowUpd = Armement::getById($idLoc);
+check((float) $rowUpd['latitude'] === -19.000000, 'latitude updated');
+check((float) $rowUpd['longitude'] === 48.000000, 'longitude updated');
 
 // --- Teardown -------------------------------------------------------------------
 $pdo->exec("DROP DATABASE IF EXISTS `$scratch`");

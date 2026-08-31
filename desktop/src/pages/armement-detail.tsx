@@ -29,6 +29,8 @@ import {
   CheckCircle2,
   XCircle,
   PenTool,
+  MapPin,
+  ExternalLink,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -280,6 +282,33 @@ export function ArmementDetail() {
         </Card>
       )}
 
+      {/* GPS location (captured on mobile, null on desktop) */}
+      {armement.latitude && armement.longitude && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Localisation GPS
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <DetailRow label="Latitude" value={armement.latitude} />
+              <DetailRow label="Longitude" value={armement.longitude} />
+            </div>
+            <a
+              href={`https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Voir sur la carte
+            </a>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -459,6 +488,26 @@ export function ArmementDetail() {
       doc.setFont("helvetica", "normal");
       doc.text("Arme en cours de perception (non réintégrée).", 14, yPos + 8);
       yPos += 18;
+    }
+
+    // Localisation GPS
+    if (armement.latitude && armement.longitude) {
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.text("Localisation GPS", 14, yPos);
+      yPos += 6;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Latitude: ${armement.latitude}`, 14, yPos);
+      yPos += 5;
+      doc.text(`Longitude: ${armement.longitude}`, 14, yPos);
+      yPos += 5;
+      doc.setTextColor(0, 0, 200);
+      doc.textWithLink("Voir sur la carte (OpenStreetMap)", 14, yPos, {
+        url: `https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}`,
+      });
+      doc.setTextColor(0, 0, 0);
+      yPos += 8;
     }
 
     // Pièces jointes

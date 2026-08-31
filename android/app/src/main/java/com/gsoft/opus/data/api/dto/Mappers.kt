@@ -307,6 +307,8 @@ fun ArmementDto.toDomain(): Armement = Armement(
     agentVerifie = agentVerifie == 1,
     agentVerifieAt = agentVerifieAt,
     signatureSvg = signatureSvg,
+    latitude = latitude?.toDoubleOrNull(),
+    longitude = longitude?.toDoubleOrNull(),
     heureReintegration = heureReintegration,
     etatReintegration = etatReintegration,
     munitionsConsommees = munitionsConsommees,

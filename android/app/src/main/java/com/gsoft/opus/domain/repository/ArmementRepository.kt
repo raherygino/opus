@@ -17,7 +17,10 @@ data class ArmementFormData(
     /** The agent preneur's code secret — verified server-side on create. */
     val codeSecret: String? = null,
     /** SVG vector data of the agent signature captured after verification. */
-    val signatureSvg: String? = null
+    val signatureSvg: String? = null,
+    /** GPS coordinates captured on mobile (required on Android, null on desktop). */
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 /** The three fields of the reintegration transition. */

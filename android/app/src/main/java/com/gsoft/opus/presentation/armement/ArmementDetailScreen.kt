@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Shield
@@ -31,6 +32,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -241,6 +243,30 @@ fun ArmementDetailScreen(
                     Icon(Icons.Outlined.TaskAlt, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Réintégration")
+                }
+            }
+
+            // ─── Localisation GPS ─────────────────────────────────────
+            if (armement.latitude != null && armement.longitude != null) {
+                FormSectionCard(
+                    title = "Localisation GPS",
+                    icon = Icons.Outlined.LocationOn,
+                    subtitle = "Position capturée lors de la perception"
+                ) {
+                    DetailRow("Latitude", "%.6f".format(armement.latitude))
+                    DetailRow("Longitude", "%.6f".format(armement.longitude))
+                    val mapUrl = "https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}"
+                    val context = LocalContext.current
+                    OutlinedButton(
+                        onClick = {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(mapUrl))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                    ) {
+                        Icon(Icons.Outlined.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text("  Voir sur la carte")
+                    }
                 }
             }
 

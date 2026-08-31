@@ -20,6 +20,8 @@ data class ArmementDto(
     @SerializedName("agent_verifie") val agentVerifie: Int = 0,
     @SerializedName("agent_verifie_at") val agentVerifieAt: String? = null,
     @SerializedName("signature_svg") val signatureSvg: String? = null,
+    @SerializedName("latitude") val latitude: String? = null,
+    @SerializedName("longitude") val longitude: String? = null,
     @SerializedName("heure_reintegration") val heureReintegration: String? = null,
     @SerializedName("etat_reintegration") val etatReintegration: String? = null,
     @SerializedName("munitions_consommees") val munitionsConsommees: Int? = null,
@@ -45,7 +47,10 @@ data class ArmementRequest(
     @SerializedName("code_secret") val codeSecret: String? = null,
     // SVG vector data of the agent signature captured after verification.
     // Optional on create, ignored on update (one-way field).
-    @SerializedName("signature_svg") val signatureSvg: String? = null
+    @SerializedName("signature_svg") val signatureSvg: String? = null,
+    // GPS coordinates captured on mobile (required on Android, null on desktop).
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null
 )
 
 /** The three fields of the reintegration transition. */

@@ -1,8 +1,16 @@
 package com.gsoft.opus.presentation.armement
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.ArmementFormData
@@ -11,11 +19,13 @@ import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -43,6 +53,11 @@ data class ArmementFormUiState(
     val signatureSvg: String? = null,
     // Whether the current signature came from the personnel's data (vs drawn).
     val signatureFromPersonnel: Boolean = false,
+    // GPS location — required on Android to create an armement perception.
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val isCapturingLocation: Boolean = false,
+    val locationError: String? = null,
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
     val saved: Boolean = false
@@ -52,7 +67,8 @@ data class ArmementFormUiState(
 class ArmementFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val armementRepository: ArmementRepository,
-    private val personnelRepository: PersonnelRepository
+    private val personnelRepository: PersonnelRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val armementId: Int = savedStateHandle.get<Int>("armementId") ?: 0
@@ -101,7 +117,9 @@ class ArmementFormViewModel @Inject constructor(
                             secteurMission = a.secteurMission ?: "",
                             etatPerception = a.etatPerception ?: "",
                             verified = a.agentVerifie,
-                            signatureSvg = a.signatureSvg
+                            signatureSvg = a.signatureSvg,
+                            latitude = a.latitude,
+                            longitude = a.longitude
                         )
                     }
                     when (val atts = armementRepository.getAttachments(armementId)) {
@@ -141,6 +159,87 @@ class ArmementFormViewModel @Inject constructor(
         _state.update { it.copy(signatureSvg = svg, signatureFromPersonnel = false) }
     }
 
+    // ─── GPS location capture ───────────────────────────────────────
+    // On Android, the agent must enable location services and the app
+    // captures the device's latitude/longitude before an armement
+    // perception can be created. This is required — the save() function
+    // blocks if no location has been captured (on create).
+
+    /** Whether the app has been granted location permissions. */
+    fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
+     * Check if location services (GPS/network provider) are enabled on
+     * the device.
+     */
+    fun isLocationEnabled(): Boolean {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    /**
+     * Capture the current device location using the FusedLocationProvider.
+     * On success, the latitude/longitude are stored in the UI state. On
+     * failure, a location error message is shown. This must succeed
+     * before a new armement perception can be saved.
+     */
+    @SuppressLint("MissingPermission")
+    fun captureLocation() {
+        if (!hasLocationPermission()) {
+            _state.update { it.copy(locationError = "Autorisation de localisation requise") }
+            return
+        }
+        if (!isLocationEnabled()) {
+            _state.update { it.copy(locationError = "Activez les services de localisation (GPS) sur votre appareil") }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(isCapturingLocation = true, locationError = null) }
+            try {
+                val location = LocationServices.getFusedLocationProviderClient(context)
+                    .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                    .await()
+                if (location != null) {
+                    _state.update {
+                        it.copy(
+                            isCapturingLocation = false,
+                            latitude = location.latitude,
+                            longitude = location.longitude,
+                            locationError = null
+                        )
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            isCapturingLocation = false,
+                            locationError = "Impossible d'obtenir la position. Réessayez."
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isCapturingLocation = false,
+                        locationError = "Erreur de localisation: ${e.message ?: "inconnue"}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearLocation() {
+        _state.update { it.copy(latitude = null, longitude = null, locationError = null) }
+    }
+
+    fun dismissLocationError() {
+        _state.update { it.copy(locationError = null) }
+    }
     /**
      * Verify the agent preneur's code secret against the server. On success,
      * the perception can be created. On failure, the verification error is
@@ -252,6 +351,13 @@ class ArmementFormViewModel @Inject constructor(
             }
             return
         }
+        // On create, GPS location is required (mobile-only requirement).
+        if (!s.isEdit && (s.latitude == null || s.longitude == null)) {
+            _state.update {
+                it.copy(errorMessage = "La localisation GPS est requise. Activez les services de localisation et capturez votre position.")
+            }
+            return
+        }
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
             val data = ArmementFormData(
@@ -266,7 +372,9 @@ class ArmementFormViewModel @Inject constructor(
                 // On create, include the code secret (verified server-side)
                 // and the signature SVG (captured after verification).
                 codeSecret = if (s.isEdit) null else s.codeSecret.trim().takeIf { it.isNotEmpty() },
-                signatureSvg = if (s.isEdit) null else s.signatureSvg
+                signatureSvg = if (s.isEdit) null else s.signatureSvg,
+                latitude = s.latitude,
+                longitude = s.longitude
             )
             val result = if (s.isEdit) {
                 armementRepository.updateArmement(armementId, data)

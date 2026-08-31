@@ -76,6 +76,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
 
+    // Google Play Services Location (GPS capture for Armement)
+    implementation(libs.play.services.location)
+
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
 

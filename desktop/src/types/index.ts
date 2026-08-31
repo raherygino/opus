@@ -277,6 +277,10 @@ export interface Armement {
   agent_verifie_at: string | null;
   /** SVG vector data of the agent signature captured at perception. */
   signature_svg: string | null;
+  /** GPS latitude captured at perception time (mobile only, null on desktop). */
+  latitude: string | null;
+  /** GPS longitude captured at perception time (mobile only, null on desktop). */
+  longitude: string | null;
   heure_reintegration: string | null;
   etat_reintegration: string | null;
   munitions_consommees: number | null;
