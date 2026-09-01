@@ -92,6 +92,7 @@ import com.gsoft.opus.presentation.declarationperte.DeclarationPerteFormScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteScreen
 import com.gsoft.opus.presentation.armement.ArmementDetailScreen
 import com.gsoft.opus.presentation.armement.ArmementFormScreen
+import com.gsoft.opus.presentation.armement.ArmementReintegrationScreen
 import com.gsoft.opus.presentation.armement.ArmementScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
@@ -483,6 +484,9 @@ fun MainScreen(
                             },
                             onCreateArmement = {
                                 navController.navigate(MainRoutes.ArmementForm.createRoute(0))
+                            },
+                            onReintegrate = { id ->
+                                navController.navigate(MainRoutes.ArmementReintegration.createRoute(id))
                             }
                         )
                     }
@@ -862,6 +866,9 @@ fun MainScreen(
                             onEdit = { id ->
                                 navController.navigate(MainRoutes.ArmementForm.createRoute(id))
                             },
+                            onReintegrate = { id ->
+                                navController.navigate(MainRoutes.ArmementReintegration.createRoute(id))
+                            },
                             onBack = { navController.popBackStack() }
                         )
                     }
@@ -889,6 +896,35 @@ fun MainScreen(
                         }
                     ) {
                         ArmementFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Armement reintegration (full-screen form)
+                    composable(
+                        route = MainRoutes.ArmementReintegration.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("armementId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArmementReintegrationScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )

@@ -67,6 +67,7 @@ import com.gsoft.opus.ui.components.ImageViewerDialog
 @Composable
 fun ArmementDetailScreen(
     onEdit: (Int) -> Unit,
+    onReintegrate: (Int) -> Unit,
     onBack: () -> Unit,
     viewModel: ArmementDetailViewModel = hiltViewModel()
 ) {
@@ -260,7 +261,7 @@ fun ArmementDetailScreen(
                 }
             } else if (state.canEdit) {
                 Button(
-                    onClick = viewModel::requestReintegration,
+                    onClick = { state.armement?.id?.let { onReintegrate(it) } },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Outlined.TaskAlt, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -352,18 +353,6 @@ fun ArmementDetailScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-
-    if (state.showReintegrationDialog) {
-        state.armement?.let { armement ->
-            ArmementReintegrationDialog(
-                armement = armement,
-                isSubmitting = state.isReintegrating,
-                errorMessage = state.reintegrationError,
-                onConfirm = viewModel::confirmReintegration,
-                onDismiss = viewModel::cancelReintegration
-            )
         }
     }
 

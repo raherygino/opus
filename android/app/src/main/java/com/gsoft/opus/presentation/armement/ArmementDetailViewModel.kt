@@ -9,7 +9,6 @@ import com.gsoft.opus.core.hasPermission
 import com.gsoft.opus.domain.model.Armement
 import com.gsoft.opus.domain.model.ArmementAttachment
 import com.gsoft.opus.domain.repository.ArmementRepository
-import com.gsoft.opus.domain.repository.ReintegrationData
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -26,9 +25,6 @@ data class ArmementDetailUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val canEdit: Boolean = false,
-    val showReintegrationDialog: Boolean = false,
-    val isReintegrating: Boolean = false,
-    val reintegrationError: String? = null,
     val userMessage: String? = null,
     val notFound: Boolean = false
 )
@@ -84,37 +80,6 @@ class ArmementDetailViewModel @Inject constructor(
     }
 
     // ─── Réintégration ──────────────────────────────────────────────
-
-    /** Opens the reintegration dialog — only while the weapon is en cours. */
-    fun requestReintegration() {
-        val armement = _state.value.armement ?: return
-        if (armement.isReintegree) return
-        _state.update { it.copy(showReintegrationDialog = true, reintegrationError = null) }
-    }
-
-    fun cancelReintegration() {
-        _state.update { it.copy(showReintegrationDialog = false, reintegrationError = null) }
-    }
-
-    fun confirmReintegration(data: ReintegrationData) {
-        viewModelScope.launch {
-            _state.update { it.copy(isReintegrating = true, reintegrationError = null) }
-            when (val result = armementRepository.reintegrateArmement(armementId, data)) {
-                is Resource.Success -> _state.update {
-                    it.copy(
-                        isReintegrating = false,
-                        showReintegrationDialog = false,
-                        armement = result.data,
-                        userMessage = "Arme réintégrée avec succès"
-                    )
-                }
-                is Resource.Error -> _state.update {
-                    it.copy(isReintegrating = false, reintegrationError = result.message)
-                }
-                is Resource.Loading -> {}
-            }
-        }
-    }
 
     fun dismissMessage() {
         _state.update { it.copy(userMessage = null) }

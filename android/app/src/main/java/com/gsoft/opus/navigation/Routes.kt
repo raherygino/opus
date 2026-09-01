@@ -124,4 +124,7 @@ sealed class MainRoutes(val route: String) {
     data object ArmementForm : MainRoutes("sed_armement_form?armementId={armementId}") {
         fun createRoute(armementId: Int = 0) = "sed_armement_form?armementId=$armementId"
     }
+    data object ArmementReintegration : MainRoutes("sed_armement_reintegration/{armementId}") {
+        fun createRoute(armementId: Int) = "sed_armement_reintegration/$armementId"
+    }
 }

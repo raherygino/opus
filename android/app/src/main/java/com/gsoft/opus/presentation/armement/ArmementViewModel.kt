@@ -7,7 +7,6 @@ import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
 import com.gsoft.opus.domain.model.Armement
 import com.gsoft.opus.domain.repository.ArmementRepository
-import com.gsoft.opus.domain.repository.ReintegrationData
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +26,6 @@ data class ArmementUiState(
     val canDelete: Boolean = false,
     val deleteTarget: Armement? = null,
     val isDeleting: Boolean = false,
-    val reintegrationTarget: Armement? = null,
-    val isReintegrating: Boolean = false,
-    val reintegrationError: String? = null,
     val userMessage: String? = null
 ) {
     val filtered: List<Armement>
@@ -119,39 +115,6 @@ class ArmementViewModel @Inject constructor(
                         deleteTarget = null,
                         userMessage = "Impossible de supprimer cet armement"
                     )
-                }
-                is Resource.Loading -> {}
-            }
-        }
-    }
-
-    // ─── Réintégration ──────────────────────────────────────────────
-
-    /** Opens the reintegration dialog — only while the weapon is en cours. */
-    fun requestReintegration(armement: Armement) {
-        if (armement.isReintegree) return
-        _state.update { it.copy(reintegrationTarget = armement, reintegrationError = null) }
-    }
-
-    fun cancelReintegration() {
-        _state.update { it.copy(reintegrationTarget = null, reintegrationError = null) }
-    }
-
-    fun confirmReintegration(data: ReintegrationData) {
-        val target = _state.value.reintegrationTarget ?: return
-        viewModelScope.launch {
-            _state.update { it.copy(isReintegrating = true, reintegrationError = null) }
-            when (val result = armementRepository.reintegrateArmement(target.id, data)) {
-                is Resource.Success -> _state.update { s ->
-                    s.copy(
-                        isReintegrating = false,
-                        reintegrationTarget = null,
-                        armements = s.armements.map { a -> if (a.id == target.id) result.data else a },
-                        userMessage = "Arme réintégrée avec succès"
-                    )
-                }
-                is Resource.Error -> _state.update {
-                    it.copy(isReintegrating = false, reintegrationError = result.message)
                 }
                 is Resource.Loading -> {}
             }

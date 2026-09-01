@@ -58,6 +58,7 @@ import com.gsoft.opus.ui.components.OpusDialog
 fun ArmementScreen(
     onArmementClick: (Int) -> Unit,
     onCreateArmement: () -> Unit,
+    onReintegrate: (Int) -> Unit,
     viewModel: ArmementViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -130,7 +131,7 @@ fun ArmementScreen(
                             canEdit = state.canEdit,
                             canDelete = state.canDelete,
                             onClick = { onArmementClick(armement.id) },
-                            onReintegrate = { viewModel.requestReintegration(armement) },
+                            onReintegrate = { onReintegrate(armement.id) },
                             onDelete = { viewModel.requestDelete(armement) }
                         )
                     }
@@ -149,16 +150,6 @@ fun ArmementScreen(
         cancelText = "Annuler",
         onCancel = viewModel::cancelDelete
     )
-
-    state.reintegrationTarget?.let { target ->
-        ArmementReintegrationDialog(
-            armement = target,
-            isSubmitting = state.isReintegrating,
-            errorMessage = state.reintegrationError,
-            onConfirm = viewModel::confirmReintegration,
-            onDismiss = viewModel::cancelReintegration
-        )
-    }
 }
 
 @Composable
