@@ -70,6 +70,7 @@ export function ArmementDetail() {
   const [reintOpen, setReintOpen] = useState(false);
   const [reintegrating, setReintegrating] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showReintMap, setShowReintMap] = useState(false);
 
   useEffect(() => {
     loadArmement();
@@ -263,21 +264,57 @@ export function ArmementDetail() {
               Réintégration
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <DetailRow label="Heure de la réintégration" value={formatHeure(armement.heure_reintegration)} />
-            <DetailRow
-              label="Munitions consommées"
-              value={
-                armement.munitions_consommees !== null
-                  ? String(armement.munitions_consommees) +
-                    (munitionsRestantes !== null ? ` (restantes : ${munitionsRestantes})` : "")
-                  : "—"
-              }
-            />
-            <DetailRow
-              label="État à la réintégration"
-              value={<span className="whitespace-pre-wrap">{armement.etat_reintegration}</span>}
-            />
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <DetailRow label="Date de la réintégration" value={formatDate(armement.date_reintegration)} />
+              <DetailRow label="Heure de la réintégration" value={formatHeure(armement.heure_reintegration)} />
+              <DetailRow
+                label="Munitions consommées"
+                value={
+                  armement.munitions_consommees !== null
+                    ? String(armement.munitions_consommees) +
+                      (munitionsRestantes !== null ? ` (restantes : ${munitionsRestantes})` : "")
+                    : "—"
+                }
+              />
+              <DetailRow
+                label="État à la réintégration"
+                value={<span className="whitespace-pre-wrap">{armement.etat_reintegration}</span>}
+              />
+            </div>
+            {armement.reintegration_latitude && armement.reintegration_longitude && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <MapPin className="h-4 w-4" />
+                  Localisation de la réintégration
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailRow label="Latitude" value={armement.reintegration_latitude} />
+                  <DetailRow label="Longitude" value={armement.reintegration_longitude} />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReintMap(!showReintMap)}
+                  className="gap-2"
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  {showReintMap ? "Masquer la carte" : "Voir sur la carte"}
+                </Button>
+                {showReintMap && (
+                  <div className="overflow-hidden rounded-lg border border-border">
+                    <iframe
+                      title="Localisation de la réintégration"
+                      width="100%"
+                      height="400"
+                      loading="lazy"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(armement.reintegration_longitude) - 0.005}%2C${Number(armement.reintegration_latitude) - 0.005}%2C${Number(armement.reintegration_longitude) + 0.005}%2C${Number(armement.reintegration_latitude) + 0.005}&layer=mapnik&marker=${armement.reintegration_latitude}%2C${armement.reintegration_longitude}`}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -477,21 +514,23 @@ export function ArmementDetail() {
     );
 
     if (reintegree) {
-      yPos = printSection(
-        "Réintégration",
+      const reintLines: [string, string][] = [
+        ["Date", formatDate(armement.date_reintegration)],
+        ["Heure", formatHeure(armement.heure_reintegration)],
+        ["État à la réintégration", armement.etat_reintegration || "—"],
         [
-          ["Heure", formatHeure(armement.heure_reintegration)],
-          ["État à la réintégration", armement.etat_reintegration || "—"],
-          [
-            "Munitions consommées",
-            armement.munitions_consommees !== null
-              ? String(armement.munitions_consommees) +
-                (munitionsRestantes !== null ? ` (restantes : ${munitionsRestantes})` : "")
-              : "—",
-          ],
+          "Munitions consommées",
+          armement.munitions_consommees !== null
+            ? String(armement.munitions_consommees) +
+              (munitionsRestantes !== null ? ` (restantes : ${munitionsRestantes})` : "")
+            : "—",
         ],
-        yPos,
-      );
+      ];
+      if (armement.reintegration_latitude && armement.reintegration_longitude) {
+        reintLines.push(["Latitude (réintégration)", String(armement.reintegration_latitude)]);
+        reintLines.push(["Longitude (réintégration)", String(armement.reintegration_longitude)]);
+      }
+      yPos = printSection("Réintégration", reintLines, yPos);
     } else {
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
@@ -520,6 +559,35 @@ export function ArmementDetail() {
       });
       doc.setTextColor(0, 0, 0);
       yPos += 8;
+    }
+
+    // Signature de l'agent (SVG → PNG via canvas, then embedded in the PDF)
+    if (armement.signature_svg) {
+      try {
+        const svgBlob = new Blob([armement.signature_svg], { type: "image/svg+xml" });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        const signatureImg = await new Promise<HTMLImageElement | null>((resolve) => {
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = svgUrl;
+        });
+        URL.revokeObjectURL(svgUrl);
+
+        if (signatureImg) {
+          const sigW = 120;
+          const sigH = (signatureImg.height / signatureImg.width) * sigW || 40;
+          doc.setFontSize(13);
+          doc.setFont("helvetica", "bold");
+          doc.text("Signature de l'agent", 14, yPos);
+          yPos += 6;
+          doc.addImage(signatureImg, "PNG", 14, yPos, sigW, sigH);
+          yPos += sigH + 8;
+        }
+      } catch {
+        // Signature conversion may fail in some environments — skip silently
+      }
     }
 
     // Pièces jointes

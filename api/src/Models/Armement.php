@@ -144,13 +144,17 @@ class Armement
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
             'UPDATE armement
-             SET heure_reintegration = ?, etat_reintegration = ?, munitions_consommees = ?
+             SET heure_reintegration = ?, date_reintegration = ?, etat_reintegration = ?, munitions_consommees = ?,
+                 reintegration_latitude = ?, reintegration_longitude = ?
              WHERE id = ? AND heure_reintegration IS NULL'
         );
         $stmt->execute([
             $data['heure_reintegration'],
+            $data['date_reintegration'] ?? null,
             $data['etat_reintegration'] ?? null,
             $data['munitions_consommees'] ?? null,
+            $data['reintegration_latitude'] ?? null,
+            $data['reintegration_longitude'] ?? null,
             $id,
         ]);
         return $stmt->rowCount() > 0;

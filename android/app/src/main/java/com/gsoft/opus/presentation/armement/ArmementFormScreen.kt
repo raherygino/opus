@@ -33,7 +33,6 @@ import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -292,7 +291,6 @@ fun ArmementFormScreen(
 
                 // Verification step (create mode only).
                 if (!state.isEdit) {
-                    var showCode by remember { mutableStateOf(false) }
                     Text(
                         text = "Vérification de l'identité",
                         style = MaterialTheme.typography.titleSmall,
@@ -304,56 +302,47 @@ fun ArmementFormScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = state.codeSecret,
-                            onValueChange = viewModel::updateCodeSecret,
-                            label = { Text("Code secret de l'agent") },
-                            singleLine = true,
-                            enabled = !state.verified && state.agentPreneurPersonnelId > 0,
-                            leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
-                            trailingIcon = {
-                                IconButton(onClick = { showCode = !showCode }) {
-                                    Icon(
-                                        if (showCode) Icons.Outlined.Close else Icons.Outlined.RemoveRedEye,
-                                        contentDescription = if (showCode) "Masquer" else "Afficher"
-                                    )
-                                }
-                            },
-                            visualTransformation = if (showCode) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                        if (state.verified) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(start = 8.dp)
-                            ) {
-                                Icon(
-                                    Icons.Outlined.CheckCircle,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = " Vérifié",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        } else {
-                            GradientButton(
-                                text = "Vérifier",
-                                onClick = { viewModel.verifyCode() },
-                                isLoading = state.verifying,
-                                modifier = Modifier.padding(start = 8.dp)
+                    OutlinedTextField(
+                        value = state.codeSecret,
+                        onValueChange = viewModel::updateCodeSecret,
+                        label = { Text("Code secret de l'agent") },
+                        singleLine = true,
+                        enabled = !state.verified && state.agentPreneurPersonnelId > 0,
+                        leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
+                    )
+                    if (state.verified) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = " Vérifié",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
+                    } else {
+                        GradientButton(
+                            text = "Vérifier",
+                            onClick = { viewModel.verifyCode() },
+                            isLoading = state.verifying,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        )
                     }
                     if (state.verifyError != null) {
                         Text(

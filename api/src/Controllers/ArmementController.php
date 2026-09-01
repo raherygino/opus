@@ -87,6 +87,13 @@ class ArmementController
             $errors['heure_reintegration'] = "L'heure est invalide (format attendu : HH:MM)";
         }
 
+        $dateReint = $data['date_reintegration'] ?? null;
+        if (empty($dateReint)) {
+            $errors['date_reintegration'] = "La date de la réintégration est requise";
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateReint)) {
+            $errors['date_reintegration'] = "La date est invalide (format attendu : YYYY-MM-DD)";
+        }
+
         if (empty(trim((string) ($data['etat_reintegration'] ?? '')))) {
             $errors['etat_reintegration'] = "L'état à la réintégration est requis";
         }
@@ -98,6 +105,17 @@ class ArmementController
             $errors['munitions_consommees'] = 'Les munitions consommées doivent être un nombre entier positif';
         } elseif ($armement['munitions'] !== null && (int) $consommees > (int) $armement['munitions']) {
             $errors['munitions_consommees'] = 'Les munitions consommées ne peuvent pas dépasser les munitions perçues';
+        }
+
+        // Reintegration coordinates are optional server-side (mobile sends
+        // them, desktop may omit). When provided they must be valid decimals.
+        $lat = $data['reintegration_latitude'] ?? null;
+        $lon = $data['reintegration_longitude'] ?? null;
+        if ($lat !== null && $lat !== '' && !is_numeric($lat)) {
+            $errors['reintegration_latitude'] = 'La latitude doit être un nombre';
+        }
+        if ($lon !== null && $lon !== '' && !is_numeric($lon)) {
+            $errors['reintegration_longitude'] = 'La longitude doit être un nombre';
         }
 
         return $errors;
@@ -332,8 +350,11 @@ class ArmementController
         $oldArmement = $armement;
         Armement::reintegrate($id, [
             'heure_reintegration' => $data['heure_reintegration'],
+            'date_reintegration' => $data['date_reintegration'] ?? null,
             'etat_reintegration' => trim((string) $data['etat_reintegration']),
             'munitions_consommees' => (int) $data['munitions_consommees'],
+            'reintegration_latitude' => $data['reintegration_latitude'] ?? null,
+            'reintegration_longitude' => $data['reintegration_longitude'] ?? null,
         ]);
         $armement = Armement::getById($id);
 

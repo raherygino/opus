@@ -23,8 +23,11 @@ data class ArmementDto(
     @SerializedName("latitude") val latitude: String? = null,
     @SerializedName("longitude") val longitude: String? = null,
     @SerializedName("heure_reintegration") val heureReintegration: String? = null,
+    @SerializedName("date_reintegration") val dateReintegration: String? = null,
     @SerializedName("etat_reintegration") val etatReintegration: String? = null,
     @SerializedName("munitions_consommees") val munitionsConsommees: Int? = null,
+    @SerializedName("reintegration_latitude") val reintegrationLatitude: String? = null,
+    @SerializedName("reintegration_longitude") val reintegrationLongitude: String? = null,
     @SerializedName("created_by") val createdBy: Int? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null,
@@ -53,11 +56,14 @@ data class ArmementRequest(
     @SerializedName("longitude") val longitude: Double? = null
 )
 
-/** The three fields of the reintegration transition. */
+/** The fields of the reintegration transition. */
 data class ReintegrationRequest(
     @SerializedName("heure_reintegration") val heureReintegration: String,
+    @SerializedName("date_reintegration") val dateReintegration: String,
     @SerializedName("etat_reintegration") val etatReintegration: String,
-    @SerializedName("munitions_consommees") val munitionsConsommees: Int
+    @SerializedName("munitions_consommees") val munitionsConsommees: Int,
+    @SerializedName("reintegration_latitude") val reintegrationLatitude: Double? = null,
+    @SerializedName("reintegration_longitude") val reintegrationLongitude: Double? = null
 )
 
 data class ArmementAttachmentDto(

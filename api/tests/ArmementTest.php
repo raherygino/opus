@@ -55,6 +55,7 @@ $migrations = [
     '026_add_personnel_code_secret.sql',
     '027_add_armement_verification_signature.sql',
     '028_add_armement_location.sql',
+    '029_add_armement_reintegration_location.sql',
 ];
 foreach ($migrations as $file) {
     $sql = file_get_contents($root . '/database/' . $file);
@@ -144,18 +145,25 @@ check(Armement::getById($id)['heure_reintegration'] === null, 'update() cannot t
 echo "Reintegration\n";
 check(Armement::reintegrate($id, [
     'heure_reintegration' => '22:30',
+    'date_reintegration' => '2025-01-15',
     'etat_reintegration' => 'Bon état',
     'munitions_consommees' => 5,
+    'reintegration_latitude' => 14.6928,
+    'reintegration_longitude' => -17.4467,
 ]), 'reintegrate succeeds while en cours');
 $row = Armement::getById($id);
 check(substr((string) $row['heure_reintegration'], 0, 5) === '22:30', 'heure_reintegration persisted');
+check($row['date_reintegration'] === '2025-01-15', 'date_reintegration persisted');
 check($row['etat_reintegration'] === 'Bon état', 'etat_reintegration persisted');
 check((int) $row['munitions_consommees'] === 5, 'munitions_consommees persisted');
+check((float) $row['reintegration_latitude'] === 14.6928, 'reintegration_latitude persisted');
+check((float) $row['reintegration_longitude'] === -17.4467, 'reintegration_longitude persisted');
 // Perception data is preserved after reintegration.
 check($row['agent_preneur_nom'] === 'Jean Rakoto' && $row['matricule_arme'] === 'PA-0001', 'perception data preserved after reintegration');
 // One-way transition: a second reintegration must fail.
 check(!Armement::reintegrate($id, [
     'heure_reintegration' => '23:00',
+    'date_reintegration' => '2025-01-16',
     'etat_reintegration' => 'Rayé',
     'munitions_consommees' => 0,
 ]), 'second reintegration rejected');
@@ -216,15 +224,18 @@ $validateReint = fn(array $data): array => $reintMethod->invoke(null, $data, $cu
 
 check($validateReint([
     'heure_reintegration' => '22:30',
+    'date_reintegration' => '2025-01-15',
     'etat_reintegration' => 'Bon état',
     'munitions_consommees' => 5,
 ]) === [], 'valid reintegration payload passes');
-check(isset($validateReint(['heure_reintegration' => '', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 5])['heure_reintegration']), 'missing heure_reintegration rejected');
-check(isset($validateReint(['heure_reintegration' => '25:00', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 5])['heure_reintegration']), 'invalid heure_reintegration rejected');
-check(isset($validateReint(['heure_reintegration' => '22:30', 'etat_reintegration' => '', 'munitions_consommees' => 5])['etat_reintegration']), 'missing etat_reintegration rejected');
-check(isset($validateReint(['heure_reintegration' => '22:30', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => null])['munitions_consommees']), 'missing munitions_consommees rejected');
-check(isset($validateReint(['heure_reintegration' => '22:30', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => -1])['munitions_consommees']), 'negative munitions_consommees rejected');
-check(isset($validateReint(['heure_reintegration' => '22:30', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 31])['munitions_consommees']), 'munitions_consommees > munitions rejected');
+check(isset($validateReint(['heure_reintegration' => '', 'date_reintegration' => '2025-01-15', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 5])['heure_reintegration']), 'missing heure_reintegration rejected');
+check(isset($validateReint(['heure_reintegration' => '25:00', 'date_reintegration' => '2025-01-15', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 5])['heure_reintegration']), 'invalid heure_reintegration rejected');
+check(isset($validateReint(['heure_reintegration' => '22:30', 'date_reintegration' => '', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 5])['date_reintegration']), 'missing date_reintegration rejected');
+check(isset($validateReint(['heure_reintegration' => '22:30', 'date_reintegration' => 'invalid', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 5])['date_reintegration']), 'invalid date_reintegration rejected');
+check(isset($validateReint(['heure_reintegration' => '22:30', 'date_reintegration' => '2025-01-15', 'etat_reintegration' => '', 'munitions_consommees' => 5])['etat_reintegration']), 'missing etat_reintegration rejected');
+check(isset($validateReint(['heure_reintegration' => '22:30', 'date_reintegration' => '2025-01-15', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => null])['munitions_consommees']), 'missing munitions_consommees rejected');
+check(isset($validateReint(['heure_reintegration' => '22:30', 'date_reintegration' => '2025-01-15', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => -1])['munitions_consommees']), 'negative munitions_consommees rejected');
+check(isset($validateReint(['heure_reintegration' => '22:30', 'date_reintegration' => '2025-01-15', 'etat_reintegration' => 'Bon état', 'munitions_consommees' => 31])['munitions_consommees']), 'munitions_consommees > munitions rejected');
 
 // --- Agent preneur snapshot (private static, via reflection) -------------------
 echo "Agent preneur snapshot\n";
@@ -405,6 +416,7 @@ check($afterUpdate['signature_svg'] === $verifiedRow['signature_svg'], 'update()
 // is preserved alongside the reintegration data.
 check(Armement::reintegrate($verifiedId, [
     'heure_reintegration' => '20:00',
+    'date_reintegration' => '2025-02-20',
     'etat_reintegration' => 'Bon état',
     'munitions_consommees' => 10,
 ]), 'reintegration succeeds on verified armement');

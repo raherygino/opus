@@ -23,11 +23,15 @@ data class ArmementFormData(
     val longitude: Double? = null
 )
 
-/** The three fields of the reintegration transition. */
+/** The fields of the reintegration transition. */
 data class ReintegrationData(
     val heureReintegration: String,
+    val dateReintegration: String,
     val etatReintegration: String,
-    val munitionsConsommees: Int
+    val munitionsConsommees: Int,
+    /** GPS coordinates captured at reintegration (required on mobile, null on desktop). */
+    val reintegrationLatitude: Double? = null,
+    val reintegrationLongitude: Double? = null
 )
 
 interface ArmementRepository {

@@ -117,8 +117,11 @@ class ArmementRepositoryImpl @Inject constructor(
                 id,
                 ReintegrationRequest(
                     heureReintegration = data.heureReintegration,
+                    dateReintegration = data.dateReintegration,
                     etatReintegration = data.etatReintegration.trim(),
-                    munitionsConsommees = data.munitionsConsommees
+                    munitionsConsommees = data.munitionsConsommees,
+                    reintegrationLatitude = data.reintegrationLatitude,
+                    reintegrationLongitude = data.reintegrationLongitude
                 )
             )
                 .extract("Impossible de réintégrer l'arme")

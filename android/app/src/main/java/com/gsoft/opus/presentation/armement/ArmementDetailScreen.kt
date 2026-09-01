@@ -227,6 +227,7 @@ fun ArmementDetailScreen(
                     icon = Icons.Outlined.TaskAlt,
                     subtitle = "Retour de l'arme"
                 ) {
+                    DetailRow("Date de la réintégration", armement.dateReintegration ?: "—")
                     DetailRow("Heure de la réintégration", armement.heureReintegrationDisplay ?: "—")
                     DetailRow("État à la réintégration", armement.etatReintegration ?: "—")
                     DetailRow(
@@ -235,6 +236,27 @@ fun ArmementDetailScreen(
                             armement.munitionsRestantes?.let { "$consommees (restantes : $it)" } ?: consommees
                         } ?: "—"
                     )
+
+                    // Reintegration GPS coordinates
+                    if (armement.reintegrationLatitude != null && armement.reintegrationLongitude != null) {
+                        val context = LocalContext.current
+                        DetailRow("Latitude (réintégration)", "%.6f".format(armement.reintegrationLatitude))
+                        DetailRow("Longitude (réintégration)", "%.6f".format(armement.reintegrationLongitude))
+                        OutlinedButton(
+                            onClick = {
+                                val intent = android.content.Intent(context, com.gsoft.opus.presentation.map.MapActivity::class.java).apply {
+                                    putExtra("latitude", armement.reintegrationLatitude)
+                                    putExtra("longitude", armement.reintegrationLongitude)
+                                    putExtra("title", "Localisation de la réintégration")
+                                }
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        ) {
+                            Icon(Icons.Outlined.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text("  Voir sur la carte")
+                        }
+                    }
                 }
             } else if (state.canEdit) {
                 Button(

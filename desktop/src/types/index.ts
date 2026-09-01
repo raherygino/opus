@@ -282,8 +282,13 @@ export interface Armement {
   /** GPS longitude captured at perception time (mobile only, null on desktop). */
   longitude: string | null;
   heure_reintegration: string | null;
+  date_reintegration: string | null;
   etat_reintegration: string | null;
   munitions_consommees: number | null;
+  /** GPS latitude captured at reintegration (mobile only, null on desktop). */
+  reintegration_latitude: string | null;
+  /** GPS longitude captured at reintegration (mobile only, null on desktop). */
+  reintegration_longitude: string | null;
   created_by: number | null;
   agent_preneur_personnel_im?: string | null;
   attachments?: ArmementAttachment[];

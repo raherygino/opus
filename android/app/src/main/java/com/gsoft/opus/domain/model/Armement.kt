@@ -29,8 +29,13 @@ data class Armement(
     /** GPS longitude captured at perception time (mobile only, null on desktop). */
     val longitude: Double?,
     val heureReintegration: String?,
+    val dateReintegration: String?,
     val etatReintegration: String?,
     val munitionsConsommees: Int?,
+    /** GPS latitude captured at reintegration (mobile only, null on desktop). */
+    val reintegrationLatitude: Double?,
+    /** GPS longitude captured at reintegration (mobile only, null on desktop). */
+    val reintegrationLongitude: Double?,
     val createdBy: Int?,
     val createdAt: String?,
     val updatedAt: String?
