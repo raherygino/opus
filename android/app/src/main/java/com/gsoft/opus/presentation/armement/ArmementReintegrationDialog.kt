@@ -8,7 +8,6 @@ import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -31,7 +29,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.gsoft.opus.domain.model.Armement
 import com.gsoft.opus.domain.repository.ReintegrationData
@@ -115,21 +113,33 @@ fun ArmementReintegrationDialog(
         }
     }
 
-    AlertDialog(
-        onDismissRequest = { if (!isSubmitting) onDismiss() },
-        title = {
-            Column {
-                Text("Réintégration de l'arme", fontWeight = FontWeight.Bold)
-                Text(
-                    text = armement.armeDisplay +
-                        if (armement.agentPreneurDisplay.isNotBlank()) " · ${armement.agentPreneurDisplay}" else "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Dialog(onDismissRequest = { if (!isSubmitting) onDismiss() }) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Title
+                Column {
+                    Text(
+                        "Réintégration de l'arme",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = armement.armeDisplay +
+                            if (armement.agentPreneurDisplay.isNotBlank()) " · ${armement.agentPreneurDisplay}" else "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 OutlinedTextField(
                     value = dateReintegration,
                     onValueChange = { dateReintegration = it },
@@ -269,57 +279,61 @@ fun ArmementReintegrationDialog(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val validationError = ArmementFormValidator.validateReintegration(
-                        heureReintegration = heure,
-                        etatReintegration = etat,
-                        munitionsConsommees = munitionsConsommees,
-                        munitionsPercues = armement.munitions
-                    )
-                    if (validationError != null) {
-                        localError = validationError
-                        return@Button
+
+                // Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss, enabled = !isSubmitting) {
+                        Text("Annuler")
                     }
-                    if (dateReintegration.isBlank()) {
-                        localError = "La date de la réintégration est requise"
-                        return@Button
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Button(
+                        onClick = {
+                            val validationError = ArmementFormValidator.validateReintegration(
+                                heureReintegration = heure,
+                                etatReintegration = etat,
+                                munitionsConsommees = munitionsConsommees,
+                                munitionsPercues = armement.munitions
+                            )
+                            if (validationError != null) {
+                                localError = validationError
+                                return@Button
+                            }
+                            if (dateReintegration.isBlank()) {
+                                localError = "La date de la réintégration est requise"
+                                return@Button
+                            }
+                            // GPS coordinates are required on Android
+                            if (latitude == null || longitude == null) {
+                                localError = "La capture de la position GPS est requise pour la réintégration"
+                                return@Button
+                            }
+                            localError = null
+                            onConfirm(
+                                ReintegrationData(
+                                    heureReintegration = heure,
+                                    dateReintegration = dateReintegration,
+                                    etatReintegration = etat,
+                                    munitionsConsommees = munitionsConsommees.trim().toInt(),
+                                    reintegrationLatitude = latitude,
+                                    reintegrationLongitude = longitude
+                                )
+                            )
+                        },
+                        enabled = !isSubmitting
+                    ) {
+                        if (isSubmitting) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text("Réintégrer")
+                        }
                     }
-                    // GPS coordinates are required on Android
-                    if (latitude == null || longitude == null) {
-                        localError = "La capture de la position GPS est requise pour la réintégration"
-                        return@Button
-                    }
-                    localError = null
-                    onConfirm(
-                        ReintegrationData(
-                            heureReintegration = heure,
-                            dateReintegration = dateReintegration,
-                            etatReintegration = etat,
-                            munitionsConsommees = munitionsConsommees.trim().toInt(),
-                            reintegrationLatitude = latitude,
-                            reintegrationLongitude = longitude
-                        )
-                    )
-                },
-                enabled = !isSubmitting
-            ) {
-                if (isSubmitting) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                } else {
-                    Text("Réintégrer")
                 }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isSubmitting) {
-                Text("Annuler")
-            }
         }
-    )
+    }
 }
 
 /**
