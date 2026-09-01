@@ -73,6 +73,7 @@ import com.gsoft.opus.ui.components.ErrorMessage
 import com.gsoft.opus.ui.components.FormSectionCard
 import com.gsoft.opus.ui.components.GradientButton
 import com.gsoft.opus.ui.components.OpusDropdown
+import com.gsoft.opus.ui.components.SvgSignatureView
 
 private fun personnelLabel(p: Personnel): String =
     "${p.lastname} ${p.firstname} (${p.im}) — ${p.grade}"
@@ -649,32 +650,17 @@ private fun AddAttachmentButton(onClick: () -> Unit) {
 }
 
 /**
- * Render an SVG signature string using a WebView preview. Used in the
+ * Render an SVG signature string natively (no WebView). Used in the
  * form to show the signature pulled from personnel data or drawn by
  * the user.
  */
 @Composable
 private fun SignatureSvgPreview(svg: String) {
-    val context = LocalContext.current
-    val webView = remember(svg) {
-        android.webkit.WebView(context).apply {
-            settings.loadWithOverviewMode = true
-            settings.useWideViewPort = true
-            setBackgroundColor(android.graphics.Color.WHITE)
-            loadDataWithBaseURL(null, svg, "image/svg+xml", "UTF-8", null)
-        }
-    }
-    Box(
+    SvgSignatureView(
+        svg = svg,
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
             .padding(top = 4.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(androidx.compose.ui.graphics.Color.White)
-    ) {
-        androidx.compose.ui.viewinterop.AndroidView(
-            factory = { webView },
-            modifier = Modifier.fillMaxWidth().height(120.dp)
-        )
-    }
+    )
 }

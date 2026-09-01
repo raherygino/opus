@@ -52,7 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import com.gsoft.opus.ui.components.SvgSignatureView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gsoft.opus.domain.model.ArmementAttachment
 import com.gsoft.opus.presentation.personnel.DetailRow
@@ -217,7 +217,7 @@ fun ArmementDetailScreen(
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 12.dp)
                     )
-                    SignatureSvgView(svg = svg)
+                    SvgSignatureView(svg = svg)
                 }
             }
 
@@ -364,36 +364,6 @@ fun ArmementDetailScreen(
                 onDismiss = { viewerTarget = null }
             )
         }
-    }
-}
-
-/**
- * Render an SVG signature string using a WebView, since Compose Canvas
- * does not natively support SVG. The WebView is non-interactive and
- * sized to fit the signature.
- */
-@Composable
-private fun SignatureSvgView(svg: String) {
-    val context = LocalContext.current
-    val webView = remember(svg) {
-        android.webkit.WebView(context).apply {
-            settings.loadWithOverviewMode = true
-            settings.useWideViewPort = true
-            setBackgroundColor(android.graphics.Color.WHITE)
-            loadDataWithBaseURL(null, svg, "image/svg+xml", "UTF-8", null)
-        }
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(androidx.compose.ui.graphics.Color.White)
-    ) {
-        androidx.compose.ui.viewinterop.AndroidView(
-            factory = { webView },
-            modifier = Modifier.fillMaxWidth().height(120.dp)
-        )
     }
 }
 

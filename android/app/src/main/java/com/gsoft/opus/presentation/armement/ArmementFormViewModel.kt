@@ -1,16 +1,14 @@
 package com.gsoft.opus.presentation.armement
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.LocationManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.gsoft.opus.core.LocationCapture
+import com.gsoft.opus.core.LocationResult
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.ArmementFormData
@@ -25,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -166,67 +163,38 @@ class ArmementFormViewModel @Inject constructor(
     // blocks if no location has been captured (on create).
 
     /** Whether the app has been granted location permissions. */
-    fun hasLocationPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+    fun hasLocationPermission(): Boolean = LocationCapture.hasPermission(context)
 
     /**
      * Check if location services (GPS/network provider) are enabled on
      * the device.
      */
-    fun isLocationEnabled(): Boolean {
-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-            lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-    }
+    fun isLocationEnabled(): Boolean = LocationCapture.isLocationEnabled(context)
 
     /**
-     * Capture the current device location using the FusedLocationProvider.
-     * On success, the latitude/longitude are stored in the UI state. On
-     * failure, a location error message is shown. This must succeed
-     * before a new armement perception can be saved.
+     * Capture the current device location. Uses FusedLocationProvider
+     * when Google Play Services is available, falls back to the Android
+     * framework LocationManager on non-GMS devices. On success, the
+     * latitude/longitude are stored in the UI state. On failure, a
+     * location error message is shown. This must succeed before a new
+     * armement perception can be saved.
      */
-    @SuppressLint("MissingPermission")
     fun captureLocation() {
-        if (!hasLocationPermission()) {
-            _state.update { it.copy(locationError = "Autorisation de localisation requise") }
-            return
-        }
-        if (!isLocationEnabled()) {
-            _state.update { it.copy(locationError = "Activez les services de localisation (GPS) sur votre appareil") }
-            return
-        }
         viewModelScope.launch {
             _state.update { it.copy(isCapturingLocation = true, locationError = null) }
-            try {
-                val location = LocationServices.getFusedLocationProviderClient(context)
-                    .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                    .await()
-                if (location != null) {
-                    _state.update {
-                        it.copy(
-                            isCapturingLocation = false,
-                            latitude = location.latitude,
-                            longitude = location.longitude,
-                            locationError = null
-                        )
-                    }
-                } else {
-                    _state.update {
-                        it.copy(
-                            isCapturingLocation = false,
-                            locationError = "Impossible d'obtenir la position. Réessayez."
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                _state.update {
+            when (val result = LocationCapture.capture(context)) {
+                is LocationResult.Success -> _state.update {
                     it.copy(
                         isCapturingLocation = false,
-                        locationError = "Erreur de localisation: ${e.message ?: "inconnue"}"
+                        latitude = result.latitude,
+                        longitude = result.longitude,
+                        locationError = null
+                    )
+                }
+                is LocationResult.Error -> _state.update {
+                    it.copy(
+                        isCapturingLocation = false,
+                        locationError = result.message
                     )
                 }
             }

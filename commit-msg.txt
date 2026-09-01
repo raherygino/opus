@@ -1,0 +1,49 @@
+Fix crashes on devices without WebView and without Google Play Services
+
+Two crashes occurred on a device without Google Play Services and
+without a WebView provider:
+
+1. WebView crash in Armement detail/form views:
+   android.webkit.WebViewFactory$MissingWebViewPackageException:
+   Failed to load WebView provider: No WebView installed
+
+   Cause: SignatureSvgView and SignatureSvgPreview used android.webkit
+   .WebView to render SVG signature strings. On devices without a
+   WebView provider (custom ROMs, non-GMS devices), instantiating
+   WebView throws a fatal AndroidRuntimeException.
+
+   Fix: Replaced WebView-based SVG rendering with a native Compose
+   Canvas renderer (SvgSignatureView.kt). The SVG format produced by
+   the signature pad only uses <path d="M x y L x y..."/> elements,
+   which are parsed and drawn as Path objects on a Canvas. No WebView
+   is involved anywhere in the app now.
+
+2. Location capture failure on non-GMS devices:
+   API : LocationServices.API is not available on this device.
+   ConnectionResult{statusCode=SERVICE_INVALID}
+
+   Cause: FusedLocationProviderClient requires Google Play Services,
+   which is not installed on some devices (Huawei, custom ROMs,
+   emulators without GMS).
+
+   Fix: Created LocationCapture utility that:
+   - Checks GoogleApiAvailability.isGooglePlayServicesAvailable()
+   - If GMS is available, uses FusedLocationProviderClient (best
+     accuracy, lower battery)
+   - If GMS is unavailable, falls back to the Android framework
+     LocationManager API:
+     a) Tries getLastKnownLocation() from all enabled providers (fast)
+     b) If stale or null, requests a single fresh update via
+        getCurrentLocation() (API 30+) or requestSingleUpdate()
+        (older API levels)
+   Both ArmementFormViewModel and ArmementReintegrationViewModel now
+   use LocationCapture.capture() instead of calling
+   LocationServices directly.
+
+New files:
+- ui/components/SvgSignatureView.kt — native SVG signature renderer
+- core/LocationCapture.kt — location capture with GMS fallback
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>
