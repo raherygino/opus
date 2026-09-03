@@ -9,7 +9,7 @@ INSERT INTO `roles` (`code`, `name`, `description`) VALUES
 -- Seed: Personnel (only admin user)
 -- ============================================
 INSERT INTO `personnel` (`im`, `grade`, `lastname`, `firstname`, `affectation`, `phone`) VALUES
-('000000', 'Commissaire de Police', 'Admin', 'System', 'Sédentaire', '+221 77 000 00 01');
+('000000', 'Commissaire de Police', 'RAKOTO', 'Harilala', 'Administration', '+261 34 00 00 001');
 
 -- ============================================
 -- Seed: Super Admin User (password = "admin123")
