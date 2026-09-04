@@ -33,6 +33,7 @@ class ArmementRepositoryImpl @Inject constructor(
         datePerception = datePerception,
         heurePerception = heurePerception,
         agentPreneurPersonnelId = agentPreneurPersonnelId,
+        armeId = armeId,
         typeArme = typeArme.trim(),
         matriculeArme = matriculeArme.trim(),
         munitions = munitions,

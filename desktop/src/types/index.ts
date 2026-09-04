@@ -266,6 +266,8 @@ export interface Armement {
   agent_preneur_im: string | null;
   agent_preneur_grade: string | null;
   agent_preneur_nom: string | null;
+  /** FK to the exact arme perceived (nullable for legacy records). */
+  arme_id: number | null;
   type_arme: string;
   matricule_arme: string;
   munitions: number | null;
@@ -306,6 +308,59 @@ export interface ArmementAttachment {
   file_size: number | null;
   created_at: string;
   updated_at: string;
+}
+
+// ========================
+// TypeArme & Arme Types (weapon catalog + individual weapon instances)
+// ========================
+
+/** Weapon type/category (e.g. "Pistolet PA 9mm", "Fusil AK-47").
+ *  Munitions stock is managed at this level because all weapons of the
+ *  same type share the same caliber/munition pool. */
+export interface TypeArme {
+  id: number;
+  nom: string;
+  description: string | null;
+  /** Shared ammunition stock for all weapons of this type. */
+  munitions_stock: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Individual physical weapon identified by its unique matricule. */
+export interface Arme {
+  id: number;
+  type_arme_id: number;
+  /** Joined type name from the API. */
+  type_arme_nom: string | null;
+  matricule: string;
+  /** Legacy per-weapon stock (kept for backward compat, no longer the
+   *  active stock — use type_arme_munitions_stock instead). */
+  munitions_stock: number;
+  /** Joined from type_arme — the active shared stock for this weapon's type. */
+  type_arme_munitions_stock: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Ammunition consumption history row (auditable log). */
+export interface ArmeMunitionsConsommation {
+  id: number;
+  arme_id: number;
+  agent_id: number | null;
+  armement_id: number | null;
+  quantite: number;
+  date_consommation: string;
+  created_at: string;
+  /** Joined from arme via the API. */
+  arme_matricule?: string | null;
+  /** Joined from type_arme via the API. */
+  type_arme_nom?: string | null;
+  /** Joined from personnel via the API. */
+  agent_im?: string | null;
+  agent_grade?: string | null;
+  agent_firstname?: string | null;
+  agent_lastname?: string | null;
 }
 
 // ========================

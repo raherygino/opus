@@ -9,6 +9,8 @@ data class ArmementFormData(
     val datePerception: String,
     val heurePerception: String,
     val agentPreneurPersonnelId: Int,
+    /** FK to the exact arme perceived (null for legacy free-text). */
+    val armeId: Int? = null,
     val typeArme: String,
     val matriculeArme: String,
     val munitions: Int?,

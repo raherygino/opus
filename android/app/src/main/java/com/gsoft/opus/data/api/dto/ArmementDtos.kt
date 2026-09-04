@@ -12,6 +12,7 @@ data class ArmementDto(
     @SerializedName("agent_preneur_im") val agentPreneurIm: String? = null,
     @SerializedName("agent_preneur_grade") val agentPreneurGrade: String? = null,
     @SerializedName("agent_preneur_nom") val agentPreneurNom: String? = null,
+    @SerializedName("arme_id") val armeId: Int? = null,
     @SerializedName("type_arme") val typeArme: String,
     @SerializedName("matricule_arme") val matriculeArme: String,
     @SerializedName("munitions") val munitions: Int? = null,
@@ -40,6 +41,9 @@ data class ArmementRequest(
     // The agent preneur identity (IM + grade + nom) is snapshotted
     // server-side from the personnel table — only the id is sent.
     @SerializedName("agent_preneur_personnel_id") val agentPreneurPersonnelId: Int,
+    /** FK to the exact arme perceived. When set, type_arme and
+     * matricule_arme are snapshotted server-side from the arme. */
+    @SerializedName("arme_id") val armeId: Int? = null,
     @SerializedName("type_arme") val typeArme: String,
     @SerializedName("matricule_arme") val matriculeArme: String,
     @SerializedName("munitions") val munitions: Int? = null,

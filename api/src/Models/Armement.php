@@ -70,11 +70,11 @@ class Armement
             'INSERT INTO armement
                 (date_perception, heure_perception,
                  agent_preneur_personnel_id, agent_preneur_im, agent_preneur_grade, agent_preneur_nom,
-                 type_arme, matricule_arme, munitions, secteur_mission, etat_perception,
+                 arme_id, type_arme, matricule_arme, munitions, secteur_mission, etat_perception,
                  agent_verifie, agent_verifie_at, signature_svg,
                  latitude, longitude,
                  created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['date_perception'],
@@ -83,6 +83,7 @@ class Armement
             $data['agent_preneur_im'] ?? null,
             $data['agent_preneur_grade'] ?? null,
             $data['agent_preneur_nom'] ?? null,
+            $data['arme_id'] ?? null,
             $data['type_arme'],
             $data['matricule_arme'],
             $data['munitions'] ?? null,
@@ -113,7 +114,7 @@ class Armement
         $allowed = [
             'date_perception', 'heure_perception',
             'agent_preneur_personnel_id', 'agent_preneur_im', 'agent_preneur_grade', 'agent_preneur_nom',
-            'type_arme', 'matricule_arme', 'munitions', 'secteur_mission', 'etat_perception',
+            'arme_id', 'type_arme', 'matricule_arme', 'munitions', 'secteur_mission', 'etat_perception',
             'latitude', 'longitude',
         ];
         foreach ($allowed as $field) {

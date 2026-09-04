@@ -22,6 +22,8 @@ use App\Controllers\PassationController;
 use App\Controllers\PassationAttachmentController;
 use App\Controllers\ArmementController;
 use App\Controllers\ArmementAttachmentController;
+use App\Controllers\ArmeController;
+use App\Controllers\TypeArmeController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -201,6 +203,26 @@ $router->post('/api/armements/{id}/attachments',                      [ArmementA
 $router->put('/api/armements/{id}/attachments/{attachId}',            [ArmementAttachmentController::class, 'update']);
 $router->delete('/api/armements/{id}/attachments/{attachId}',         [ArmementAttachmentController::class, 'destroy']);
 $router->get('/api/armements/{id}/attachments/{attachId}/download',   [ArmementAttachmentController::class, 'download']);
+
+// ========================
+// Type d'arme Routes (catalogue — referenced by arme)
+// ========================
+$router->get('/api/types-armes',           [TypeArmeController::class, 'index']);
+$router->get('/api/types-armes/{id}',      [TypeArmeController::class, 'show']);
+$router->post('/api/types-armes',          [TypeArmeController::class, 'store']);
+$router->put('/api/types-armes/{id}',      [TypeArmeController::class, 'update']);
+$router->delete('/api/types-armes/{id}',   [TypeArmeController::class, 'destroy']);
+
+// ========================
+// Arme Routes (individual weapon instances — ammunition stock source of truth)
+// ========================
+$router->get('/api/armes',                              [ArmeController::class, 'index']);
+$router->get('/api/armes/{id}',                         [ArmeController::class, 'show']);
+$router->post('/api/armes',                             [ArmeController::class, 'store']);
+$router->put('/api/armes/{id}',                         [ArmeController::class, 'update']);
+$router->delete('/api/armes/{id}',                      [ArmeController::class, 'destroy']);
+$router->get('/api/armes/{id}/consommations',           [ArmeController::class, 'consommations']);
+$router->post('/api/armes/{id}/consommation',           [ArmeController::class, 'consommationAction']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

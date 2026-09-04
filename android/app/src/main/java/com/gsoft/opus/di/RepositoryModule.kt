@@ -1,6 +1,7 @@
 package com.gsoft.opus.di
 
 import com.gsoft.opus.data.repository.ArmementRepositoryImpl
+import com.gsoft.opus.data.repository.ArmeRepositoryImpl
 import com.gsoft.opus.data.repository.AuthRepositoryImpl
 import com.gsoft.opus.data.repository.ComportementRepositoryImpl
 import com.gsoft.opus.data.repository.CorrespondanceRepositoryImpl
@@ -13,6 +14,7 @@ import com.gsoft.opus.data.repository.PersonnelRepositoryImpl
 import com.gsoft.opus.data.repository.QrAuthRepositoryImpl
 import com.gsoft.opus.data.repository.SettingsRepositoryImpl
 import com.gsoft.opus.domain.repository.ArmementRepository
+import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.AuthRepository
 import com.gsoft.opus.domain.repository.ComportementRepository
 import com.gsoft.opus.domain.repository.CorrespondanceRepository
@@ -77,6 +79,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindArmementRepository(impl: ArmementRepositoryImpl): ArmementRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindArmeRepository(impl: ArmeRepositoryImpl): ArmeRepository
 
     @Binds
     @Singleton

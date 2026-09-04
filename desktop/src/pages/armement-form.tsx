@@ -13,6 +13,7 @@ import {
   getArmementAttachmentDownloadUrl,
 } from "@/lib/api/armement";
 import { getPersonnelList, verifyPersonnelCodeSecret } from "@/lib/api/personnel";
+import { getArmeList } from "@/lib/api/arme";
 import { isImageFile } from "@/lib/utils/attachment";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ import {
   XCircle,
   PenTool,
 } from "lucide-react";
-import type { ArmementAttachment, Personnel } from "@/types";
+import type { ArmementAttachment, Arme, Personnel } from "@/types";
 import type { ArmementPayload } from "@/lib/api/armement";
 
 interface AttachmentItem {
@@ -75,6 +76,7 @@ export function ArmementForm() {
     date_perception: todayIso(),
     heure_perception: nowTime(),
     agent_preneur_personnel_id: 0,
+    arme_id: null,
     type_arme: "",
     matricule_arme: "",
     munitions: null,
@@ -82,6 +84,7 @@ export function ArmementForm() {
     etat_perception: "",
   });
   const [personnelList, setPersonnelList] = useState<Personnel[]>([]);
+  const [armesList, setArmesList] = useState<Arme[]>([]);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [photoPadIndex, setPhotoPadIndex] = useState<number | null>(null);
   const [viewerTarget, setViewerTarget] = useState<{ id: number; title: string } | null>(null);
@@ -111,8 +114,12 @@ export function ArmementForm() {
   async function loadData() {
     setLoading(true);
     try {
-      const personnel = await getPersonnelList();
+      const [personnel, armes] = await Promise.all([
+        getPersonnelList(),
+        getArmeList(),
+      ]);
       setPersonnelList(personnel);
+      setArmesList(armes);
 
       if (isEdit) {
         const a = await getArmementById(Number(id));
@@ -120,6 +127,7 @@ export function ArmementForm() {
           date_perception: a.date_perception.slice(0, 10),
           heure_perception: a.heure_perception.slice(0, 5),
           agent_preneur_personnel_id: a.agent_preneur_personnel_id ?? 0,
+          arme_id: a.arme_id ?? null,
           type_arme: a.type_arme ?? "",
           matricule_arme: a.matricule_arme ?? "",
           munitions: a.munitions,
@@ -137,7 +145,7 @@ export function ArmementForm() {
         );
       }
     } catch {
-      addNotification("error", "Erreur", isEdit ? "Armement introuvable" : "Impossible de charger le personnel");
+      addNotification("error", "Erreur", isEdit ? "Armement introuvable" : "Impossible de charger les données");
       if (isEdit) navigate(LIST_PATH);
     } finally {
       setLoading(false);
@@ -423,16 +431,48 @@ export function ArmementForm() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="arme_id">Arme perçue *</Label>
+                <Select
+                  id="arme_id"
+                  value={form.arme_id ? String(form.arme_id) : ""}
+                  onChange={(e) => {
+                    const armeId = e.target.value ? Number(e.target.value) : null;
+                    const selected = armeId ? armesList.find((a) => a.id === armeId) : null;
+                    setForm({
+                      ...form,
+                      arme_id: armeId,
+                      // Auto-fill the snapshot fields from the selected arme.
+                      // The backend re-snapshots them server-side anyway, but
+                      // filling them here gives immediate visual feedback.
+                      type_arme: selected?.type_arme_nom ?? form.type_arme,
+                      matricule_arme: selected?.matricule ?? form.matricule_arme,
+                    });
+                  }}
+                  placeholder="Sélectionner une arme enregistrée"
+                  options={armesList.map((a) => ({
+                    value: String(a.id),
+                    label: `${a.type_arme_nom ?? "—"} — ${a.matricule} (stock type: ${a.type_arme_munitions_stock})`,
+                  }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Sélectionnez l'arme exacte perçue. Le type et le matricule
+                  sont remplis automatiquement. Pour les perceptions
+                  antérieures sans arme enregistrée, laissez vide et remplissez
+                  les champs ci-dessous.
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="type_arme">Type d'arme *</Label>
                 <Input
                   id="type_arme"
                   value={form.type_arme}
                   onChange={(e) =>
-                    setForm({ ...form, type_arme: e.target.value })
+                    setForm({ ...form, type_arme: e.target.value, arme_id: null })
                   }
                   placeholder="Ex : Pistolet PA 9mm"
                   required
+                  disabled={!!form.arme_id}
                 />
               </div>
               <div className="space-y-2">
@@ -441,10 +481,11 @@ export function ArmementForm() {
                   id="matricule_arme"
                   value={form.matricule_arme}
                   onChange={(e) =>
-                    setForm({ ...form, matricule_arme: e.target.value })
+                    setForm({ ...form, matricule_arme: e.target.value, arme_id: null })
                   }
                   placeholder="Ex : PA-0001"
                   required
+                  disabled={!!form.arme_id}
                 />
               </div>
             </div>

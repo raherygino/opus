@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.GpsFixed
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
@@ -94,6 +95,9 @@ import com.gsoft.opus.presentation.armement.ArmementDetailScreen
 import com.gsoft.opus.presentation.armement.ArmementFormScreen
 import com.gsoft.opus.presentation.armement.ArmementReintegrationScreen
 import com.gsoft.opus.presentation.armement.ArmementScreen
+import com.gsoft.opus.presentation.arme.ArmeDetailScreen
+import com.gsoft.opus.presentation.arme.ArmeFormScreen
+import com.gsoft.opus.presentation.arme.ArmeScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -202,6 +206,7 @@ fun MainScreen(
             "sed_main_courante_sec" to MainRoutes.MainCouranteSec.route,
             "sed_passation" to MainRoutes.Passation.route,
             "sed_armement" to MainRoutes.Armement.route,
+            "sed_arme" to MainRoutes.Arme.route,
             "sed_materiels" to MainRoutes.Materiels.route,
             "sed_situation_gav" to MainRoutes.SituationGav.route,
             "sed_main_courante_poste" to MainRoutes.MainCourantePoste.route,
@@ -930,6 +935,47 @@ fun MainScreen(
                         )
                     }
 
+                    // Arme management (weapon catalog + ammunition stock)
+                    composable(MainRoutes.Arme.route) {
+                        ArmeScreen(
+                            onArmeClick = { id ->
+                                navController.navigate(MainRoutes.ArmeDetail.createRoute(id))
+                            },
+                            onCreateArme = {
+                                navController.navigate(MainRoutes.ArmeForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ArmeDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("armeId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) {
+                        ArmeDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ArmeForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ArmeForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("armeId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        )
+                    ) {
+                        ArmeFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
                         SignaturePairingScreen(
@@ -1213,6 +1259,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
         "sedentaire_secretariat_main_courante",
         "sedentaire_poste_passation",
         "sedentaire_poste_armement",
+        "sedentaire_poste_arme",
         "sedentaire_poste_materiels",
         "sedentaire_poste_situation_gav",
         "sedentaire_poste_main_courante",
@@ -1289,6 +1336,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
         val posteChildren = listOf(
             ContextMenuItem(id = "sed_passation", title = "Passation", icon = Icons.Outlined.Handshake, module = "sedentaire_poste_passation"),
             ContextMenuItem(id = "sed_armement", title = "Armement", icon = Icons.Outlined.Security, module = "sedentaire_poste_armement"),
+            ContextMenuItem(id = "sed_arme", title = "Armes", icon = Icons.Outlined.GpsFixed, module = "sedentaire_poste_arme"),
             ContextMenuItem(id = "sed_materiels", title = "Matériels", icon = Icons.Outlined.Inventory, module = "sedentaire_poste_materiels"),
             ContextMenuItem(id = "sed_situation_gav", title = "Situation GAV", icon = Icons.Outlined.ViewColumn, module = "sedentaire_poste_situation_gav"),
             ContextMenuItem(id = "sed_main_courante_poste", title = "Main courante", icon = Icons.Outlined.NoteAlt, module = "sedentaire_poste_main_courante"),

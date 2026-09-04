@@ -11,6 +11,9 @@ export interface ArmementPayload {
   // The agent preneur identity (IM + grade + nom) is snapshotted
   // server-side from the personnel table — only the id is sent.
   agent_preneur_personnel_id: number;
+  /** FK to the exact arme perceived. When set, type_arme and
+   * matricule_arme are snapshotted server-side from the arme. */
+  arme_id?: number | null;
   type_arme: string;
   matricule_arme: string;
   munitions: number | null;
@@ -24,8 +27,9 @@ export interface ArmementPayload {
   signature_svg?: string | null;
 }
 
-/** The three fields of the reintegration transition. */
+/** The fields of the reintegration transition. */
 export interface ReintegrationPayload {
+  date_reintegration: string;
   heure_reintegration: string;
   etat_reintegration: string;
   munitions_consommees: number;

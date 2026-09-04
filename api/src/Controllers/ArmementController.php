@@ -5,9 +5,12 @@ namespace App\Controllers;
 use App\Helpers\Response;
 use App\Models\Armement;
 use App\Models\ArmementAttachment;
+use App\Models\Arme;
+use App\Models\ArmeMunitionsConsommation;
 use App\Models\Personnel;
 use App\Models\AuditLog;
 use App\Models\Notification;
+use App\Database;
 
 class ArmementController
 {
@@ -183,6 +186,7 @@ class ArmementController
         $data['created_by'] = (int) $authUser['sub'];
 
         self::snapshotAgentPreneur($data);
+        self::snapshotArme($data);
 
         // Verify the agent preneur's code secret before accepting the
         // perception. The code must be provided and must match the
@@ -287,6 +291,7 @@ class ArmementController
 
         // Re-snapshot the agent preneur identity when the personnel changes.
         self::snapshotAgentPreneur($data);
+        self::snapshotArme($data);
 
         $errors = self::validate($data, false);
         if (!empty($errors)) {
@@ -348,14 +353,76 @@ class ArmementController
         }
 
         $oldArmement = $armement;
-        Armement::reintegrate($id, [
-            'heure_reintegration' => $data['heure_reintegration'],
-            'date_reintegration' => $data['date_reintegration'] ?? null,
-            'etat_reintegration' => trim((string) $data['etat_reintegration']),
-            'munitions_consommees' => (int) $data['munitions_consommees'],
-            'reintegration_latitude' => $data['reintegration_latitude'] ?? null,
-            'reintegration_longitude' => $data['reintegration_longitude'] ?? null,
-        ]);
+        $consommees = (int) $data['munitions_consommees'];
+
+        // --- Atomic transaction: reintegration + stock deduction + history --
+        // When the perception references an exact arme (arme_id), the
+        // munitions_consommees are deducted from that weapon's stock and a
+        // consumption history row is inserted, all inside the same
+        // transaction as the reintegration itself. The conditional UPDATE
+        // (WHERE munitions_stock >= ?) prevents the stock from going
+        // negative and prevents race conditions between concurrent
+        // consumers. If the stock is insufficient, the whole reintegration
+        // is rolled back so the armement record stays "en cours".
+        $db = Database::getInstance()->getConnection();
+        $stockDeducted = false;
+        $stockError = null;
+
+        if (!empty($armement['arme_id']) && $consommees > 0) {
+            try {
+                $db->beginTransaction();
+
+                Armement::reintegrate($id, [
+                    'heure_reintegration' => $data['heure_reintegration'],
+                    'date_reintegration' => $data['date_reintegration'] ?? null,
+                    'etat_reintegration' => trim((string) $data['etat_reintegration']),
+                    'munitions_consommees' => $consommees,
+                    'reintegration_latitude' => $data['reintegration_latitude'] ?? null,
+                    'reintegration_longitude' => $data['reintegration_longitude'] ?? null,
+                ]);
+
+                if (!Arme::decreaseStock((int) $armement['arme_id'], $consommees)) {
+                    $db->rollBack();
+                    Response::error(
+                        "Stock de munitions insuffisant pour ce type d'arme. La réintégration n'a pas été enregistrée.",
+                        422,
+                        ['munitions_consommees' => 'Stock insuffisant pour ce type d\'arme']
+                    );
+                }
+
+                ArmeMunitionsConsommation::create([
+                    'arme_id' => (int) $armement['arme_id'],
+                    'agent_id' => $armement['agent_preneur_personnel_id'] ?? null,
+                    'armement_id' => $id,
+                    'quantite' => $consommees,
+                    'date_consommation' => date('Y-m-d H:i:s'),
+                ]);
+
+                $db->commit();
+                $stockDeducted = true;
+            } catch (\Throwable $e) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
+                $stockError = 'Erreur lors de la réintégration (déduction du stock)';
+            }
+        } else {
+            // No arme linked, or zero consumption — just record the
+            // reintegration without touching any weapon stock.
+            Armement::reintegrate($id, [
+                'heure_reintegration' => $data['heure_reintegration'],
+                'date_reintegration' => $data['date_reintegration'] ?? null,
+                'etat_reintegration' => trim((string) $data['etat_reintegration']),
+                'munitions_consommees' => $consommees,
+                'reintegration_latitude' => $data['reintegration_latitude'] ?? null,
+                'reintegration_longitude' => $data['reintegration_longitude'] ?? null,
+            ]);
+        }
+
+        if ($stockError !== null) {
+            Response::error($stockError, 500);
+        }
+
         $armement = Armement::getById($id);
 
         // --- Audit log ---
@@ -439,6 +506,34 @@ class ArmementController
         $data['agent_preneur_nom'] = trim(
             (($agent['firstname'] ?? '') . ' ' . ($agent['lastname'] ?? ''))
         ) ?: null;
+    }
+
+    /**
+     * Snapshot the weapon identity (type_arme + matricule_arme) from the
+     * arme table when arme_id is provided. The snapshot columns stay
+     * authoritative for historical display — they survive even if the arme
+     * is later modified or deleted. When arme_id is provided, the client-
+     * supplied type_arme/matricule_arme are overridden with the arme's
+     * canonical values so the perception always reflects the exact weapon.
+     * When arme_id is null/empty, the client-supplied free-text values are
+     * kept (backward compatible with legacy perceptions).
+     */
+    private static function snapshotArme(array &$data): void
+    {
+        $armeId = $data['arme_id'] ?? null;
+        if ($armeId === null || $armeId === '' || (int) $armeId <= 0) {
+            $data['arme_id'] = null;
+            return;
+        }
+        $arme = Arme::getById((int) $armeId);
+        if (!$arme) {
+            $data['arme_id'] = null;
+            return;
+        }
+        // Override the free-text weapon identity with the arme's canonical
+        // values so the perception record always matches the exact weapon.
+        $data['type_arme'] = $arme['type_arme_nom'] ?? $data['type_arme'] ?? '';
+        $data['matricule_arme'] = $arme['matricule'] ?? $data['matricule_arme'] ?? '';
     }
 
     /**

@@ -12,6 +12,13 @@ function nowTime(): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+function todayIso(): string {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
 interface ReintegrationDialogProps {
   open: boolean;
   armement: Armement | null;
@@ -31,6 +38,7 @@ export function ReintegrationDialog({
   onConfirm,
   onCancel,
 }: ReintegrationDialogProps) {
+  const [date, setDate] = useState("");
   const [heure, setHeure] = useState("");
   const [etat, setEtat] = useState("");
   const [munitionsConsommees, setMunitionsConsommees] = useState("");
@@ -38,6 +46,7 @@ export function ReintegrationDialog({
 
   useEffect(() => {
     if (open) {
+      setDate(todayIso());
       setHeure(nowTime());
       setEtat("");
       setMunitionsConsommees("");
@@ -58,6 +67,10 @@ export function ReintegrationDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!date) {
+      setError("La date de la réintégration est requise");
+      return;
+    }
     if (!heure) {
       setError("L'heure de la réintégration est requise");
       return;
@@ -83,6 +96,7 @@ export function ReintegrationDialog({
     }
     setError(null);
     onConfirm({
+      date_reintegration: date,
       heure_reintegration: heure,
       etat_reintegration: etat.trim(),
       munitions_consommees: count,
@@ -119,6 +133,16 @@ export function ReintegrationDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="date_reintegration">Date de la réintégration *</Label>
+            <Input
+              id="date_reintegration"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="heure_reintegration">Heure de la réintégration *</Label>
             <Input

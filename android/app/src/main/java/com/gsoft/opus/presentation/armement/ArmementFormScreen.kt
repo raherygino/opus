@@ -180,12 +180,44 @@ fun ArmementFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Arme selector — when an arme is selected, type_arme and
+                // matricule_arme are auto-filled and the manual inputs below
+                // are disabled. Legacy free-text is still allowed by clearing
+                // the selector.
+                val armeOptions = state.armeOptions
+                val selectedArmeLabel = armeOptions
+                    .firstOrNull { it.id == state.armeId }
+                    ?.let { "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock: ${it.munitionsStock})" }
+                    ?: ""
+                OpusDropdown(
+                    label = "Arme perçue",
+                    options = armeOptions.map {
+                        "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock: ${it.munitionsStock})"
+                    },
+                    selected = selectedArmeLabel,
+                    onSelect = { label ->
+                        armeOptions.firstOrNull {
+                            "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock: ${it.munitionsStock})" == label
+                        }?.let { viewModel.updateArmeId(it.id) }
+                    },
+                    placeholder = "Sélectionner une arme enregistrée",
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (armeOptions.isEmpty()) {
+                    Text(
+                        text = "Aucune arme enregistrée — remplissez les champs ci-dessous.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 OutlinedTextField(
                     value = state.typeArme,
                     onValueChange = viewModel::updateTypeArme,
                     label = { Text("Type d'arme *") },
                     placeholder = { Text("Ex : Pistolet PA 9mm") },
                     singleLine = true,
+                    enabled = state.armeId == null,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -196,6 +228,7 @@ fun ArmementFormScreen(
                     label = { Text("Matricule de l'arme *") },
                     placeholder = { Text("Ex : PA-0001") },
                     singleLine = true,
+                    enabled = state.armeId == null,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )

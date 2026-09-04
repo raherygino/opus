@@ -1,6 +1,8 @@
 package com.gsoft.opus.data.api.dto
 
 import com.gsoft.opus.domain.model.AppNotification
+import com.gsoft.opus.domain.model.Arme
+import com.gsoft.opus.domain.model.ArmeMunitionsConsommation
 import com.gsoft.opus.domain.model.Armement
 import com.gsoft.opus.domain.model.ArmementAttachment
 import com.gsoft.opus.domain.model.AuthResult
@@ -12,6 +14,7 @@ import com.gsoft.opus.domain.model.DeclarationPerteAttachment
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.model.Passation
 import com.gsoft.opus.domain.model.PassationAttachment
+import com.gsoft.opus.domain.model.TypeArme
 import com.gsoft.opus.domain.model.VerifiedIdentity
 import com.gsoft.opus.domain.model.QrAuthDeviceType
 import com.gsoft.opus.domain.model.QrAuthRequester
@@ -299,6 +302,7 @@ fun ArmementDto.toDomain(): Armement = Armement(
     agentPreneurIm = agentPreneurIm,
     agentPreneurGrade = agentPreneurGrade,
     agentPreneurNom = agentPreneurNom,
+    armeId = armeId,
     typeArme = typeArme,
     matriculeArme = matriculeArme,
     munitions = munitions,
@@ -329,4 +333,40 @@ fun ArmementAttachmentDto.toDomain(): ArmementAttachment = ArmementAttachment(
     mimeType = mimeType,
     fileSize = fileSize,
     createdAt = createdAt
+)
+
+fun TypeArmeDto.toDomain(): TypeArme = TypeArme(
+    id = id,
+    nom = nom,
+    description = description,
+    munitionsStock = munitionsStock,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun ArmeDto.toDomain(): Arme = Arme(
+    id = id,
+    typeArmeId = typeArmeId,
+    typeArmeNom = typeArmeNom,
+    matricule = matricule,
+    munitionsStock = munitionsStock,
+    typeArmeMunitionsStock = typeArmeMunitionsStock,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun ArmeMunitionsConsommationDto.toDomain(): ArmeMunitionsConsommation = ArmeMunitionsConsommation(
+    id = id,
+    armeId = armeId,
+    agentId = agentId,
+    armementId = armementId,
+    quantite = quantite,
+    dateConsommation = dateConsommation,
+    createdAt = createdAt,
+    armeMatricule = armeMatricule,
+    typeArmeNom = typeArmeNom,
+    agentIm = agentIm,
+    agentGrade = agentGrade,
+    agentFirstname = agentFirstname,
+    agentLastname = agentLastname
 )

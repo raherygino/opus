@@ -55,6 +55,7 @@ import {
   MessageSquareMore,
   BellRing,
   Smartphone,
+  Crosshair,
 } from "lucide-react";
 
 interface NavItem {
@@ -73,6 +74,7 @@ const DIVISION_MODULES: Record<string, string[]> = {
     "sedentaire_secretariat_main_courante",
     "sedentaire_poste_passation",
     "sedentaire_poste_armement",
+    "sedentaire_poste_arme",
     "sedentaire_poste_materiels",
     "sedentaire_poste_situation_gav",
     "sedentaire_poste_main_courante",
@@ -149,6 +151,7 @@ function buildNavItems(user: User): NavItem[] {
     const posteChildren: NavItem[] = [
       { icon: Handshake, label: "Passation", path: "/sedentaire/poste/passation", module: "sedentaire_poste_passation" },
       { icon: ShieldEllipsis, label: "Armement", path: "/sedentaire/poste/armement", module: "sedentaire_poste_armement" },
+      { icon: Crosshair, label: "Armes", path: "/sedentaire/poste/armes", module: "sedentaire_poste_arme" },
       { icon: Box, label: "Matériels", path: "/sedentaire/poste/materiels", module: "sedentaire_poste_materiels" },
       { icon: Columns4, label: "Situation GAV", path: "/sedentaire/poste/situation-gav", module: "sedentaire_poste_situation_gav" },
       { icon: BookOpenText, label: "Main courante", path: "/sedentaire/poste/main-courante", module: "sedentaire_poste_main_courante" },

@@ -111,33 +111,67 @@ export function ArmementList() {
   const columns: Column<Armement>[] = [
     {
       key: "date_perception",
-      header: "Date",
+      header: "Date et Heure Perception",
       sortable: true,
-      render: (a) => formatDate(a.date_perception),
-    },
-    {
-      key: "heure_perception",
-      header: "Heure",
-      sortable: true,
-      render: (a) => formatHeure(a.heure_perception),
+      render: (a) =>
+        `${formatDate(a.date_perception)} ${formatHeure(a.heure_perception)}`.trim(),
     },
     {
       key: "agent_preneur",
-      header: "Agent preneur",
+      header: "ID Agent",
       sortable: true,
-      render: (a) => agentPreneurDisplay(a),
+      render: (a) =>
+        [a.agent_preneur_im, agentPreneurDisplay(a)]
+          .filter(Boolean)
+          .join(" — ") || "—",
     },
     {
       key: "arme",
-      header: "Arme",
+      header: "Type d'Arme / Matricule",
       sortable: true,
       render: (a) => armeDisplay(a),
+    },
+    {
+      key: "munitions",
+      header: "Munitions",
+      sortable: true,
+      render: (a) => (a.munitions !== null && a.munitions !== undefined ? String(a.munitions) : "—"),
     },
     {
       key: "secteur_mission",
       header: "Secteur / Mission",
       sortable: true,
       render: (a) => a.secteur_mission || "—",
+    },
+    {
+      key: "etat_perception",
+      header: "Etat Perception",
+      sortable: true,
+      render: (a) => a.etat_perception || "—",
+    },
+    {
+      key: "date_reintegration",
+      header: "Date et Heure Réintégration",
+      sortable: true,
+      render: (a) =>
+        isReintegree(a)
+          ? `${formatDate(a.date_reintegration)} ${formatHeure(a.heure_reintegration)}`.trim()
+          : "—",
+    },
+    {
+      key: "etat_reintegration",
+      header: "Etat Réintégration",
+      sortable: true,
+      render: (a) => a.etat_reintegration || "—",
+    },
+    {
+      key: "munitions_consommees",
+      header: "Munitions Consommées",
+      sortable: true,
+      render: (a) =>
+        a.munitions_consommees !== null && a.munitions_consommees !== undefined
+          ? String(a.munitions_consommees)
+          : "—",
     },
     {
       key: "statut",

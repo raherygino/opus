@@ -13,6 +13,8 @@ data class Armement(
     val agentPreneurIm: String?,
     val agentPreneurGrade: String?,
     val agentPreneurNom: String?,
+    /** FK to the exact arme perceived (nullable for legacy records). */
+    val armeId: Int?,
     val typeArme: String,
     val matriculeArme: String,
     val munitions: Int?,

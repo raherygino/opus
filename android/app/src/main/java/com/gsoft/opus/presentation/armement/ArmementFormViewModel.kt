@@ -10,9 +10,11 @@ import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.LocationCapture
 import com.gsoft.opus.core.LocationResult
 import com.gsoft.opus.core.Resource
+import com.gsoft.opus.domain.model.Arme
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.ArmementFormData
 import com.gsoft.opus.domain.repository.ArmementRepository
+import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -36,6 +38,10 @@ data class ArmementFormUiState(
     val heure: String = "",
     val agentPreneurPersonnelId: Int = 0,
     val personnelOptions: List<Personnel> = emptyList(),
+    /** FK to the exact arme perceived (null for legacy free-text). */
+    val armeId: Int? = null,
+    /** Available armes for selection. */
+    val armeOptions: List<Arme> = emptyList(),
     val typeArme: String = "",
     val matriculeArme: String = "",
     val munitions: String = "",
@@ -65,6 +71,7 @@ class ArmementFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val armementRepository: ArmementRepository,
     private val personnelRepository: PersonnelRepository,
+    private val armeRepository: ArmeRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -82,6 +89,7 @@ class ArmementFormViewModel @Inject constructor(
 
     init {
         loadPersonnel()
+        loadArmes()
         if (armementId > 0) {
             loadArmement()
         }
@@ -91,6 +99,15 @@ class ArmementFormViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = personnelRepository.getPersonnelList()) {
                 is Resource.Success -> _state.update { it.copy(personnelOptions = result.data) }
+                else -> {}
+            }
+        }
+    }
+
+    private fun loadArmes() {
+        viewModelScope.launch {
+            when (val result = armeRepository.getArmeList()) {
+                is Resource.Success -> _state.update { it.copy(armeOptions = result.data) }
                 else -> {}
             }
         }
@@ -108,6 +125,7 @@ class ArmementFormViewModel @Inject constructor(
                             datePerception = a.datePerception.take(10),
                             heure = a.heurePerceptionDisplay,
                             agentPreneurPersonnelId = a.agentPreneurPersonnelId ?: 0,
+                            armeId = a.armeId,
                             typeArme = a.typeArme,
                             matriculeArme = a.matriculeArme,
                             munitions = a.munitions?.toString() ?: "",
@@ -146,8 +164,26 @@ class ArmementFormViewModel @Inject constructor(
             )
         }
     }
-    fun updateTypeArme(value: String) { _state.update { it.copy(typeArme = value) } }
-    fun updateMatriculeArme(value: String) { _state.update { it.copy(matriculeArme = value) } }
+    fun updateTypeArme(value: String) {
+        // Manual edit of type_arme clears the arme FK (legacy free-text mode).
+        _state.update { it.copy(typeArme = value, armeId = null) }
+    }
+    fun updateMatriculeArme(value: String) {
+        // Manual edit of matricule_arme clears the arme FK (legacy free-text mode).
+        _state.update { it.copy(matriculeArme = value, armeId = null) }
+    }
+    fun updateArmeId(armeId: Int?) {
+        // When an arme is selected, snapshot its type/matricule for immediate
+        // visual feedback. The backend re-snapshots server-side anyway.
+        val arme = _state.value.armeOptions.firstOrNull { it.id == armeId }
+        _state.update {
+            it.copy(
+                armeId = armeId,
+                typeArme = arme?.typeArmeNom ?: it.typeArme,
+                matriculeArme = arme?.matricule ?: it.matriculeArme
+            )
+        }
+    }
     fun updateMunitions(value: String) { _state.update { it.copy(munitions = value) } }
     fun updateSecteurMission(value: String) { _state.update { it.copy(secteurMission = value) } }
     fun updateEtatPerception(value: String) { _state.update { it.copy(etatPerception = value) } }
@@ -332,6 +368,7 @@ class ArmementFormViewModel @Inject constructor(
                 datePerception = s.datePerception,
                 heurePerception = s.heure,
                 agentPreneurPersonnelId = s.agentPreneurPersonnelId,
+                armeId = s.armeId,
                 typeArme = s.typeArme,
                 matriculeArme = s.matriculeArme,
                 munitions = s.munitions.trim().takeIf { it.isNotEmpty() }?.toIntOrNull(),

@@ -4,7 +4,13 @@ import com.gsoft.opus.data.api.dto.ApiResponse
 import com.gsoft.opus.data.api.dto.ArmementAttachmentDto
 import com.gsoft.opus.data.api.dto.ArmementDto
 import com.gsoft.opus.data.api.dto.ArmementRequest
+import com.gsoft.opus.data.api.dto.ArmeDto
+import com.gsoft.opus.data.api.dto.ArmeMunitionsConsommationDto
+import com.gsoft.opus.data.api.dto.ArmeRequest
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
+import com.gsoft.opus.data.api.dto.ConsommationRequest
+import com.gsoft.opus.data.api.dto.TypeArmeDto
+import com.gsoft.opus.data.api.dto.TypeArmeRequest
 import com.gsoft.opus.data.api.dto.CodeSecretRequest
 import com.gsoft.opus.data.api.dto.CodeSecretResultDto
 import com.gsoft.opus.data.api.dto.ComportementDto
@@ -449,4 +455,50 @@ interface ApiService {
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
+
+    // ─── TypeArme (weapon type catalog) ──────────────────────────────
+
+    @GET("api/types-armes")
+    suspend fun getTypeArmeList(@Query("search") search: String? = null): Response<ApiResponse<List<TypeArmeDto>>>
+
+    @GET("api/types-armes/{id}")
+    suspend fun getTypeArme(@Path("id") id: Int): Response<ApiResponse<TypeArmeDto>>
+
+    @POST("api/types-armes")
+    suspend fun createTypeArme(@Body request: TypeArmeRequest): Response<ApiResponse<TypeArmeDto>>
+
+    @PUT("api/types-armes/{id}")
+    suspend fun updateTypeArme(@Path("id") id: Int, @Body request: TypeArmeRequest): Response<ApiResponse<TypeArmeDto>>
+
+    @DELETE("api/types-armes/{id}")
+    suspend fun deleteTypeArme(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Arme (individual weapon instances + ammunition stock) ───────
+
+    @GET("api/armes")
+    suspend fun getArmeList(
+        @Query("type_arme_id") typeArmeId: Int? = null,
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<ArmeDto>>>
+
+    @GET("api/armes/{id}")
+    suspend fun getArme(@Path("id") id: Int): Response<ApiResponse<ArmeDto>>
+
+    @POST("api/armes")
+    suspend fun createArme(@Body request: ArmeRequest): Response<ApiResponse<ArmeDto>>
+
+    @PUT("api/armes/{id}")
+    suspend fun updateArme(@Path("id") id: Int, @Body request: ArmeRequest): Response<ApiResponse<ArmeDto>>
+
+    @DELETE("api/armes/{id}")
+    suspend fun deleteArme(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/armes/{id}/consommations")
+    suspend fun getArmeConsommations(@Path("id") id: Int): Response<ApiResponse<List<ArmeMunitionsConsommationDto>>>
+
+    @POST("api/armes/{id}/consommation")
+    suspend fun recordConsommation(
+        @Path("id") id: Int,
+        @Body request: ConsommationRequest
+    ): Response<ApiResponse<ArmeDto>>
 }
