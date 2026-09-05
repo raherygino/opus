@@ -337,15 +337,15 @@ export function PersonnelForm() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Informations personnelles
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Informations personnelles
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
               <div className="flex items-start gap-6 mb-4">
                 <div className="flex flex-col items-center gap-2 shrink-0">
                   <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
@@ -549,114 +549,115 @@ export function PersonnelForm() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3 pt-4">
-              <Button type="submit" className="gap-2" disabled={saving}>
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {saving ? "Enregistrement..." : "Enregistrer"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate("/personnel")}
-              >
-                Annuler
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Paperclip className="h-4 w-4" />
-            Pièces jointes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {attachments.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Aucune pièce jointe
-            </p>
-          )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              Pièces jointes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {attachments.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Aucune pièce jointe
+              </p>
+            )}
 
-          {attachments.map((att, index) =>
-            att._delete ? null : (
-              <div
-                key={att.id || `attachment-${index}`}
-                className="flex items-center gap-3 rounded-lg border border-border p-3"
-              >
-                <div className="flex-1 space-y-1">
-                  <Input
-                    placeholder="Titre de la pièce jointe"
-                    value={att.title}
-                    onChange={(e) =>
-                      updateAttachment(index, { title: e.target.value })
-                    }
-                    className="h-8 text-sm"
-                  />
-                  {att.id && att.existingFile && id && (
-                    <a
-                      href={getAttachmentDownloadUrl(Number(id), att.id)}
-                      download
-                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                    >
-                      <Download className="h-3 w-3" />
-                      {att.existingFile}
-                    </a>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {att.id && att.existingFile && id && isImageFile(null, att.existingFile) && (
+            {attachments.map((att, index) =>
+              att._delete ? null : (
+                <div
+                  key={att.id || `attachment-${index}`}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
+                >
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      placeholder="Titre de la pièce jointe"
+                      value={att.title}
+                      onChange={(e) =>
+                        updateAttachment(index, { title: e.target.value })
+                      }
+                      className="h-8 text-sm"
+                    />
+                    {att.id && att.existingFile && id && (
+                      <a
+                        href={getAttachmentDownloadUrl(Number(id), att.id)}
+                        download
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" />
+                        {att.existingFile}
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {att.id && att.existingFile && id && isImageFile(null, att.existingFile) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Aperçu"
+                        onClick={() => setViewerTarget({ id: att.id!, title: att.title || att.existingFile! })}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    <Input
+                      type="file"
+                      className="w-40 h-8 text-xs"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) updateAttachment(index, { file });
+                      }}
+                    />
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      title="Aperçu"
-                      onClick={() => setViewerTarget({ id: att.id!, title: att.title || att.existingFile! })}
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => removeAttachment(index)}
                     >
-                      <Eye className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  )}
-                  <Input
-                    type="file"
-                    className="w-40 h-8 text-xs"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) updateAttachment(index, { file });
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => removeAttachment(index)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  </div>
                 </div>
-              </div>
-            ),
-          )}
+              ),
+            )}
 
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={addAttachment}
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter une pièce jointe
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center gap-3">
+          <Button type="submit" className="gap-2" disabled={saving}>
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {saving ? "Enregistrement..." : "Enregistrer"}
+          </Button>
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={addAttachment}
+            onClick={() => navigate("/personnel")}
           >
-            <Plus className="h-4 w-4" />
-            Ajouter une pièce jointe
+            Annuler
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </form>
 
       <ConfirmDialog
         open={confirmDeleteOpen}
