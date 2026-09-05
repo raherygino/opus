@@ -464,29 +464,39 @@ export function ArmementForm() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="type_arme">Type d'arme *</Label>
-                <Input
-                  id="type_arme"
-                  value={form.type_arme}
-                  onChange={(e) =>
-                    setForm({ ...form, type_arme: e.target.value, arme_id: null })
-                  }
-                  placeholder="Ex : Pistolet PA 9mm"
-                  required
-                  disabled={!!form.arme_id}
-                />
+                {form.arme_id ? (
+                  <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/30 px-3 text-sm">
+                    {form.type_arme || "—"}
+                  </div>
+                ) : (
+                  <Input
+                    id="type_arme"
+                    value={form.type_arme}
+                    onChange={(e) =>
+                      setForm({ ...form, type_arme: e.target.value, arme_id: null })
+                    }
+                    placeholder="Ex : Pistolet PA 9mm"
+                    required
+                  />
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="matricule_arme">Matricule de l'arme *</Label>
-                <Input
-                  id="matricule_arme"
-                  value={form.matricule_arme}
-                  onChange={(e) =>
-                    setForm({ ...form, matricule_arme: e.target.value, arme_id: null })
-                  }
-                  placeholder="Ex : PA-0001"
-                  required
-                  disabled={!!form.arme_id}
-                />
+                {form.arme_id ? (
+                  <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/30 px-3 text-sm">
+                    {form.matricule_arme || "—"}
+                  </div>
+                ) : (
+                  <Input
+                    id="matricule_arme"
+                    value={form.matricule_arme}
+                    onChange={(e) =>
+                      setForm({ ...form, matricule_arme: e.target.value, arme_id: null })
+                    }
+                    placeholder="Ex : PA-0001"
+                    required
+                  />
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

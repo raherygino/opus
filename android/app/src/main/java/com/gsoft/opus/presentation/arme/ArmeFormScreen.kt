@@ -186,6 +186,9 @@ fun ArmeFormScreen(
     if (state.showTypeArmeDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.hideTypeArmeDialog() },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             title = { Text("Nouveau type d'arme") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -202,6 +205,16 @@ fun ArmeFormScreen(
                         onValueChange = viewModel::updateNewTypeArmeDescription,
                         label = { Text("Description (optionnelle)") },
                         minLines = 2,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = state.newTypeArmeMunitionsStock,
+                        onValueChange = viewModel::updateNewTypeArmeMunitionsStock,
+                        label = { Text("Stock de munitions") },
+                        placeholder = { Text("0") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )

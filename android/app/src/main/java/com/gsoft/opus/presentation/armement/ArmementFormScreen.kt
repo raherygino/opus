@@ -45,6 +45,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -187,17 +188,17 @@ fun ArmementFormScreen(
                 val armeOptions = state.armeOptions
                 val selectedArmeLabel = armeOptions
                     .firstOrNull { it.id == state.armeId }
-                    ?.let { "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock: ${it.munitionsStock})" }
+                    ?.let { "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock type: ${it.typeArmeMunitionsStock})" }
                     ?: ""
                 OpusDropdown(
                     label = "Arme perçue",
                     options = armeOptions.map {
-                        "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock: ${it.munitionsStock})"
+                        "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock type: ${it.typeArmeMunitionsStock})"
                     },
                     selected = selectedArmeLabel,
                     onSelect = { label ->
                         armeOptions.firstOrNull {
-                            "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock: ${it.munitionsStock})" == label
+                            "${it.typeArmeNom ?: "—"} — ${it.matricule} (stock type: ${it.typeArmeMunitionsStock})" == label
                         }?.let { viewModel.updateArmeId(it.id) }
                     },
                     placeholder = "Sélectionner une arme enregistrée",
@@ -211,27 +212,59 @@ fun ArmementFormScreen(
                     )
                 }
 
-                OutlinedTextField(
-                    value = state.typeArme,
-                    onValueChange = viewModel::updateTypeArme,
-                    label = { Text("Type d'arme *") },
-                    placeholder = { Text("Ex : Pistolet PA 9mm") },
-                    singleLine = true,
-                    enabled = state.armeId == null,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                if (state.armeId != null) {
+                    // Read-only display — auto-filled from the selected arme.
+                    Surface(
+                        tonalElevation = 0.dp,
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                            Text(
+                                text = "Type d'arme",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = state.typeArme.ifBlank { "—" },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "Matricule de l'arme",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = state.matriculeArme.ifBlank { "—" },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                } else {
+                    OutlinedTextField(
+                        value = state.typeArme,
+                        onValueChange = viewModel::updateTypeArme,
+                        label = { Text("Type d'arme *") },
+                        placeholder = { Text("Ex : Pistolet PA 9mm") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                OutlinedTextField(
-                    value = state.matriculeArme,
-                    onValueChange = viewModel::updateMatriculeArme,
-                    label = { Text("Matricule de l'arme *") },
-                    placeholder = { Text("Ex : PA-0001") },
-                    singleLine = true,
-                    enabled = state.armeId == null,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    OutlinedTextField(
+                        value = state.matriculeArme,
+                        onValueChange = viewModel::updateMatriculeArme,
+                        label = { Text("Matricule de l'arme *") },
+                        placeholder = { Text("Ex : PA-0001") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 OutlinedTextField(
                     value = state.munitions,

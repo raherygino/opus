@@ -4,10 +4,18 @@ import { useWindowStore } from "@/stores/window-store";
 import { useCommandStore } from "@/stores/command-store";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useThemeStore } from "@/stores/theme-store";
-import { getTheme } from "@/themes";
+import { getTheme, themes } from "@/themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { WindowControls } from "./window-controls";
 import { TrafficLights } from "./traffic-lights";
 import { cn } from "@/lib/utils";
@@ -16,8 +24,8 @@ import {
   PanelLeft,
   Search,
   Command,
-  Moon,
-  Sun,
+  Check,
+  Palette,
   LayoutDashboard,
   FileText,
   Settings,
@@ -38,7 +46,7 @@ export function CustomTitleBar() {
     useWindowStore();
   const { open: openCommand } = useCommandStore();
   const { isOpen, toggle } = useSidebarStore();
-  const { theme, cycleTheme } = useThemeStore();
+  const { theme, setTheme } = useThemeStore();
 
   const isMac = platform === "darwin";
 
@@ -148,23 +156,52 @@ export function CustomTitleBar() {
       </div>
 
       <div className="flex items-center gap-0.5 px-2 no-drag">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={cycleTheme}
-            >
-              {getTheme(theme).type === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Cycle theme ({getTheme(theme).name})</TooltipContent>
-        </Tooltip>
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Theme ({getTheme(theme).name})</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="end" side="bottom" sideOffset={6} className="min-w-[12rem]">
+            <DropdownMenuLabel className="flex items-center gap-1.5">
+              <Palette className="h-3 w-3" />
+              Themes
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {themes.map((t) => {
+              const isActive = t.id === theme;
+              return (
+                <DropdownMenuItem
+                  key={t.id}
+                  className="gap-2"
+                  onSelect={() => setTheme(t.id)}
+                >
+                  <span
+                    className={cn(
+                      "flex h-3.5 w-3.5 items-center justify-center rounded-full border",
+                      t.type === "dark" ? "border-border/60 bg-foreground/10" : "border-border bg-background",
+                    )}
+                  >
+                    {isActive && <Check className="h-3 w-3 text-primary" />}
+                  </span>
+                  <span className="flex-1">{t.name}</span>
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {t.type}
+                  </span>
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {!isMac && (

@@ -30,6 +30,7 @@ data class ArmeFormUiState(
     val showTypeArmeDialog: Boolean = false,
     val newTypeArmeNom: String = "",
     val newTypeArmeDescription: String = "",
+    val newTypeArmeMunitionsStock: String = "",
     val isSavingTypeArme: Boolean = false
 )
 
@@ -85,10 +86,13 @@ class ArmeFormViewModel @Inject constructor(
 
     fun showTypeArmeDialog() { _state.update { it.copy(showTypeArmeDialog = true) } }
     fun hideTypeArmeDialog() {
-        _state.update { it.copy(showTypeArmeDialog = false, newTypeArmeNom = "", newTypeArmeDescription = "") }
+        _state.update { it.copy(showTypeArmeDialog = false, newTypeArmeNom = "", newTypeArmeDescription = "", newTypeArmeMunitionsStock = "") }
     }
     fun updateNewTypeArmeNom(v: String) { _state.update { it.copy(newTypeArmeNom = v) } }
     fun updateNewTypeArmeDescription(v: String) { _state.update { it.copy(newTypeArmeDescription = v) } }
+    fun updateNewTypeArmeMunitionsStock(v: String) {
+        _state.update { it.copy(newTypeArmeMunitionsStock = v.filter(Char::isDigit)) }
+    }
 
     fun createTypeArme() {
         val s = _state.value
@@ -100,7 +104,11 @@ class ArmeFormViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isSavingTypeArme = true, errorMessage = null) }
             when (val result = armeRepository.createTypeArme(
-                TypeArmeFormData(nom = s.newTypeArmeNom.trim(), description = s.newTypeArmeDescription.trim().ifBlank { null })
+                TypeArmeFormData(
+                    nom = s.newTypeArmeNom.trim(),
+                    description = s.newTypeArmeDescription.trim().ifBlank { null },
+                    munitionsStock = s.newTypeArmeMunitionsStock.trim().ifBlank { "0" }.toInt()
+                )
             )) {
                 is Resource.Success -> {
                     _state.update {
@@ -110,7 +118,8 @@ class ArmeFormViewModel @Inject constructor(
                             typesArmes = it.typesArmes + result.data,
                             typeArmeId = result.data.id,
                             newTypeArmeNom = "",
-                            newTypeArmeDescription = ""
+                            newTypeArmeDescription = "",
+                            newTypeArmeMunitionsStock = ""
                         )
                     }
                 }
