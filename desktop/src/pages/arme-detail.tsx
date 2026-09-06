@@ -5,11 +5,8 @@ import { useNotificationStore } from "@/stores/notification-store";
 import {
   getArmeById,
   getArmeConsommations,
-  recordConsommation,
 } from "@/lib/api/arme";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -23,7 +20,6 @@ import {
   Pencil,
   Loader2,
   Crosshair,
-  Plus,
   History,
 } from "lucide-react";
 import type { Arme, ArmeMunitionsConsommation } from "@/types";
@@ -51,10 +47,6 @@ export function ArmeDetail() {
   const [arme, setArme] = useState<Arme | null>(null);
   const [consommations, setConsommations] = useState<ArmeMunitionsConsommation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showConsoDialog, setShowConsoDialog] = useState(false);
-  const [consoQuantite, setConsoQuantite] = useState("1");
-  const [consoAgentId, setConsoAgentId] = useState("");
-  const [savingConso, setSavingConso] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -77,41 +69,6 @@ export function ArmeDetail() {
       navigate(LIST_PATH);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleConsommation(e: React.FormEvent) {
-    e.preventDefault();
-    if (!arme) return;
-    const q = Number(consoQuantite);
-    if (!Number.isInteger(q) || q <= 0) {
-      addNotification("error", "Validation", "La quantité doit être un entier positif");
-      return;
-    }
-    setSavingConso(true);
-    try {
-      await recordConsommation(arme.id, {
-        quantite: q,
-        agent_id: consoAgentId.trim() ? Number(consoAgentId) : null,
-      });
-      addNotification("success", "Consommation enregistrée", `${q} munition(s) déduites du stock`);
-      setShowConsoDialog(false);
-      setConsoQuantite("1");
-      setConsoAgentId("");
-      loadAll(arme.id);
-    } catch (err: unknown) {
-      let msg = "Impossible d'enregistrer la consommation";
-      if (err && typeof err === "object" && "response" in err) {
-        const resp = (err as { response: { data: { message?: string; errors?: Record<string, string> } } }).response;
-        if (resp?.data?.errors) {
-          msg = Object.values(resp.data.errors).join(", ");
-        } else if (resp?.data?.message) {
-          msg = resp.data.message;
-        }
-      }
-      addNotification("error", "Erreur", msg);
-    } finally {
-      setSavingConso(false);
     }
   }
 
@@ -208,16 +165,10 @@ export function ArmeDetail() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <History className="h-4 w-4" />
-              Historique des consommations ({consommations.length})
-            </CardTitle>
-            <Button size="sm" onClick={() => setShowConsoDialog(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Enregistrer une consommation
-            </Button>
-          </div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Historique des consommations ({consommations.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
@@ -231,68 +182,6 @@ export function ArmeDetail() {
         </CardContent>
       </Card>
 
-      {showConsoDialog && (
-        <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center"
-          onClick={() => setShowConsoDialog(false)}
-        >
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="relative z-50 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-base font-semibold mb-4">
-              Enregistrer une consommation de munitions
-            </h3>
-            <form onSubmit={handleConsommation} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="conso_quantite">Quantité consommée *</Label>
-                <Input
-                  id="conso_quantite"
-                  type="number"
-                  min={1}
-                  value={consoQuantite}
-                  onChange={(e) => setConsoQuantite(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Stock actuel du type : {arme.type_arme_munitions_stock}. La déduction est
-                  atomique et rejetée si le stock est insuffisant.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="conso_agent">ID Agent (optionnel)</Label>
-                <Input
-                  id="conso_agent"
-                  type="number"
-                  min={1}
-                  value={consoAgentId}
-                  onChange={(e) => setConsoAgentId(e.target.value)}
-                  placeholder="Personnel ID"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowConsoDialog(false)}
-                  disabled={savingConso}
-                >
-                  Annuler
-                </Button>
-                <Button type="submit" size="sm" disabled={savingConso} className="gap-2">
-                  {savingConso && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  Enregistrer
-                </Button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </motion.div>
   );
 }
