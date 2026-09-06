@@ -109,6 +109,7 @@ import com.gsoft.opus.presentation.personnel.ComportementFormScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
 import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
+import com.gsoft.opus.presentation.sedentaire.SedentaireDashboardScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
@@ -431,7 +432,46 @@ fun MainScreen(
                     }
 
                     // Sédentaire – Secrétariat
-                    composable(MainRoutes.SedDashboard.route) { ContextMenuItemScreens.SedDashboard() }
+                    composable(MainRoutes.SedDashboard.route) {
+                        SedentaireDashboardScreen(
+                            onCorrespondanceList = {
+                                navController.navigate(MainRoutes.Correspondance.route)
+                            },
+                            onCorrespondanceDetail = { id ->
+                                navController.navigate(MainRoutes.CorrespondanceDetail.createRoute(id))
+                            },
+                            onCreateCorrespondance = {
+                                navController.navigate(MainRoutes.CorrespondanceForm.createRoute(0))
+                            },
+                            onDeclarationList = {
+                                navController.navigate(MainRoutes.DeclarationPerte.route)
+                            },
+                            onDeclarationDetail = { id ->
+                                navController.navigate(MainRoutes.DeclarationPerteDetail.createRoute(id))
+                            },
+                            onCreateDeclaration = {
+                                navController.navigate(MainRoutes.DeclarationPerteForm.createRoute(0))
+                            },
+                            onPassationList = {
+                                navController.navigate(MainRoutes.Passation.route)
+                            },
+                            onPassationDetail = { id ->
+                                navController.navigate(MainRoutes.PassationDetail.createRoute(id))
+                            },
+                            onCreatePassation = {
+                                navController.navigate(MainRoutes.PassationForm.createRoute(0))
+                            },
+                            onPersonnelList = {
+                                navController.navigate(MainRoutes.GestionPersonnel.route)
+                            },
+                            onPersonnelDetail = { id ->
+                                navController.navigate(MainRoutes.PersonnelDetail.createRoute(id))
+                            },
+                            onCreatePersonnel = {
+                                navController.navigate(MainRoutes.PersonnelForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Correspondance.route) {
                         CorrespondanceScreen(
                             onCorrespondanceClick = { id ->
