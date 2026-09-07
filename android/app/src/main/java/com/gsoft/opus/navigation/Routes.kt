@@ -136,4 +136,15 @@ sealed class MainRoutes(val route: String) {
     data object ArmeForm : MainRoutes("sed_arme_form?armeId={armeId}") {
         fun createRoute(armeId: Int = 0) = "sed_arme_form?armeId=$armeId"
     }
+
+    // Matériel management (equipment assignment & return)
+    data object MaterielDetail : MainRoutes("sed_materiel_detail/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_detail/$affectationId"
+    }
+    data object MaterielForm : MainRoutes("sed_materiel_form?affectationId={affectationId}") {
+        fun createRoute(affectationId: Int = 0) = "sed_materiel_form?affectationId=$affectationId"
+    }
+    data object MaterielReintegration : MainRoutes("sed_materiel_reintegration/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_reintegration/$affectationId"
+    }
 }

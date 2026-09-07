@@ -98,6 +98,10 @@ import com.gsoft.opus.presentation.armement.ArmementScreen
 import com.gsoft.opus.presentation.arme.ArmeDetailScreen
 import com.gsoft.opus.presentation.arme.ArmeFormScreen
 import com.gsoft.opus.presentation.arme.ArmeScreen
+import com.gsoft.opus.presentation.materiel.MaterielScreen
+import com.gsoft.opus.presentation.materiel.MaterielDetailScreen
+import com.gsoft.opus.presentation.materiel.MaterielFormScreen
+import com.gsoft.opus.presentation.materiel.MaterielReintegrationScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -469,6 +473,15 @@ fun MainScreen(
                             },
                             onCreatePersonnel = {
                                 navController.navigate(MainRoutes.PersonnelForm.createRoute(0))
+                            },
+                            onMaterielsList = {
+                                navController.navigate(MainRoutes.Materiels.route)
+                            },
+                            onMaterielDetail = { id ->
+                                navController.navigate(MainRoutes.MaterielDetail.createRoute(id))
+                            },
+                            onCreateMateriel = {
+                                navController.navigate(MainRoutes.MaterielForm.createRoute(0))
                             }
                         )
                     }
@@ -535,7 +548,19 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.Materiels.route) { ContextMenuItemScreens.Materiels() }
+                    composable(MainRoutes.Materiels.route) {
+                        MaterielScreen(
+                            onAffectationClick = { id ->
+                                navController.navigate(MainRoutes.MaterielDetail.createRoute(id))
+                            },
+                            onCreateAffectation = {
+                                navController.navigate(MainRoutes.MaterielForm.createRoute(0))
+                            },
+                            onReintegrate = { id ->
+                                navController.navigate(MainRoutes.MaterielReintegration.createRoute(id))
+                            }
+                        )
+                    }
                     composable(MainRoutes.SituationGav.route) { ContextMenuItemScreens.SituationGav() }
                     composable(MainRoutes.MainCourantePoste.route) { ContextMenuItemScreens.MainCourantePoste() }
                     composable(MainRoutes.RenseignementSed.route) { ContextMenuItemScreens.RenseignementSed() }
@@ -1011,6 +1036,53 @@ fun MainScreen(
                         )
                     ) {
                         ArmeFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Matériel management (equipment assignment & return)
+                    composable(
+                        route = MainRoutes.MaterielDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("affectationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) {
+                        MaterielDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.MaterielForm.createRoute(id))
+                            },
+                            onReintegrate = { id ->
+                                navController.navigate(MainRoutes.MaterielReintegration.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MaterielForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("affectationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        )
+                    ) {
+                        MaterielFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MaterielReintegration.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("affectationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) {
+                        MaterielReintegrationScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )

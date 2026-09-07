@@ -364,6 +364,61 @@ export interface ArmeMunitionsConsommation {
 }
 
 // ========================
+// Matériel Types (Sédentaire > Poste — equipment assignment & return)
+// ========================
+
+/** Equipment type catalog (e.g. Radio, Bâton, Gilet, Menottes, Lampe). */
+export interface TypeMateriel {
+  id: number;
+  nom: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** One material line item within an assignment (type + unique ID + states). */
+export interface AffectationMaterielLigne {
+  id: number;
+  affectation_id: number;
+  type_materiel_id: number;
+  /** Snapshot of the type name at assignment time. */
+  type_materiel_nom: string;
+  /** Unique ID Matériel (serial / inventory number). */
+  numero_materiel: string;
+  /** Condition state at issue (perception). */
+  etat_emport: string | null;
+  /** Condition state at return (réintégration). Null until returned. */
+  etat_reintegration: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type AffectationMaterielStatut = "Assigné" | "Réintégré";
+
+/** Equipment assignment header (agent + perception/reintegration dates + lignes). */
+export interface AffectationMateriel {
+  id: number;
+  agent_personnel_id: number;
+  agent_im: string | null;
+  agent_grade: string | null;
+  agent_nom: string | null;
+  date_perception: string;
+  heure_perception: string;
+  date_reintegration: string | null;
+  heure_reintegration: string | null;
+  statut: AffectationMaterielStatut;
+  observations: string | null;
+  agent_verifie: number;
+  agent_verifie_at: string | null;
+  signature_svg: string | null;
+  created_by: number | null;
+  agent_personnel_im?: string | null;
+  lignes?: AffectationMaterielLigne[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {

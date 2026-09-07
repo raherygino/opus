@@ -24,6 +24,8 @@ use App\Controllers\ArmementController;
 use App\Controllers\ArmementAttachmentController;
 use App\Controllers\ArmeController;
 use App\Controllers\TypeArmeController;
+use App\Controllers\TypeMaterielController;
+use App\Controllers\AffectationMaterielController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -223,6 +225,25 @@ $router->put('/api/armes/{id}',                         [ArmeController::class, 
 $router->delete('/api/armes/{id}',                      [ArmeController::class, 'destroy']);
 $router->get('/api/armes/{id}/consommations',           [ArmeController::class, 'consommations']);
 $router->post('/api/armes/{id}/consommation',           [ArmeController::class, 'consommationAction']);
+
+// ========================
+// Type Matériel Routes (equipment type catalogue)
+// ========================
+$router->get('/api/types-materiels',           [TypeMaterielController::class, 'index']);
+$router->get('/api/types-materiels/{id}',      [TypeMaterielController::class, 'show']);
+$router->post('/api/types-materiels',          [TypeMaterielController::class, 'store']);
+$router->put('/api/types-materiels/{id}',      [TypeMaterielController::class, 'update']);
+$router->delete('/api/types-materiels/{id}',   [TypeMaterielController::class, 'destroy']);
+
+// ========================
+// Affectation Matériel Routes (equipment assignment & return)
+// ========================
+$router->get('/api/affectations-materiels',                    [AffectationMaterielController::class, 'index']);
+$router->get('/api/affectations-materiels/{id}',               [AffectationMaterielController::class, 'show']);
+$router->post('/api/affectations-materiels',                   [AffectationMaterielController::class, 'store']);
+$router->put('/api/affectations-materiels/{id}',               [AffectationMaterielController::class, 'update']);
+$router->post('/api/affectations-materiels/{id}/reintegration', [AffectationMaterielController::class, 'reintegrate']);
+$router->delete('/api/affectations-materiels/{id}',            [AffectationMaterielController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)
