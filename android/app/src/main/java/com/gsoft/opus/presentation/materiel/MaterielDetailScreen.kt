@@ -192,7 +192,6 @@ fun MaterielDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 DetailRow("Type de matériel", ligne.typeMaterielNom)
-                                DetailRow("ID Matériel", ligne.numeroMateriel)
                                 DetailRow("État à l'emport", ligne.etatEmport)
                                 DetailRow("État à la réintégration", ligne.etatReintegration)
                             }

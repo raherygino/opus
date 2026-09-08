@@ -39,7 +39,6 @@ function nowTime(): string {
 
 interface LigneForm {
   type_materiel_id: number;
-  numero_materiel: string;
   etat_emport: string;
 }
 
@@ -57,7 +56,7 @@ export function MaterielForm() {
     observations: "",
   });
   const [lignes, setLignes] = useState<LigneForm[]>([
-    { type_materiel_id: 0, numero_materiel: "", etat_emport: "" },
+    { type_materiel_id: 0, etat_emport: "" },
   ]);
   const [personnelList, setPersonnelList] = useState<Personnel[]>([]);
   const [typeList, setTypeList] = useState<TypeMateriel[]>([]);
@@ -107,7 +106,6 @@ export function MaterielForm() {
       setLignes(
         (data.lignes ?? []).map((l) => ({
           type_materiel_id: l.type_materiel_id,
-          numero_materiel: l.numero_materiel,
           etat_emport: l.etat_emport ?? "",
         })),
       );
@@ -183,7 +181,7 @@ export function MaterielForm() {
   function addLigne() {
     setLignes((prev) => [
       ...prev,
-      { type_materiel_id: 0, numero_materiel: "", etat_emport: "" },
+      { type_materiel_id: 0, etat_emport: "" },
     ]);
   }
 
@@ -211,18 +209,6 @@ export function MaterielForm() {
         addNotification("error", "Erreur", `Ligne ${i + 1} : le type de matériel est requis`);
         return;
       }
-      if (!lignes[i].numero_materiel.trim()) {
-        addNotification("error", "Erreur", `Ligne ${i + 1} : l'ID Matériel est requis`);
-        return;
-      }
-    }
-
-    // Check for duplicate numero_materiel within the same assignment
-    const nums = lignes.map((l) => l.numero_materiel.trim());
-    const dupIndex = nums.findIndex((n, i) => nums.indexOf(n) !== i);
-    if (dupIndex >= 0) {
-      addNotification("error", "Erreur", `Ligne ${dupIndex + 1} : l'ID Matériel « ${nums[dupIndex]} » est en double`);
-      return;
     }
 
     // On create, the agent must be verified via code secret.
@@ -240,7 +226,6 @@ export function MaterielForm() {
         observations: form.observations.trim() || null,
         lignes: lignes.map<AffectationMaterielLignePayload>((l) => ({
           type_materiel_id: l.type_materiel_id,
-          numero_materiel: l.numero_materiel.trim(),
           etat_emport: l.etat_emport.trim() || null,
         })),
         // On create, include the code secret + optional signature.
@@ -559,28 +544,16 @@ export function MaterielForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`ligne-${index}-numero`}>ID Matériel *</Label>
+                    <Label htmlFor={`ligne-${index}-etat`}>État à l'emport (optionnel)</Label>
                     <Input
-                      id={`ligne-${index}-numero`}
-                      value={ligne.numero_materiel}
+                      id={`ligne-${index}-etat`}
+                      value={ligne.etat_emport}
                       onChange={(e) =>
-                        updateLigne(index, "numero_materiel", e.target.value)
+                        updateLigne(index, "etat_emport", e.target.value)
                       }
-                      placeholder="Ex : R-001"
-                      required
+                      placeholder="Ex : Bon, Neuf, Moyen..."
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`ligne-${index}-etat`}>État à l'emport (optionnel)</Label>
-                  <Input
-                    id={`ligne-${index}-etat`}
-                    value={ligne.etat_emport}
-                    onChange={(e) =>
-                      updateLigne(index, "etat_emport", e.target.value)
-                    }
-                    placeholder="Ex : Bon, Neuf, Moyen..."
-                  />
                 </div>
               </div>
             ))}

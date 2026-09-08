@@ -65,7 +65,6 @@ export async function deleteTypeMateriel(id: number): Promise<void> {
 
 export interface AffectationMaterielLignePayload {
   type_materiel_id: number;
-  numero_materiel: string;
   etat_emport?: string | null;
 }
 

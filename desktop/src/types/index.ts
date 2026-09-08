@@ -376,15 +376,13 @@ export interface TypeMateriel {
   updated_at: string;
 }
 
-/** One material line item within an assignment (type + unique ID + states). */
+/** One material line item within an assignment (type + states). */
 export interface AffectationMaterielLigne {
   id: number;
   affectation_id: number;
   type_materiel_id: number;
   /** Snapshot of the type name at assignment time. */
   type_materiel_nom: string;
-  /** Unique ID Matériel (serial / inventory number). */
-  numero_materiel: string;
   /** Condition state at issue (perception). */
   etat_emport: string | null;
   /** Condition state at return (réintégration). Null until returned. */

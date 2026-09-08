@@ -386,16 +386,6 @@ fun MaterielFormScreen(
                         )
 
                         OutlinedTextField(
-                            value = ligne.numeroMateriel,
-                            onValueChange = { viewModel.updateLigne(index, ligne.copy(numeroMateriel = it)) },
-                            label = { Text("ID Matériel *") },
-                            placeholder = { Text("Ex : R-001") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        OutlinedTextField(
                             value = ligne.etatEmport,
                             onValueChange = { viewModel.updateLigne(index, ligne.copy(etatEmport = it)) },
                             label = { Text("État à l'emport (optionnel)") },

@@ -21,8 +21,6 @@ data class AffectationMaterielLigne(
     val typeMaterielId: Int,
     /** Snapshot of the type name at assignment time. */
     val typeMaterielNom: String,
-    /** Unique ID Matériel (serial / inventory number). */
-    val numeroMateriel: String,
     /** Condition state at issue (perception). */
     val etatEmport: String?,
     /** Condition state at return (réintégration). Null until returned. */
@@ -73,5 +71,5 @@ data class AffectationMateriel(
 
     /** Summary of material types in this assignment. */
     val materielsSummary: String
-        get() = lignes.joinToString(", ") { "${it.typeMaterielNom} · ${it.numeroMateriel}" }
+        get() = lignes.joinToString(", ") { it.typeMaterielNom }
 }

@@ -113,14 +113,12 @@ AffectationMateriel::createLigne([
     'affectation_id' => $affId,
     'type_materiel_id' => $typeRadioId,
     'type_materiel_nom' => 'Radio',
-    'numero_materiel' => 'R-001',
     'etat_emport' => 'Bon',
 ]);
 AffectationMateriel::createLigne([
     'affectation_id' => $affId,
     'type_materiel_id' => $typeBatonId,
     'type_materiel_nom' => 'Bâton',
-    'numero_materiel' => 'B-001',
     'etat_emport' => 'Neuf',
 ]);
 
@@ -128,8 +126,6 @@ $row = AffectationMateriel::getById($affId);
 check($row !== null, 'create + getById assignment');
 check($row['statut'] === 'Assigné', 'statut = Assigné');
 check(count($row['lignes']) === 2, 'assignment has 2 lignes');
-check($row['lignes'][0]['numero_materiel'] === 'R-001', 'ligne 1 numero_materiel');
-check($row['lignes'][1]['numero_materiel'] === 'B-001', 'ligne 2 numero_materiel');
 
 // getAll with lignes attached
 $all = AffectationMateriel::getAll();
@@ -141,12 +137,6 @@ check(count(AffectationMateriel::getAll(['statut' => 'reintegre'])) === 0, 'filt
 
 // Search filter
 check(count(AffectationMateriel::getAll(['search' => 'Dupont'])) === 1, 'search by agent name');
-
-// --- Business rule 7: material currently assigned cannot be assigned to another agent ---
-echo "Business rule 7: simultaneous assignment\n";
-check(AffectationMateriel::isNumeroMaterielActivementAffecte('R-001'), 'R-001 is actively assigned');
-check(!AffectationMateriel::isNumeroMaterielActivementAffecte('R-999'), 'R-999 is not assigned');
-check(!AffectationMateriel::isNumeroMaterielActivementAffecte('R-001', $affId), 'R-001 excluded by own assignment id');
 
 // countAffectationLignes after assignment
 check(TypeMateriel::countAffectationLignes($typeRadioId) === 1, 'countAffectationLignes = 1 after assignment');
@@ -174,9 +164,6 @@ $reintAgain = AffectationMateriel::reintegrate($affId, [
 ], []);
 check(!$reintAgain, 'reintegrate rejected (already reintegrated)');
 
-// After reintegration, the material is no longer "actively assigned"
-check(!AffectationMateriel::isNumeroMaterielActivementAffecte('R-001'), 'R-001 no longer active after reintegration');
-
 // --- etat_reintegration on lignes ---
 check($reintRow['lignes'][0]['etat_reintegration'] === 'Bon', 'ligne 0 etat_reintegration filled');
 check($reintRow['lignes'][1]['etat_reintegration'] === 'Bon', 'ligne 1 etat_reintegration filled');
@@ -189,9 +176,9 @@ check(AffectationMateriel::getById($affId)['observations'] === 'Mission spécial
 // --- replaceLignes ---
 echo "Replace lignes\n";
 AffectationMateriel::replaceLignes($affId, [
-    ['type_materiel_id' => $typeRadioId, 'type_materiel_nom' => 'Radio', 'numero_materiel' => 'R-001', 'etat_emport' => 'Bon'],
-    ['type_materiel_id' => $typeBatonId, 'type_materiel_nom' => 'Bâton', 'numero_materiel' => 'B-001', 'etat_emport' => 'Neuf'],
-    ['type_materiel_id' => $typeRadioId, 'type_materiel_nom' => 'Radio', 'numero_materiel' => 'R-002', 'etat_emport' => 'Moyen'],
+    ['type_materiel_id' => $typeRadioId, 'type_materiel_nom' => 'Radio', 'etat_emport' => 'Bon'],
+    ['type_materiel_id' => $typeBatonId, 'type_materiel_nom' => 'Bâton', 'etat_emport' => 'Neuf'],
+    ['type_materiel_id' => $typeRadioId, 'type_materiel_nom' => 'Radio', 'etat_emport' => 'Moyen'],
 ]);
 $replaced = AffectationMateriel::getById($affId);
 check(count($replaced['lignes']) === 3, 'replaceLignes results in 3 lignes');
@@ -217,7 +204,6 @@ AffectationMateriel::createLigne([
     'affectation_id' => $aff2Id,
     'type_materiel_id' => $typeBatonId,
     'type_materiel_nom' => 'Bâton',
-    'numero_materiel' => 'B-002',
     'etat_emport' => 'Bon',
 ]);
 check(TypeMateriel::countAffectationLignes($typeBatonId) === 1, 'type used by 1 ligne');
@@ -244,7 +230,7 @@ $validate = fn(array $data, bool $isCreate = true): array =>
     $method->invoke(null, $data, $isCreate);
 
 $validLignes = [
-    ['type_materiel_id' => $typeRadioId, 'numero_materiel' => 'R-100'],
+    ['type_materiel_id' => $typeRadioId],
 ];
 $validPayload = [
     'agent_personnel_id' => $agent1Id,
@@ -257,8 +243,7 @@ check(isset($validate(['agent_personnel_id' => 0, 'date_perception' => '2026-09-
 check(isset($validate(['agent_personnel_id' => $agent1Id, 'date_perception' => '', 'heure_perception' => '08:00', 'lignes' => $validLignes])['date_perception']), 'missing date rejected');
 check(isset($validate(['agent_personnel_id' => $agent1Id, 'date_perception' => '2026-09-01', 'heure_perception' => '25:00', 'lignes' => $validLignes])['heure_perception']), 'invalid heure rejected');
 check(isset($validate(['agent_personnel_id' => $agent1Id, 'date_perception' => '2026-09-01', 'heure_perception' => '08:00', 'lignes' => []])['lignes']), 'empty lignes rejected on create');
-check(isset($validate(['agent_personnel_id' => $agent1Id, 'date_perception' => '2026-09-01', 'heure_perception' => '08:00', 'lignes' => [['type_materiel_id' => 0, 'numero_materiel' => 'X']]])['lignes[0].type_materiel_id']), 'ligne missing type rejected');
-check(isset($validate(['agent_personnel_id' => $agent1Id, 'date_perception' => '2026-09-01', 'heure_perception' => '08:00', 'lignes' => [['type_materiel_id' => $typeRadioId, 'numero_materiel' => '']]])['lignes[0].numero_materiel']), 'ligne missing numero rejected');
+check(isset($validate(['agent_personnel_id' => $agent1Id, 'date_perception' => '2026-09-01', 'heure_perception' => '08:00', 'lignes' => [['type_materiel_id' => 0]]])['lignes[0].type_materiel_id']), 'ligne missing type rejected');
 
 // TypeMateriel controller validation
 echo "TypeMateriel controller validation\n";

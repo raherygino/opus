@@ -387,7 +387,6 @@ fun AffectationMaterielLigneDto.toDomain(): AffectationMaterielLigne = Affectati
     affectationId = affectationId,
     typeMaterielId = typeMaterielId,
     typeMaterielNom = typeMaterielNom,
-    numeroMateriel = numeroMateriel,
     etatEmport = etatEmport,
     etatReintegration = etatReintegration,
     createdAt = createdAt,

@@ -10,7 +10,7 @@
 -- type_materiel        : catalogue of equipment types (Radio, Bâton, Gilet, …)
 -- affectation_materiel : assignment header (agent, perception/reintegration dates, statut)
 -- affectation_materiel_ligne : one row per material in the assignment
---   (type_materiel_id + numero_materiel + etat_emport + etat_reintegration)
+--   (type_materiel_id + etat_emport + etat_reintegration)
 
 CREATE TABLE IF NOT EXISTS `type_materiel` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS `affectation_materiel_ligne` (
     `affectation_id` INT UNSIGNED NOT NULL COMMENT 'FK to affectation_materiel',
     `type_materiel_id` INT UNSIGNED NOT NULL COMMENT 'FK to type_materiel',
     `type_materiel_nom` VARCHAR(100) NOT NULL COMMENT 'Snapshot of the type name at assignment time',
-    `numero_materiel` VARCHAR(100) NOT NULL COMMENT 'Unique ID Matériel (serial / inventory number)',
     `etat_emport` VARCHAR(100) NULL COMMENT 'Condition state at issue (perception)',
     `etat_reintegration` VARCHAR(100) NULL COMMENT 'Condition state at return (réintégration)',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -56,6 +55,5 @@ CREATE TABLE IF NOT EXISTS `affectation_materiel_ligne` (
     CONSTRAINT `fk_am_ligne_affectation` FOREIGN KEY (`affectation_id`) REFERENCES `affectation_materiel`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_am_ligne_type_materiel` FOREIGN KEY (`type_materiel_id`) REFERENCES `type_materiel`(`id`) ON DELETE RESTRICT,
     INDEX `idx_am_ligne_affectation` (`affectation_id`),
-    INDEX `idx_am_ligne_type` (`type_materiel_id`),
-    INDEX `idx_am_ligne_numero` (`numero_materiel`)
+    INDEX `idx_am_ligne_type` (`type_materiel_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

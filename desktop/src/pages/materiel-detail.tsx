@@ -297,7 +297,6 @@ export function MaterielDetail() {
             >
               <div className="grid grid-cols-2 gap-4">
                 <DetailRow label="Type de matériel" value={l.type_materiel_nom} />
-                <DetailRow label="ID Matériel" value={l.numero_materiel} />
                 <DetailRow label="État à l'emport" value={l.etat_emport} />
                 <DetailRow
                   label="État à la réintégration"
@@ -382,7 +381,7 @@ export function MaterielDetail() {
                 {lignes.map((l) => (
                   <div key={l.id} className="space-y-1">
                     <p className="text-xs text-muted-foreground">
-                      {l.type_materiel_nom} · {l.numero_materiel}
+                      {l.type_materiel_nom}
                     </p>
                     <Input
                       value={reintEtats[l.id] ?? ""}

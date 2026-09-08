@@ -23,7 +23,6 @@ import javax.inject.Inject
 
 data class LigneFormState(
     val typeMaterielId: Int = 0,
-    val numeroMateriel: String = "",
     val etatEmport: String = ""
 )
 
@@ -112,7 +111,6 @@ class MaterielFormViewModel @Inject constructor(
                             lignes = aff.lignes.map { l ->
                                 LigneFormState(
                                     typeMaterielId = l.typeMaterielId,
-                                    numeroMateriel = l.numeroMateriel,
                                     etatEmport = l.etatEmport ?: ""
                                 )
                             }
@@ -235,17 +233,6 @@ class MaterielFormViewModel @Inject constructor(
                 _state.update { it.copy(errorMessage = "Ligne ${i + 1} : le type de matériel est requis") }
                 return
             }
-            if (l.numeroMateriel.isBlank()) {
-                _state.update { it.copy(errorMessage = "Ligne ${i + 1} : l'ID Matériel est requis") }
-                return
-            }
-        }
-        // Check for duplicate numero_materiel within the same assignment
-        val nums = s.lignes.map { it.numeroMateriel.trim() }
-        val dupIndex = nums.indexOfFirst { n -> nums.indexOf(n) != nums.lastIndexOf(n) }
-        if (dupIndex >= 0) {
-            _state.update { it.copy(errorMessage = "Ligne ${dupIndex + 1} : l'ID Matériel « ${nums[dupIndex]} » est en double") }
-            return
         }
         // On create, the agent must be verified via code secret before the
         // affectation can be created. On edit, verification was done at
@@ -267,7 +254,6 @@ class MaterielFormViewModel @Inject constructor(
                 lignes = s.lignes.map {
                     AffectationMaterielLigneFormData(
                         typeMaterielId = it.typeMaterielId,
-                        numeroMateriel = it.numeroMateriel.trim(),
                         etatEmport = it.etatEmport.trim().ifBlank { null }
                     )
                 },

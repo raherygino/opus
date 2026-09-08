@@ -118,7 +118,6 @@ class MaterielRepositoryImpl @Inject constructor(
         lignes = lignes.map {
             AffectationMaterielLigneRequest(
                 typeMaterielId = it.typeMaterielId,
-                numeroMateriel = it.numeroMateriel.trim(),
                 etatEmport = it.etatEmport?.trim()?.ifBlank { null }
             )
         },

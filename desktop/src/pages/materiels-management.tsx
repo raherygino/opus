@@ -282,7 +282,7 @@ export function MaterielsManagement() {
           <div className="flex flex-wrap gap-1">
             {lignes.map((l) => (
               <Badge key={l.id} variant="secondary" className="gap-1">
-                {l.type_materiel_nom} · {l.numero_materiel}
+                {l.type_materiel_nom}
               </Badge>
             ))}
           </div>

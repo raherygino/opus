@@ -140,14 +140,13 @@ class AffectationMateriel
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
             'INSERT INTO affectation_materiel_ligne
-                (affectation_id, type_materiel_id, type_materiel_nom, numero_materiel, etat_emport, etat_reintegration)
-             VALUES (?, ?, ?, ?, ?, ?)'
+                (affectation_id, type_materiel_id, type_materiel_nom, etat_emport, etat_reintegration)
+             VALUES (?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['affectation_id'],
             $data['type_materiel_id'],
             $data['type_materiel_nom'],
-            $data['numero_materiel'],
             $data['etat_emport'] ?? null,
             $data['etat_reintegration'] ?? null,
         ]);
@@ -202,7 +201,6 @@ class AffectationMateriel
                 'affectation_id'    => $affectationId,
                 'type_materiel_id'  => $ligne['type_materiel_id'],
                 'type_materiel_nom' => $ligne['type_materiel_nom'],
-                'numero_materiel'   => $ligne['numero_materiel'],
                 'etat_emport'       => $ligne['etat_emport'] ?? null,
                 'etat_reintegration' => $ligne['etat_reintegration'] ?? null,
             ]);
@@ -240,33 +238,6 @@ class AffectationMateriel
         }
 
         return $updated;
-    }
-
-    /**
-     * Check whether a numero_materiel is currently assigned (statut =
-     * 'Assigné') in any OTHER assignment. Used to enforce business rule 7:
-     * a material currently assigned should not be simultaneously assigned
-     * to another agent.
-     *
-     * @param string $numeroMateriel The material ID to check
-     * @param int|null $excludeAffectationId Exclude this assignment (for updates)
-     */
-    public static function isNumeroMaterielActivementAffecte(string $numeroMateriel, ?int $excludeAffectationId = null): bool
-    {
-        $db = Database::getInstance()->getConnection();
-        $sql = 'SELECT COUNT(*) FROM affectation_materiel_ligne l
-                INNER JOIN affectation_materiel a ON l.affectation_id = a.id
-                WHERE l.numero_materiel = ? AND a.statut = ?';
-        $params = [$numeroMateriel, 'Assigné'];
-
-        if ($excludeAffectationId !== null) {
-            $sql .= ' AND a.id != ?';
-            $params[] = $excludeAffectationId;
-        }
-
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        return (int) $stmt->fetchColumn() > 0;
     }
 
     public static function delete(int $id): bool

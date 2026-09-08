@@ -148,7 +148,7 @@ fun MaterielReintegrationScreen(
                 aff.lignes.forEach { ligne ->
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
                         Text(
-                            text = "${ligne.typeMaterielNom} · ${ligne.numeroMateriel}",
+                            text = ligne.typeMaterielNom,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

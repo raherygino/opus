@@ -56,10 +56,6 @@ class AffectationMaterielController
                 foreach ($lignes as $i => $ligne) {
                     if (empty((int) ($ligne['type_materiel_id'] ?? 0))) {
                         $errors["lignes[$i].type_materiel_id"] = 'Le type de matériel est requis';
-                        continue;
-                    }
-                    if (empty(trim((string) ($ligne['numero_materiel'] ?? '')))) {
-                        $errors["lignes[$i].numero_materiel"] = 'L\'ID Matériel est requis';
                     }
                 }
             }
@@ -147,7 +143,6 @@ class AffectationMaterielController
             } else {
                 $ligne['type_materiel_nom'] = $ligne['type_materiel_nom'] ?? '';
             }
-            $ligne['numero_materiel'] = trim((string) ($ligne['numero_materiel'] ?? ''));
         }
         unset($ligne);
     }
@@ -254,17 +249,6 @@ class AffectationMaterielController
         $lignes = $data['lignes'] ?? [];
         self::snapshotLignes($lignes);
 
-        // Business rule 7: a material currently assigned should not be
-        // simultaneously assigned to another agent.
-        foreach ($lignes as $ligne) {
-            $numero = trim((string) ($ligne['numero_materiel'] ?? ''));
-            if ($numero !== '' && AffectationMateriel::isNumeroMaterielActivementAffecte($numero)) {
-                Response::error('Validation failed', 422, [
-                    'lignes' => "Le matériel « {$numero} » est actuellement affecté à un autre agent",
-                ]);
-            }
-        }
-
         // Create the assignment + line items atomically.
         $db = Database::getInstance()->getConnection();
         $db->beginTransaction();
@@ -275,7 +259,6 @@ class AffectationMaterielController
                     'affectation_id'    => $id,
                     'type_materiel_id'  => $ligne['type_materiel_id'],
                     'type_materiel_nom' => $ligne['type_materiel_nom'],
-                    'numero_materiel'   => $ligne['numero_materiel'],
                     'etat_emport'       => $ligne['etat_emport'] ?? null,
                 ]);
             }
@@ -354,17 +337,6 @@ class AffectationMaterielController
         $lignes = $data['lignes'] ?? null;
         if ($lignes !== null) {
             self::snapshotLignes($lignes);
-
-            // Business rule 7: check that no numero_materiel is actively
-            // assigned in a DIFFERENT assignment.
-            foreach ($lignes as $ligne) {
-                $numero = trim((string) ($ligne['numero_materiel'] ?? ''));
-                if ($numero !== '' && AffectationMateriel::isNumeroMaterielActivementAffecte($numero, $id)) {
-                    Response::error('Validation failed', 422, [
-                        'lignes' => "Le matériel « {$numero} » est actuellement affecté à un autre agent",
-                    ]);
-                }
-            }
         }
 
         $oldAffectation = $affectation;

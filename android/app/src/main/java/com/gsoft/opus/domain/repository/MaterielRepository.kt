@@ -13,7 +13,6 @@ data class TypeMaterielFormData(
 /** One material line in an assignment. */
 data class AffectationMaterielLigneFormData(
     val typeMaterielId: Int,
-    val numeroMateriel: String,
     val etatEmport: String? = null
 )
 

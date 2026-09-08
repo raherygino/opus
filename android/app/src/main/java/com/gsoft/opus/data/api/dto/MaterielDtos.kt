@@ -28,7 +28,6 @@ data class AffectationMaterielLigneDto(
     @SerializedName("affectation_id") val affectationId: Int,
     @SerializedName("type_materiel_id") val typeMaterielId: Int,
     @SerializedName("type_materiel_nom") val typeMaterielNom: String,
-    @SerializedName("numero_materiel") val numeroMateriel: String,
     @SerializedName("etat_emport") val etatEmport: String? = null,
     @SerializedName("etat_reintegration") val etatReintegration: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
@@ -58,7 +57,6 @@ data class AffectationMaterielDto(
 
 data class AffectationMaterielLigneRequest(
     @SerializedName("type_materiel_id") val typeMaterielId: Int,
-    @SerializedName("numero_materiel") val numeroMateriel: String,
     @SerializedName("etat_emport") val etatEmport: String? = null
 )
 
