@@ -101,6 +101,17 @@ const ArmeDetail = lazy(() =>
   import("@/pages/arme-detail").then((m) => ({ default: m.ArmeDetail })),
 );
 
+// Matériels (Sédentaire > Poste — equipment assignment & return)
+const MaterielsManagement = lazy(() =>
+  import("@/pages/materiels-management").then((m) => ({ default: m.MaterielsManagement })),
+);
+const MaterielForm = lazy(() =>
+  import("@/pages/materiel-form").then((m) => ({ default: m.MaterielForm })),
+);
+const MaterielDetail = lazy(() =>
+  import("@/pages/materiel-detail").then((m) => ({ default: m.MaterielDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -426,6 +437,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <ArmeForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiels"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MaterielsManagement />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiels/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MaterielForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiels/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MaterielDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiels/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MaterielForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

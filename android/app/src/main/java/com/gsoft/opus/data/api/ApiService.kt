@@ -8,6 +8,11 @@ import com.gsoft.opus.data.api.dto.ArmeDto
 import com.gsoft.opus.data.api.dto.ArmeMunitionsConsommationDto
 import com.gsoft.opus.data.api.dto.ArmeRequest
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
+import com.gsoft.opus.data.api.dto.AffectationMaterielDto
+import com.gsoft.opus.data.api.dto.AffectationMaterielRequest
+import com.gsoft.opus.data.api.dto.ReintegrationMaterielRequest
+import com.gsoft.opus.data.api.dto.TypeMaterielDto
+import com.gsoft.opus.data.api.dto.TypeMaterielRequest
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
 import com.gsoft.opus.data.api.dto.TypeArmeRequest
@@ -501,4 +506,45 @@ interface ApiService {
         @Path("id") id: Int,
         @Body request: ConsommationRequest
     ): Response<ApiResponse<ArmeDto>>
+
+    // ─── TypeMateriel (equipment type catalog) ──────────────────────
+
+    @GET("api/types-materiels")
+    suspend fun getTypeMaterielList(@Query("search") search: String? = null): Response<ApiResponse<List<TypeMaterielDto>>>
+
+    @GET("api/types-materiels/{id}")
+    suspend fun getTypeMateriel(@Path("id") id: Int): Response<ApiResponse<TypeMaterielDto>>
+
+    @POST("api/types-materiels")
+    suspend fun createTypeMateriel(@Body request: TypeMaterielRequest): Response<ApiResponse<TypeMaterielDto>>
+
+    @PUT("api/types-materiels/{id}")
+    suspend fun updateTypeMateriel(@Path("id") id: Int, @Body request: TypeMaterielRequest): Response<ApiResponse<TypeMaterielDto>>
+
+    @DELETE("api/types-materiels/{id}")
+    suspend fun deleteTypeMateriel(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── AffectationMateriel (equipment assignment & return) ────────
+
+    @GET("api/affectations-materiels")
+    suspend fun getAffectationMaterielList(
+        @Query("search") search: String? = null,
+        @Query("statut") statut: String? = null,
+        @Query("agent_personnel_id") agentPersonnelId: Int? = null
+    ): Response<ApiResponse<List<AffectationMaterielDto>>>
+
+    @GET("api/affectations-materiels/{id}")
+    suspend fun getAffectationMateriel(@Path("id") id: Int): Response<ApiResponse<AffectationMaterielDto>>
+
+    @POST("api/affectations-materiels")
+    suspend fun createAffectationMateriel(@Body request: AffectationMaterielRequest): Response<ApiResponse<AffectationMaterielDto>>
+
+    @PUT("api/affectations-materiels/{id}")
+    suspend fun updateAffectationMateriel(@Path("id") id: Int, @Body request: AffectationMaterielRequest): Response<ApiResponse<AffectationMaterielDto>>
+
+    @POST("api/affectations-materiels/{id}/reintegration")
+    suspend fun reintegrateAffectationMateriel(@Path("id") id: Int, @Body request: ReintegrationMaterielRequest): Response<ApiResponse<AffectationMaterielDto>>
+
+    @DELETE("api/affectations-materiels/{id}")
+    suspend fun deleteAffectationMateriel(@Path("id") id: Int): Response<ApiResponse<Nothing>>
 }

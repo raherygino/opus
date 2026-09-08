@@ -479,9 +479,9 @@ export function PersonnelDetail() {
             </CardHeader>
             <CardContent className="space-y-3">
               {person.signature_svg ? (
-                <div className="rounded-lg border border-border bg-white p-3">
+                <div className="rounded-lg border border-border bg-white p-3 overflow-hidden">
                   <div
-                    className="w-full"
+                    className="w-full [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:w-auto [&>svg]:h-auto"
                     dangerouslySetInnerHTML={{ __html: person.signature_svg }}
                   />
                 </div>

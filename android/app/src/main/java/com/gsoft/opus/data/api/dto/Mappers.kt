@@ -6,6 +6,9 @@ import com.gsoft.opus.domain.model.ArmeMunitionsConsommation
 import com.gsoft.opus.domain.model.Armement
 import com.gsoft.opus.domain.model.ArmementAttachment
 import com.gsoft.opus.domain.model.AuthResult
+import com.gsoft.opus.domain.model.AffectationMateriel
+import com.gsoft.opus.domain.model.AffectationMaterielLigne
+import com.gsoft.opus.domain.model.TypeMateriel
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -369,4 +372,44 @@ fun ArmeMunitionsConsommationDto.toDomain(): ArmeMunitionsConsommation = ArmeMun
     agentGrade = agentGrade,
     agentFirstname = agentFirstname,
     agentLastname = agentLastname
+)
+
+fun TypeMaterielDto.toDomain(): TypeMateriel = TypeMateriel(
+    id = id,
+    nom = nom,
+    description = description,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun AffectationMaterielLigneDto.toDomain(): AffectationMaterielLigne = AffectationMaterielLigne(
+    id = id,
+    affectationId = affectationId,
+    typeMaterielId = typeMaterielId,
+    typeMaterielNom = typeMaterielNom,
+    etatEmport = etatEmport,
+    etatReintegration = etatReintegration,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun AffectationMaterielDto.toDomain(): AffectationMateriel = AffectationMateriel(
+    id = id,
+    agentPersonnelId = agentPersonnelId,
+    agentIm = agentIm,
+    agentGrade = agentGrade,
+    agentNom = agentNom,
+    datePerception = datePerception,
+    heurePerception = heurePerception,
+    dateReintegration = dateReintegration,
+    heureReintegration = heureReintegration,
+    statut = statut,
+    observations = observations,
+    agentVerifie = agentVerifie != 0,
+    agentVerifieAt = agentVerifieAt,
+    signatureSvg = signatureSvg,
+    createdBy = createdBy,
+    lignes = lignes?.map { it.toDomain() } ?: emptyList(),
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )

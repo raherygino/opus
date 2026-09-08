@@ -248,7 +248,7 @@ export function ArmementDetail() {
                 Signature de l'agent
               </div>
               <div
-                className="rounded-lg border-2 border-dashed border-border bg-white p-2"
+                className="rounded-lg border-2 border-dashed border-border bg-white p-2 overflow-hidden [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:w-auto [&>svg]:h-auto"
                 dangerouslySetInnerHTML={{ __html: armement.signature_svg }}
               />
             </div>

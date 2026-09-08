@@ -670,7 +670,7 @@ export function ArmementForm() {
                     {signatureSvg ? (
                       <div className="space-y-2">
                         <div
-                          className="rounded-lg border-2 border-dashed border-border bg-white p-2"
+                          className="rounded-lg border-2 border-dashed border-border bg-white p-2 overflow-hidden [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:w-auto [&>svg]:h-auto"
                           dangerouslySetInnerHTML={{ __html: signatureSvg }}
                         />
                         <div className="flex items-center gap-2">
