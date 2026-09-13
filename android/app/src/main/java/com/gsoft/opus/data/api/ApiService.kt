@@ -26,6 +26,7 @@ import com.gsoft.opus.data.api.dto.PlainteEntreeDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeRequest
+import com.gsoft.opus.data.api.dto.PlainteNextNumberDto
 import com.gsoft.opus.data.api.dto.PlainteSortieDto
 import com.gsoft.opus.data.api.dto.PlainteSortieAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteSortieRequest
@@ -699,6 +700,9 @@ interface ApiService {
     @GET("api/plaintes-entree/without-sortie")
     suspend fun getPlaintesEntreeWithoutSortie(): Response<ApiResponse<List<PlainteEntreeSummaryDto>>>
 
+    @GET("api/plaintes-entree/next-number")
+    suspend fun getPlainteEntreeNextNumber(@Query("type") type: String): Response<ApiResponse<PlainteNextNumberDto>>
+
     @GET("api/plaintes-entree/{id}")
     suspend fun getPlainteEntree(@Path("id") id: Int): Response<ApiResponse<PlainteEntreeDto>>
 
@@ -747,6 +751,9 @@ interface ApiService {
         @Query("date_from") dateFrom: String? = null,
         @Query("date_to") dateTo: String? = null
     ): Response<ApiResponse<List<PlainteSortieDto>>>
+
+    @GET("api/plaintes-sortie/next-number")
+    suspend fun getPlainteSortieNextNumber(): Response<ApiResponse<PlainteNextNumberDto>>
 
     @GET("api/plaintes-sortie/{id}")
     suspend fun getPlainteSortie(@Path("id") id: Int): Response<ApiResponse<PlainteSortieDto>>

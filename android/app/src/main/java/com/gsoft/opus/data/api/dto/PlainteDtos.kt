@@ -42,6 +42,7 @@ data class PlainteEntreeDto(
 data class PlainteEntreeRequest(
     @SerializedName("type") val type: String,
     @SerializedName("date_plainte") val datePlainte: String,
+    @SerializedName("numero_dossier") val numeroDossier: String? = null,
     @SerializedName("numero_st") val numeroSt: String?,
     @SerializedName("opj_personnel_id") val opjPersonnelId: Int?,
     @SerializedName("enqueteur_personnel_id") val enqueteurPersonnelId: Int?,
@@ -116,6 +117,7 @@ data class PlainteSortieRequest(
     @SerializedName("plainte_entree_id") val plainteEntreeId: Int,
     @SerializedName("nature") val nature: String,
     @SerializedName("date_sortie") val dateSortie: String,
+    @SerializedName("numero") val numero: String? = null,
     @SerializedName("numero_ttr") val numeroTtr: String,
     @SerializedName("nom_substitut") val nomSubstitut: String,
     @SerializedName("date_deferrement") val dateDeferrement: String?,
@@ -131,4 +133,10 @@ data class PlainteSortieAttachmentDto(
     @SerializedName("mime_type") val mimeType: String? = null,
     @SerializedName("file_size") val fileSize: Long? = null,
     @SerializedName("created_at") val createdAt: String? = null
+)
+
+/** Response from /api/plaintes-entree/next-number and /api/plaintes-sortie/next-number. */
+data class PlainteNextNumberDto(
+    @SerializedName("numero_dossier") val numeroDossier: String? = null,
+    @SerializedName("numero") val numero: String? = null
 )

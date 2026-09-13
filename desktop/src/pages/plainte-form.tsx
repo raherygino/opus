@@ -11,6 +11,7 @@ import {
   updatePlainteEntreeAttachmentTitle,
   deletePlainteEntreeAttachment,
   getPlainteEntreeAttachmentDownloadUrl,
+  peekPlainteEntreeNumber,
   validatePlainteEntreeForm,
   PLAINTE_ENTREE_TYPES,
   PLAINTE_ENTREE_TYPE_LABELS,
@@ -63,6 +64,7 @@ export function PlainteForm() {
   const [form, setForm] = useState<PlainteEntreeInput>({
     type: "ST_PARQUET",
     date_plainte: todayIso(),
+    numero_dossier: "",
     numero_st: "",
     opj_personnel_id: 0,
     enqueteur_personnel_id: 0,
@@ -87,9 +89,30 @@ export function PlainteForm() {
     loadPersonnel();
     if (isEdit && id) {
       loadEntry(Number(id));
+    } else {
+      loadSuggestedNumber();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function loadSuggestedNumber() {
+    try {
+      const num = await peekPlainteEntreeNumber(form.type);
+      setNumeroDossier(num);
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  function handleTypeChange(newType: PlainteEntreeInput["type"]) {
+    setForm((f) => ({ ...f, type: newType }));
+    // Refresh the suggested number when the type changes (only on create).
+    if (!isEdit) {
+      peekPlainteEntreeNumber(newType)
+        .then(setNumeroDossier)
+        .catch(() => {});
+    }
+  }
 
   async function loadPersonnel() {
     try {
@@ -178,6 +201,7 @@ export function PlainteForm() {
     try {
       const payload: PlainteEntreeInput = {
         ...form,
+        numero_dossier: isEdit ? undefined : (numeroDossier.trim() || undefined),
         numero_st: form.type === "ST_PARQUET" ? form.numero_st?.trim() || null : null,
         partie_civile: form.partie_civile?.trim() || null,
         mise_en_cause: form.mise_en_cause?.trim() || null,
@@ -262,7 +286,7 @@ export function PlainteForm() {
                 <Label>Type de plainte *</Label>
                 <Select
                   value={form.type}
-                  onChange={(e) => update("type", e.target.value as PlainteEntreeInput["type"])}
+                  onChange={(e) => handleTypeChange(e.target.value as PlainteEntreeInput["type"])}
                   options={PLAINTE_ENTREE_TYPES.map((t) => ({
                     value: t,
                     label: PLAINTE_ENTREE_TYPE_LABELS[t],
@@ -282,10 +306,30 @@ export function PlainteForm() {
                 />
                 {errors.date_plainte && <p className="text-sm text-destructive">{errors.date_plainte}</p>}
               </div>
-              {isEdit && numeroDossier && (
+              {isEdit ? (
+                numeroDossier && (
+                  <div className="space-y-2">
+                    <Label>Numéro du dossier</Label>
+                    <Input value={numeroDossier} readOnly className="font-mono text-sm bg-muted/50" />
+                  </div>
+                )
+              ) : (
                 <div className="space-y-2">
-                  <Label>Numéro du dossier</Label>
-                  <Input value={numeroDossier} readOnly className="font-mono text-sm bg-muted/50" />
+                  <Label htmlFor="numero_dossier">Numéro du dossier (suggéré — modifiable)</Label>
+                  <Input
+                    id="numero_dossier"
+                    value={numeroDossier}
+                    onChange={(e) => setNumeroDossier(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={loadSuggestedNumber}
+                    className="p-0 h-auto text-xs"
+                  >
+                    Régénérer le numéro suggéré
+                  </Button>
                 </div>
               )}
               {showNumeroSt && (

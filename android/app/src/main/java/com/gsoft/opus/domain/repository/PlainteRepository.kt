@@ -11,6 +11,7 @@ import com.gsoft.opus.domain.model.PlainteSortieAttachment
 data class PlainteEntreeFormData(
     val type: String,
     val datePlainte: String,
+    val numeroDossier: String? = null,
     val numeroSt: String?,
     val opjPersonnelId: Int?,
     val enqueteurPersonnelId: Int?,
@@ -29,6 +30,7 @@ data class PlainteSortieFormData(
     val plainteEntreeId: Int,
     val nature: String,
     val dateSortie: String,
+    val numero: String? = null,
     val numeroTtr: String,
     val nomSubstitut: String,
     val dateDeferrement: String?,
@@ -49,6 +51,7 @@ interface PlainteRepository {
     suspend fun updatePlainteEntree(id: Int, data: PlainteEntreeFormData): Resource<PlainteEntree>
     suspend fun deletePlainteEntree(id: Int): Resource<Unit>
     suspend fun getEntreesWithoutSortie(): Resource<List<PlainteEntreeSummary>>
+    suspend fun peekEntreeNumber(type: String): Resource<String>
 
     suspend fun getEntreeAttachments(plainteEntreeId: Int): Resource<List<PlainteEntreeAttachment>>
     suspend fun addEntreeAttachment(plainteEntreeId: Int, title: String, file: UploadFile): Resource<PlainteEntreeAttachment>
@@ -68,6 +71,7 @@ interface PlainteRepository {
     suspend fun createPlainteSortie(data: PlainteSortieFormData): Resource<PlainteSortie>
     suspend fun updatePlainteSortie(id: Int, data: PlainteSortieFormData): Resource<PlainteSortie>
     suspend fun deletePlainteSortie(id: Int): Resource<Unit>
+    suspend fun peekSortieNumber(): Resource<String>
 
     suspend fun getSortieAttachments(plainteSortieId: Int): Resource<List<PlainteSortieAttachment>>
     suspend fun addSortieAttachment(plainteSortieId: Int, title: String, file: UploadFile): Resource<PlainteSortieAttachment>

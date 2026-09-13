@@ -272,17 +272,35 @@ fun PlainteSortieFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // numero is server-generated; show read-only on edit.
-                if (state.isEdit && state.numero.isNotBlank()) {
+                // numero: editable on create (pre-filled with the
+                // suggested next number), read-only on edit.
+                if (state.isEdit) {
+                    if (state.numero.isNotBlank()) {
+                        OutlinedTextField(
+                            value = state.numero,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Numéro") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
                     OutlinedTextField(
                         value = state.numero,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Numéro") },
+                        onValueChange = viewModel::updateNumero,
+                        label = { Text("Numéro (suggéré — modifiable)") },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    androidx.compose.material3.TextButton(
+                        onClick = { viewModel.refreshSuggestedNumber() },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Régénérer le numéro suggéré")
+                    }
                 }
 
                 OutlinedTextField(

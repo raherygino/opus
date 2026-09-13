@@ -66,6 +66,7 @@ class PlainteFormViewModel @Inject constructor(
     init {
         loadPersonnel()
         if (plainteEntreeId > 0) loadEntry()
+        else loadSuggestedNumber()
     }
 
     private fun loadPersonnel() {
@@ -75,6 +76,19 @@ class PlainteFormViewModel @Inject constructor(
                 else -> {}
             }
         }
+    }
+
+    private fun loadSuggestedNumber() {
+        viewModelScope.launch {
+            when (val result = plainteRepository.peekEntreeNumber(_state.value.type)) {
+                is Resource.Success -> _state.update { it.copy(numeroDossier = result.data) }
+                else -> {}
+            }
+        }
+    }
+
+    fun refreshSuggestedNumber() {
+        if (!_state.value.isEdit) loadSuggestedNumber()
     }
 
     private fun loadEntry() {
@@ -119,8 +133,11 @@ class PlainteFormViewModel @Inject constructor(
 
     fun updateType(value: String) {
         _state.update { it.copy(type = value) }
+        // Refresh the suggested number when the type changes (only on create).
+        if (!_state.value.isEdit) loadSuggestedNumber()
     }
     fun updateDatePlainte(value: String) { _state.update { it.copy(datePlainte = value) } }
+    fun updateNumeroDossier(value: String) { _state.update { it.copy(numeroDossier = value) } }
     fun updateNumeroSt(value: String) { _state.update { it.copy(numeroSt = value) } }
     fun updateOpj(personnelId: Int) { _state.update { it.copy(opjPersonnelId = personnelId) } }
     fun updateEnqueteur(personnelId: Int) { _state.update { it.copy(enqueteurPersonnelId = personnelId) } }
@@ -186,6 +203,7 @@ class PlainteFormViewModel @Inject constructor(
             val data = PlainteEntreeFormData(
                 type = s.type,
                 datePlainte = s.datePlainte,
+                numeroDossier = s.numeroDossier.takeIf { it.isNotBlank() },
                 numeroSt = s.numeroSt.ifBlank { null },
                 opjPersonnelId = s.opjPersonnelId,
                 enqueteurPersonnelId = s.enqueteurPersonnelId,

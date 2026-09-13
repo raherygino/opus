@@ -56,10 +56,19 @@ class PlainteEntreeController
         }
 
         // ── numero_dossier ───────────────────────────────────────────
-        // On create, the numero is server-generated; if the client sends
-        // one, validate uniqueness. On update, the numero is read-only
-        // (never regenerated) — only validate uniqueness if changed.
-        if (!$isCreate && array_key_exists('numero_dossier', $data)) {
+        // The numero is user-editable. On create, if the client sends a
+        // value, validate uniqueness; if empty, the server auto-generates
+        // one. On update, the numero is read-only (never regenerated) —
+        // only validate uniqueness if changed.
+        if ($isCreate && array_key_exists('numero_dossier', $data)) {
+            $value = trim((string) ($data['numero_dossier'] ?? ''));
+            if ($value !== '') {
+                $existing = PlainteEntree::getByNumeroDossier($value);
+                if ($existing && (!$excludeId || (int) $existing['id'] !== $excludeId)) {
+                    $errors['numero_dossier'] = 'Ce numéro de dossier existe déjà';
+                }
+            }
+        } elseif (!$isCreate && array_key_exists('numero_dossier', $data)) {
             $value = trim((string) ($data['numero_dossier'] ?? ''));
             if ($value !== '') {
                 $existing = PlainteEntree::getByNumeroDossier($value);
@@ -177,6 +186,32 @@ class PlainteEntreeController
     }
 
     /**
+     * GET /api/plaintes-entree/next-number?type=ST_PARQUET
+     *
+     * Returns the suggested next dossier number for the given type, based
+     * on the current sequence counter. The number is not consumed — it is
+     * only a preview. The actual counter is incremented on save.
+     */
+    public function nextNumber(array $params): void
+    {
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        $type = $_GET['type'] ?? null;
+        if (!in_array($type, PlainteEntree::TYPES, true)) {
+            Response::error('Type de plainte invalide', 422, [
+                'type' => 'Le type de plainte est requis et doit être valide',
+            ]);
+        }
+
+        $typeKey = PlainteEntree::TYPE_PREFIXES[$type];
+        $numero = PlainteSequence::peekNumber($typeKey);
+        Response::success(['numero_dossier' => $numero]);
+    }
+
+    /**
      * GET /api/plaintes-entree/{id}
      */
     public function show(array $params): void
@@ -217,9 +252,14 @@ class PlainteEntreeController
             Response::error('Validation failed', 422, $errors);
         }
 
-        // Generate the dossier number server-side using the per-type prefix.
+        // Use the user-provided numero if non-empty; otherwise auto-generate.
         $typeKey = PlainteEntree::TYPE_PREFIXES[$data['type']];
-        $data['numero_dossier'] = PlainteSequence::nextNumber($typeKey);
+        $userNumero = trim((string) ($data['numero_dossier'] ?? ''));
+        if ($userNumero !== '') {
+            $data['numero_dossier'] = $userNumero;
+        } else {
+            $data['numero_dossier'] = PlainteSequence::nextNumber($typeKey);
+        }
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

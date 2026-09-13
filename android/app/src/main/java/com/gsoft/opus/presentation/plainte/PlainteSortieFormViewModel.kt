@@ -70,6 +70,21 @@ class PlainteSortieFormViewModel @Inject constructor(
             // so the user can pick one in the form.
             loadAvailableEntrees()
         }
+        // Load the suggested sortie number on create.
+        if (plainteSortieId == 0) loadSuggestedNumber()
+    }
+
+    private fun loadSuggestedNumber() {
+        viewModelScope.launch {
+            when (val result = plainteRepository.peekSortieNumber()) {
+                is Resource.Success -> _state.update { it.copy(numero = result.data) }
+                else -> {}
+            }
+        }
+    }
+
+    fun refreshSuggestedNumber() {
+        if (!_state.value.isEdit) loadSuggestedNumber()
     }
 
     private fun loadAvailableEntrees() {
@@ -151,6 +166,7 @@ class PlainteSortieFormViewModel @Inject constructor(
 
     fun updateNature(value: String) { _state.update { it.copy(nature = value) } }
     fun updateDateSortie(value: String) { _state.update { it.copy(dateSortie = value) } }
+    fun updateNumero(value: String) { _state.update { it.copy(numero = value) } }
     fun updateNumeroTtr(value: String) { _state.update { it.copy(numeroTtr = value) } }
     fun updateNomSubstitut(value: String) { _state.update { it.copy(nomSubstitut = value) } }
     fun updateDateDeferrement(value: String) { _state.update { it.copy(dateDeferrement = value) } }
@@ -207,6 +223,7 @@ class PlainteSortieFormViewModel @Inject constructor(
                 plainteEntreeId = s.plainteEntreeId,
                 nature = s.nature,
                 dateSortie = s.dateSortie,
+                numero = s.numero.takeIf { it.isNotBlank() },
                 numeroTtr = s.numeroTtr.trim(),
                 nomSubstitut = s.nomSubstitut.trim(),
                 dateDeferrement = s.dateDeferrement.ifBlank { null },

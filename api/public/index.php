@@ -300,6 +300,7 @@ $router->delete('/api/main-courante-categories/{id}', [MainCouranteCategorieCont
 // ========================
 $router->get('/api/plaintes-entree',                          [PlainteEntreeController::class, 'index']);
 $router->get('/api/plaintes-entree/without-sortie',           [PlainteEntreeController::class, 'withoutSortie']);
+$router->get('/api/plaintes-entree/next-number',              [PlainteEntreeController::class, 'nextNumber']);
 $router->get('/api/plaintes-entree/{id}',                     [PlainteEntreeController::class, 'show']);
 $router->post('/api/plaintes-entree',                         [PlainteEntreeController::class, 'store']);
 $router->put('/api/plaintes-entree/{id}',                     [PlainteEntreeController::class, 'update']);
@@ -315,6 +316,7 @@ $router->get('/api/plaintes-entree/{id}/attachments/{attachId}/download',   [Pla
 // Plainte SORTIE (Police Judiciaire — outgoing processing of an ENTRÉE)
 // ========================
 $router->get('/api/plaintes-sortie',                          [PlainteSortieController::class, 'index']);
+$router->get('/api/plaintes-sortie/next-number',              [PlainteSortieController::class, 'nextNumber']);
 $router->get('/api/plaintes-sortie/{id}',                     [PlainteSortieController::class, 'show']);
 $router->post('/api/plaintes-sortie',                         [PlainteSortieController::class, 'store']);
 $router->put('/api/plaintes-sortie/{id}',                     [PlainteSortieController::class, 'update']);

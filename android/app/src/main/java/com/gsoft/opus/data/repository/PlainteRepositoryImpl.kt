@@ -35,6 +35,7 @@ class PlainteRepositoryImpl @Inject constructor(
     private fun PlainteEntreeFormData.toRequest() = PlainteEntreeRequest(
         type = type,
         datePlainte = datePlainte,
+        numeroDossier = numeroDossier?.takeIf { it.isNotBlank() },
         numeroSt = numeroSt,
         opjPersonnelId = opjPersonnelId,
         enqueteurPersonnelId = enqueteurPersonnelId,
@@ -52,6 +53,7 @@ class PlainteRepositoryImpl @Inject constructor(
         plainteEntreeId = plainteEntreeId,
         nature = nature,
         dateSortie = dateSortie,
+        numero = numero?.takeIf { it.isNotBlank() },
         numeroTtr = numeroTtr,
         nomSubstitut = nomSubstitut,
         dateDeferrement = dateDeferrement,
@@ -143,6 +145,18 @@ class PlainteRepositoryImpl @Inject constructor(
                 .map { list -> list.map { it.toDomain() } }
         } catch (e: Exception) {
             Resource.error(failureMessage(e, "getEntreesWithoutSortie"))
+        }
+    }
+
+    override suspend fun peekEntreeNumber(type: String): Resource<String> {
+        return try {
+            when (val result = apiService.getPlainteEntreeNextNumber(type).extract("Impossible de récupérer le numéro suggéré")) {
+                is Resource.Success -> Resource.success(result.data.numeroDossier ?: "")
+                is Resource.Error -> Resource.error(result.message, result.code)
+                is Resource.Loading -> Resource.loading()
+            }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, "peekEntreeNumber"))
         }
     }
 
@@ -246,6 +260,18 @@ class PlainteRepositoryImpl @Inject constructor(
             else Resource.error(response.body()?.message ?: "Impossible de supprimer cette sortie", response.code())
         } catch (e: Exception) {
             Resource.error(failureMessage(e, "deletePlainteSortie"))
+        }
+    }
+
+    override suspend fun peekSortieNumber(): Resource<String> {
+        return try {
+            when (val result = apiService.getPlainteSortieNextNumber().extract("Impossible de récupérer le numéro suggéré")) {
+                is Resource.Success -> Resource.success(result.data.numero ?: "")
+                is Resource.Error -> Resource.error(result.message, result.code)
+                is Resource.Loading -> Resource.loading()
+            }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, "peekSortieNumber"))
         }
     }
 

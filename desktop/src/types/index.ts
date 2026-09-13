@@ -882,6 +882,7 @@ export interface PlainteSortieAttachment {
 export interface PlainteEntreeInput {
   type: PlainteEntreeType;
   date_plainte: string;
+  numero_dossier?: string | null;
   numero_st?: string | null;
   opj_personnel_id?: number | null;
   enqueteur_personnel_id?: number | null;
@@ -899,6 +900,7 @@ export interface PlainteSortieInput {
   plainte_entree_id: number;
   nature: PlainteSortieNature;
   date_sortie: string;
+  numero?: string | null;
   numero_ttr: string;
   nom_substitut: string;
   date_deferrement?: string | null;

@@ -62,8 +62,16 @@ class PlainteSortieController
             }
         }
 
-        // ── numero (server-generated on create; read-only on update) ─
-        if (!$isCreate && array_key_exists('numero', $data)) {
+        // ── numero (user-editable; auto-generated if empty on create) ──
+        if ($isCreate && array_key_exists('numero', $data)) {
+            $value = trim((string) ($data['numero'] ?? ''));
+            if ($value !== '') {
+                $existing = PlainteSortie::getByNumero($value);
+                if ($existing && (!$excludeId || (int) $existing['id'] !== $excludeId)) {
+                    $errors['numero'] = 'Ce numéro existe déjà';
+                }
+            }
+        } elseif (!$isCreate && array_key_exists('numero', $data)) {
             $value = trim((string) ($data['numero'] ?? ''));
             if ($value !== '') {
                 $existing = PlainteSortie::getByNumero($value);
@@ -117,6 +125,23 @@ class PlainteSortieController
     }
 
     /**
+     * GET /api/plaintes-sortie/next-number
+     *
+     * Returns the suggested next sortie number, based on the current
+     * sequence counter. The number is not consumed — it is only a preview.
+     */
+    public function nextNumber(array $params): void
+    {
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        $numero = PlainteSequence::peekNumber('SORTIE');
+        Response::success(['numero' => $numero]);
+    }
+
+    /**
      * GET /api/plaintes-sortie/{id}
      */
     public function show(array $params): void
@@ -165,8 +190,13 @@ class PlainteSortieController
             ]);
         }
 
-        // Generate the sortie number server-side.
-        $data['numero'] = PlainteSequence::nextNumber('SORTIE');
+        // Use the user-provided numero if non-empty; otherwise auto-generate.
+        $userNumero = trim((string) ($data['numero'] ?? ''));
+        if ($userNumero !== '') {
+            $data['numero'] = $userNumero;
+        } else {
+            $data['numero'] = PlainteSequence::nextNumber('SORTIE');
+        }
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

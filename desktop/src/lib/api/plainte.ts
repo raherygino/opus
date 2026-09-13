@@ -39,6 +39,14 @@ export async function getPlaintesEntreeWithoutSortie(): Promise<PlainteEntreeSum
   return data.data;
 }
 
+/** Peek at the suggested next ENTRÉE dossier number for the given type. */
+export async function peekPlainteEntreeNumber(type: string): Promise<string> {
+  const { data } = await apiClient.get<ApiResponse<{ numero_dossier: string }>>(
+    `/plaintes-entree/next-number?type=${encodeURIComponent(type)}`,
+  );
+  return data.data.numero_dossier;
+}
+
 export async function createPlainteEntree(
   input: PlainteEntreeInput,
 ): Promise<PlainteEntree> {
@@ -142,6 +150,14 @@ export async function getPlainteSortieById(id: number): Promise<PlainteSortie> {
     `/plaintes-sortie/${id}`,
   );
   return data.data;
+}
+
+/** Peek at the suggested next SORTIE number. */
+export async function peekPlainteSortieNumber(): Promise<string> {
+  const { data } = await apiClient.get<ApiResponse<{ numero: string }>>(
+    `/plaintes-sortie/next-number`,
+  );
+  return data.data.numero;
 }
 
 export async function createPlainteSortie(

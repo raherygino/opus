@@ -12,6 +12,7 @@ import {
   deletePlainteSortieAttachment,
   getPlainteSortieAttachmentDownloadUrl,
   getPlaintesEntreeWithoutSortie,
+  peekPlainteSortieNumber,
   validatePlainteSortieForm,
   PLAINTE_SORTIE_NATURES,
   PLAINTE_SORTIE_NATURE_LABELS,
@@ -74,6 +75,7 @@ export function PlainteSortieForm() {
     plainte_entree_id: preselectedEntreeId,
     nature: "DAT",
     date_sortie: todayIso(),
+    numero: "",
     numero_ttr: "",
     nom_substitut: "",
     date_deferrement: "",
@@ -97,8 +99,20 @@ export function PlainteSortieForm() {
     } else {
       loadAvailableEntrees();
     }
+    if (!isEdit) {
+      loadSuggestedNumber();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function loadSuggestedNumber() {
+    try {
+      const num = await peekPlainteSortieNumber();
+      setNumero(num);
+    } catch {
+      // Non-blocking
+    }
+  }
 
   async function loadAvailableEntrees() {
     setLoadingEntrees(true);
@@ -230,6 +244,7 @@ export function PlainteSortieForm() {
     try {
       const payload: PlainteSortieInput = {
         ...form,
+        numero: isEdit ? undefined : (numero.trim() || undefined),
         numero_ttr: form.numero_ttr.trim(),
         nom_substitut: form.nom_substitut.trim(),
         date_deferrement: form.nature === "DEFERREMENT" ? form.date_deferrement?.trim() || null : null,
@@ -392,10 +407,30 @@ export function PlainteSortieForm() {
                 />
                 {errors.date_sortie && <p className="text-sm text-destructive">{errors.date_sortie}</p>}
               </div>
-              {isEdit && numero && (
+              {isEdit ? (
+                numero && (
+                  <div className="space-y-2">
+                    <Label>Numéro</Label>
+                    <Input value={numero} readOnly className="font-mono text-sm bg-muted/50" />
+                  </div>
+                )
+              ) : (
                 <div className="space-y-2">
-                  <Label>Numéro</Label>
-                  <Input value={numero} readOnly className="font-mono text-sm bg-muted/50" />
+                  <Label htmlFor="numero">Numéro (suggéré — modifiable)</Label>
+                  <Input
+                    id="numero"
+                    value={numero}
+                    onChange={(e) => setNumero(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={loadSuggestedNumber}
+                    className="p-0 h-auto text-xs"
+                  >
+                    Régénérer le numéro suggéré
+                  </Button>
                 </div>
               )}
               <div className="space-y-2">

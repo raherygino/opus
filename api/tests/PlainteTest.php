@@ -294,6 +294,40 @@ check(isset($validateSortie(sampleSortie(['plainte_entree_id' => $idPd, 'nom_sub
 check(isset($validateSortie(sampleSortie(['plainte_entree_id' => null]))['plainte_entree_id']), 'missing plainte_entree_id rejected');
 check(isset($validateSortie(sampleSortie(['plainte_entree_id' => 99999]))['plainte_entree_id']), 'non-existent plainte_entree_id rejected');
 
+// --- Editable numero (user-provided) ------------------------------------------
+echo "Editable numero\n";
+// User can provide a custom numero_dossier on create.
+$customEntree = sampleEntree(['type' => 'PLAINTE_DIRECTE']);
+$customEntree['numero_dossier'] = 'N°099/TRIMO/PD/' . $yy;
+$customId = PlainteEntree::create($customEntree);
+$customRow = PlainteEntree::getById($customId);
+check($customRow['numero_dossier'] === 'N°099/TRIMO/PD/' . $yy, 'user-provided numero_dossier persisted on create');
+
+// Duplicate user-provided numero is rejected by validation.
+$dupErrors = $validateEntree(sampleEntree([
+    'type' => 'PLAINTE_DIRECTE',
+    'numero_dossier' => 'N°099/TRIMO/PD/' . $yy,
+]));
+check(isset($dupErrors['numero_dossier']), 'duplicate user-provided numero_dossier rejected');
+
+// Empty numero_dossier on create is allowed (server will auto-generate).
+$autoErrors = $validateEntree(sampleEntree(['type' => 'PLAINTE_DIRECTE', 'numero_dossier' => '']));
+check(!isset($autoErrors['numero_dossier']), 'empty numero_dossier on create is valid (auto-generated)');
+
+// User can provide a custom numero on SORTIE create.
+$customSortie = sampleSortie(['plainte_entree_id' => $customId, 'nature' => 'DAT']);
+$customSortie['numero'] = 'N°099/MSP/DGPN/DGA/DRSP-1/CSP/A-TRIMO/' . $yy;
+$customSortieId = PlainteSortie::create($customSortie);
+$customSortieRow = PlainteSortie::getById($customSortieId);
+check($customSortieRow['numero'] === 'N°099/MSP/DGPN/DGA/DRSP-1/CSP/A-TRIMO/' . $yy, 'user-provided numero persisted on SORTIE create');
+
+// Duplicate user-provided SORTIE numero is rejected by validation.
+$dupSortieErrors = $validateSortie(sampleSortie([
+    'plainte_entree_id' => $idPd,
+    'numero' => 'N°099/MSP/DGPN/DGA/DRSP-1/CSP/A-TRIMO/' . $yy,
+]));
+check(isset($dupSortieErrors['numero']), 'duplicate user-provided SORTIE numero rejected');
+
 // --- Teardown -------------------------------------------------------------------
 $pdo->exec("DROP DATABASE IF EXISTS `$scratch`");
 

@@ -171,17 +171,35 @@ fun PlainteFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // numero_dossier is server-generated; show read-only on edit.
-                if (state.isEdit && state.numeroDossier.isNotBlank()) {
+                // numero_dossier: editable on create (pre-filled with the
+                // suggested next number), read-only on edit.
+                if (state.isEdit) {
+                    if (state.numeroDossier.isNotBlank()) {
+                        OutlinedTextField(
+                            value = state.numeroDossier,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Numéro du dossier") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
                     OutlinedTextField(
                         value = state.numeroDossier,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Numéro du dossier") },
+                        onValueChange = viewModel::updateNumeroDossier,
+                        label = { Text("Numéro du dossier (suggéré — modifiable)") },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    androidx.compose.material3.TextButton(
+                        onClick = { viewModel.refreshSuggestedNumber() },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Régénérer le numéro suggéré")
+                    }
                 }
 
                 // numero_st is ST_PARQUET only.
