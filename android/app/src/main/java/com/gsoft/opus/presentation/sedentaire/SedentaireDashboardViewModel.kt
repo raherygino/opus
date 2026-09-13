@@ -5,12 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
+import com.gsoft.opus.domain.model.AffectationMateriel
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.DeclarationPerte
 import com.gsoft.opus.domain.model.Passation
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.CorrespondanceRepository
 import com.gsoft.opus.domain.repository.DeclarationPerteRepository
+import com.gsoft.opus.domain.repository.MaterielRepository
 import com.gsoft.opus.domain.repository.PassationRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
@@ -27,6 +29,7 @@ const val DASH_MODULE_CORRESPONDANCE = "sedentaire_secretariat_correspondance"
 const val DASH_MODULE_DECLARATION_PERTE = "sedentaire_secretariat_declaration_perte"
 const val DASH_MODULE_PASSATION = "sedentaire_poste_passation"
 const val DASH_MODULE_PERSONNEL = "personnel"
+const val DASH_MODULE_MATERIELS = "sedentaire_poste_materiels"
 
 /** A single merged activity entry shown in the "Activité récente" list. */
 data class ActivityItem(
@@ -37,7 +40,7 @@ data class ActivityItem(
     val targetId: Int
 )
 
-enum class ActivityType { CORRESPONDANCE, DECLARATION, PASSATION, PERSONNEL }
+enum class ActivityType { CORRESPONDANCE, DECLARATION, PASSATION, PERSONNEL, MATERIEL }
 
 data class SedentaireDashboardUiState(
     val isLoading: Boolean = true,
@@ -45,14 +48,17 @@ data class SedentaireDashboardUiState(
     val declarations: List<DeclarationPerte> = emptyList(),
     val passations: List<Passation> = emptyList(),
     val personnel: List<Personnel> = emptyList(),
+    val materiels: List<AffectationMateriel> = emptyList(),
     val canViewCorrespondance: Boolean = false,
     val canViewDeclaration: Boolean = false,
     val canViewPassation: Boolean = false,
     val canViewPersonnel: Boolean = false,
+    val canViewMateriels: Boolean = false,
     val canCreateCorrespondance: Boolean = false,
     val canCreateDeclaration: Boolean = false,
     val canCreatePassation: Boolean = false,
     val canCreatePersonnel: Boolean = false,
+    val canCreateMateriels: Boolean = false,
     val errorMessage: String? = null
 ) {
     /** Recent items merged across all modules, sorted by createdAt descending. */
@@ -108,6 +114,17 @@ data class SedentaireDashboardUiState(
                     )
                 )
             }
+            materiels.forEach { m ->
+                items.add(
+                    ActivityItem(
+                        id = "mat-${m.id}",
+                        action = "Affectation matériel #${m.id} — ${m.agentDisplay.ifBlank { "—" }} (${m.lignes.size} matériel(s))",
+                        createdAt = m.createdAt,
+                        type = ActivityType.MATERIEL,
+                        targetId = m.id
+                    )
+                )
+            }
             return items.sortedByDescending { it.createdAt ?: "" }.take(8)
         }
 }
@@ -118,6 +135,7 @@ class SedentaireDashboardViewModel @Inject constructor(
     private val declarationPerteRepository: DeclarationPerteRepository,
     private val passationRepository: PassationRepository,
     private val personnelRepository: PersonnelRepository,
+    private val materielRepository: MaterielRepository,
     private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
@@ -137,6 +155,7 @@ class SedentaireDashboardViewModel @Inject constructor(
             val canViewDecl = hasPermission(user, DASH_MODULE_DECLARATION_PERTE, PermissionAction.VIEW)
             val canViewPass = hasPermission(user, DASH_MODULE_PASSATION, PermissionAction.VIEW)
             val canViewPers = hasPermission(user, DASH_MODULE_PERSONNEL, PermissionAction.VIEW)
+            val canViewMat = hasPermission(user, DASH_MODULE_MATERIELS, PermissionAction.VIEW)
 
             _state.update {
                 it.copy(
@@ -146,10 +165,12 @@ class SedentaireDashboardViewModel @Inject constructor(
                     canViewDeclaration = canViewDecl,
                     canViewPassation = canViewPass,
                     canViewPersonnel = canViewPers,
+                    canViewMateriels = canViewMat,
                     canCreateCorrespondance = hasPermission(user, DASH_MODULE_CORRESPONDANCE, PermissionAction.CREATE),
                     canCreateDeclaration = hasPermission(user, DASH_MODULE_DECLARATION_PERTE, PermissionAction.CREATE),
                     canCreatePassation = hasPermission(user, DASH_MODULE_PASSATION, PermissionAction.CREATE),
-                    canCreatePersonnel = hasPermission(user, DASH_MODULE_PERSONNEL, PermissionAction.CREATE)
+                    canCreatePersonnel = hasPermission(user, DASH_MODULE_PERSONNEL, PermissionAction.CREATE),
+                    canCreateMateriels = hasPermission(user, DASH_MODULE_MATERIELS, PermissionAction.CREATE)
                 )
             }
 
@@ -166,11 +187,15 @@ class SedentaireDashboardViewModel @Inject constructor(
             val persDeferred = async {
                 if (canViewPers) personnelRepository.getPersonnelList() else Resource.success(emptyList<Personnel>())
             }
+            val matDeferred = async {
+                if (canViewMat) materielRepository.getAffectationMaterielList() else Resource.success(emptyList<AffectationMateriel>())
+            }
 
             val corrResult = corrDeferred.await()
             val declResult = declDeferred.await()
             val passResult = passDeferred.await()
             val persResult = persDeferred.await()
+            val matResult = matDeferred.await()
 
             val errors = mutableListOf<String>()
             val corr = (corrResult as? Resource.Success)?.data ?: emptyList()
@@ -181,6 +206,8 @@ class SedentaireDashboardViewModel @Inject constructor(
             if (passResult is Resource.Error && canViewPass) errors.add("Passations indisponibles")
             val pers = (persResult as? Resource.Success)?.data ?: emptyList()
             if (persResult is Resource.Error && canViewPers) errors.add("Personnel indisponible")
+            val mat = (matResult as? Resource.Success)?.data ?: emptyList()
+            if (matResult is Resource.Error && canViewMat) errors.add("Matériels indisponibles")
 
             _state.update {
                 it.copy(
@@ -189,6 +216,7 @@ class SedentaireDashboardViewModel @Inject constructor(
                     declarations = decl,
                     passations = pass,
                     personnel = pers,
+                    materiels = mat,
                     errorMessage = errors.takeIf { it.isNotEmpty() }?.joinToString(" · ")
                 )
             }

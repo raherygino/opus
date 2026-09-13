@@ -23,14 +23,14 @@ sealed class MainRoutes(val route: String) {
     data object GestionPersonnel : MainRoutes("sed_gestion_personnel")
     data object DeclarationPerte : MainRoutes("sed_declaration_perte")
     data object Rapport : MainRoutes("sed_rapport")
-    data object MainCouranteSec : MainRoutes("sed_main_courante_sec")
+    data object MainCouranteSec : MainRoutes("sed_main_courante_sec?origine=Secretariat")
 
     // Sédentaire – Poste
     data object Passation : MainRoutes("sed_passation")
     data object Armement : MainRoutes("sed_armement")
     data object Materiels : MainRoutes("sed_materiels")
     data object SituationGav : MainRoutes("sed_situation_gav")
-    data object MainCourantePoste : MainRoutes("sed_main_courante_poste")
+    data object MainCourantePoste : MainRoutes("sed_main_courante_poste?origine=Poste")
     data object RenseignementSed : MainRoutes("sed_renseignement")
 
     // Division Service Général
@@ -135,5 +135,40 @@ sealed class MainRoutes(val route: String) {
     }
     data object ArmeForm : MainRoutes("sed_arme_form?armeId={armeId}") {
         fun createRoute(armeId: Int = 0) = "sed_arme_form?armeId=$armeId"
+    }
+
+    // Matériel management (equipment assignment & return)
+    data object MaterielDetail : MainRoutes("sed_materiel_detail/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_detail/$affectationId"
+    }
+    data object MaterielForm : MainRoutes("sed_materiel_form?affectationId={affectationId}") {
+        fun createRoute(affectationId: Int = 0) = "sed_materiel_form?affectationId=$affectationId"
+    }
+    data object MaterielReintegration : MainRoutes("sed_materiel_reintegration/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_reintegration/$affectationId"
+    }
+
+    // Matériel roulant management (vehicle perception & reintegration — VHL / Moto)
+    data object MaterielRoulant : MainRoutes("sed_materiel_roulant")
+    data object MaterielRoulantDetail : MainRoutes("sed_materiel_roulant_detail/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_roulant_detail/$affectationId"
+    }
+    data object MaterielRoulantForm : MainRoutes("sed_materiel_roulant_form?affectationId={affectationId}") {
+        fun createRoute(affectationId: Int = 0) = "sed_materiel_roulant_form?affectationId=$affectationId"
+    }
+    data object MaterielRoulantReintegration : MainRoutes("sed_materiel_roulant_reintegration/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_roulant_reintegration/$affectationId"
+    }
+
+    // Main courante management (event logbook — Sédentaire > Secrétariat & Poste)
+    // Both contexts share the same screens; the origine is passed as a query
+    // parameter so the ViewModel knows which module/permission to use.
+    data object MainCouranteDetail : MainRoutes("sed_main_courante_detail/{mainCouranteId}?origine={origine}") {
+        fun createRoute(mainCouranteId: Int, origine: String = "Secretariat") =
+            "sed_main_courante_detail/$mainCouranteId?origine=$origine"
+    }
+    data object MainCouranteForm : MainRoutes("sed_main_courante_form?mainCouranteId={mainCouranteId}&origine={origine}") {
+        fun createRoute(mainCouranteId: Int = 0, origine: String = "Secretariat") =
+            "sed_main_courante_form?mainCouranteId=$mainCouranteId&origine=$origine"
     }
 }

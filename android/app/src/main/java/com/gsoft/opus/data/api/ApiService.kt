@@ -8,6 +8,20 @@ import com.gsoft.opus.data.api.dto.ArmeDto
 import com.gsoft.opus.data.api.dto.ArmeMunitionsConsommationDto
 import com.gsoft.opus.data.api.dto.ArmeRequest
 import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
+import com.gsoft.opus.data.api.dto.AffectationMaterielDto
+import com.gsoft.opus.data.api.dto.AffectationMaterielRequest
+import com.gsoft.opus.data.api.dto.ReintegrationMaterielRequest
+import com.gsoft.opus.data.api.dto.TypeMaterielDto
+import com.gsoft.opus.data.api.dto.TypeMaterielRequest
+import com.gsoft.opus.data.api.dto.MaterielRoulantDto
+import com.gsoft.opus.data.api.dto.MaterielRoulantAttachmentDto
+import com.gsoft.opus.data.api.dto.MaterielRoulantRequest
+import com.gsoft.opus.data.api.dto.ReintegrationMaterielRoulantRequest
+import com.gsoft.opus.data.api.dto.MainCouranteDto
+import com.gsoft.opus.data.api.dto.MainCouranteAttachmentDto
+import com.gsoft.opus.data.api.dto.MainCouranteCategorieDto
+import com.gsoft.opus.data.api.dto.MainCouranteCategorieRequest
+import com.gsoft.opus.data.api.dto.MainCouranteRequest
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
 import com.gsoft.opus.data.api.dto.TypeArmeRequest
@@ -51,6 +65,7 @@ import com.gsoft.opus.data.api.dto.VerifyCodeSecretRequest
 import com.gsoft.opus.data.api.dto.VerifyIdentityRequest
 import com.gsoft.opus.data.api.dto.VerifiedIdentityDto
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -501,4 +516,166 @@ interface ApiService {
         @Path("id") id: Int,
         @Body request: ConsommationRequest
     ): Response<ApiResponse<ArmeDto>>
+
+    // ─── TypeMateriel (equipment type catalog) ──────────────────────
+
+    @GET("api/types-materiels")
+    suspend fun getTypeMaterielList(@Query("search") search: String? = null): Response<ApiResponse<List<TypeMaterielDto>>>
+
+    @GET("api/types-materiels/{id}")
+    suspend fun getTypeMateriel(@Path("id") id: Int): Response<ApiResponse<TypeMaterielDto>>
+
+    @POST("api/types-materiels")
+    suspend fun createTypeMateriel(@Body request: TypeMaterielRequest): Response<ApiResponse<TypeMaterielDto>>
+
+    @PUT("api/types-materiels/{id}")
+    suspend fun updateTypeMateriel(@Path("id") id: Int, @Body request: TypeMaterielRequest): Response<ApiResponse<TypeMaterielDto>>
+
+    @DELETE("api/types-materiels/{id}")
+    suspend fun deleteTypeMateriel(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── AffectationMateriel (equipment assignment & return) ────────
+
+    @GET("api/affectations-materiels")
+    suspend fun getAffectationMaterielList(
+        @Query("search") search: String? = null,
+        @Query("statut") statut: String? = null,
+        @Query("agent_personnel_id") agentPersonnelId: Int? = null
+    ): Response<ApiResponse<List<AffectationMaterielDto>>>
+
+    @GET("api/affectations-materiels/{id}")
+    suspend fun getAffectationMateriel(@Path("id") id: Int): Response<ApiResponse<AffectationMaterielDto>>
+
+    @POST("api/affectations-materiels")
+    suspend fun createAffectationMateriel(@Body request: AffectationMaterielRequest): Response<ApiResponse<AffectationMaterielDto>>
+
+    @PUT("api/affectations-materiels/{id}")
+    suspend fun updateAffectationMateriel(@Path("id") id: Int, @Body request: AffectationMaterielRequest): Response<ApiResponse<AffectationMaterielDto>>
+
+    @POST("api/affectations-materiels/{id}/reintegration")
+    suspend fun reintegrateAffectationMateriel(@Path("id") id: Int, @Body request: ReintegrationMaterielRequest): Response<ApiResponse<AffectationMaterielDto>>
+
+    @DELETE("api/affectations-materiels/{id}")
+    suspend fun deleteAffectationMateriel(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── MaterielRoulant (vehicle perception & reintegration — VHL / Moto) ───
+
+    @GET("api/materiels-roulants")
+    suspend fun getMaterielRoulantList(
+        @Query("search") search: String? = null,
+        @Query("statut") statut: String? = null,
+        @Query("type_materiel") typeMateriel: String? = null
+    ): Response<ApiResponse<List<MaterielRoulantDto>>>
+
+    @GET("api/materiels-roulants/{id}")
+    suspend fun getMaterielRoulant(@Path("id") id: Int): Response<ApiResponse<MaterielRoulantDto>>
+
+    @POST("api/materiels-roulants")
+    suspend fun createMaterielRoulant(@Body request: MaterielRoulantRequest): Response<ApiResponse<MaterielRoulantDto>>
+
+    @PUT("api/materiels-roulants/{id}")
+    suspend fun updateMaterielRoulant(@Path("id") id: Int, @Body request: MaterielRoulantRequest): Response<ApiResponse<MaterielRoulantDto>>
+
+    @POST("api/materiels-roulants/{id}/reintegration")
+    suspend fun reintegrateMaterielRoulant(@Path("id") id: Int, @Body request: ReintegrationMaterielRoulantRequest): Response<ApiResponse<MaterielRoulantDto>>
+
+    @DELETE("api/materiels-roulants/{id}")
+    suspend fun deleteMaterielRoulant(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── MaterielRoulant Attachments ────────────────────────────────
+
+    @GET("api/materiels-roulants/{id}/attachments")
+    suspend fun getMaterielRoulantAttachments(@Path("id") id: Int): Response<ApiResponse<List<MaterielRoulantAttachmentDto>>>
+
+    @POST("api/materiels-roulants/{id}/attachments")
+    suspend fun createMaterielRoulantAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<MaterielRoulantAttachmentDto>>
+
+    @PUT("api/materiels-roulants/{id}/attachments/{attachId}")
+    suspend fun updateMaterielRoulantAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<MaterielRoulantAttachmentDto>>
+
+    @DELETE("api/materiels-roulants/{id}/attachments/{attachId}")
+    suspend fun deleteMaterielRoulantAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ─── Main courante (event logbook — Sédentaire > Secrétariat & Poste) ───
+
+    @GET("api/main-courante")
+    suspend fun getMainCouranteList(
+        @Query("origine") origine: String? = null,
+        @Query("categorie") categorie: String? = null,
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<MainCouranteDto>>>
+
+    @GET("api/main-courante/{id}")
+    suspend fun getMainCourante(@Path("id") id: Int): Response<ApiResponse<MainCouranteDto>>
+
+    @POST("api/main-courante")
+    suspend fun createMainCourante(@Body request: MainCouranteRequest): Response<ApiResponse<MainCouranteDto>>
+
+    @PUT("api/main-courante/{id}")
+    suspend fun updateMainCourante(@Path("id") id: Int, @Body request: MainCouranteRequest): Response<ApiResponse<MainCouranteDto>>
+
+    @DELETE("api/main-courante/{id}")
+    suspend fun deleteMainCourante(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Main courante Attachments ───────────────────────────────────
+
+    @GET("api/main-courante/{id}/attachments")
+    suspend fun getMainCouranteAttachments(@Path("id") id: Int): Response<ApiResponse<List<MainCouranteAttachmentDto>>>
+
+    @Multipart
+    @POST("api/main-courante/{id}/attachments")
+    suspend fun createMainCouranteAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<MainCouranteAttachmentDto>>
+
+    @PUT("api/main-courante/{id}/attachments/{attachId}")
+    suspend fun updateMainCouranteAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<MainCouranteAttachmentDto>>
+
+    @DELETE("api/main-courante/{id}/attachments/{attachId}")
+    suspend fun deleteMainCouranteAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Main courante Categories (user-managed label catalog)
+    // ========================
+
+    @GET("api/main-courante-categories")
+    suspend fun getMainCouranteCategories(): Response<ApiResponse<List<MainCouranteCategorieDto>>>
+
+    @POST("api/main-courante-categories")
+    suspend fun createMainCouranteCategorie(
+        @Body request: MainCouranteCategorieRequest
+    ): Response<ApiResponse<MainCouranteCategorieDto>>
+
+    @PUT("api/main-courante-categories/{id}")
+    suspend fun updateMainCouranteCategorie(
+        @Path("id") id: Int,
+        @Body request: MainCouranteCategorieRequest
+    ): Response<ApiResponse<MainCouranteCategorieDto>>
+
+    @DELETE("api/main-courante-categories/{id}")
+    suspend fun deleteMainCouranteCategorie(
+        @Path("id") id: Int
+    ): Response<ApiResponse<Nothing>>
 }

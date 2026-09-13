@@ -364,6 +364,113 @@ export interface ArmeMunitionsConsommation {
 }
 
 // ========================
+// Matériel Types (Sédentaire > Poste — equipment assignment & return)
+// ========================
+
+/** Equipment type catalog (e.g. Radio, Bâton, Gilet, Menottes, Lampe). */
+export interface TypeMateriel {
+  id: number;
+  nom: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** One material line item within an assignment (type + states). */
+export interface AffectationMaterielLigne {
+  id: number;
+  affectation_id: number;
+  type_materiel_id: number;
+  /** Snapshot of the type name at assignment time. */
+  type_materiel_nom: string;
+  /** Condition state at issue (perception). */
+  etat_emport: string | null;
+  /** Condition state at return (réintégration). Null until returned. */
+  etat_reintegration: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type AffectationMaterielStatut = "Assigné" | "Réintégré";
+
+/** Equipment assignment header (agent + perception/reintegration dates + lignes). */
+export interface AffectationMateriel {
+  id: number;
+  agent_personnel_id: number;
+  agent_im: string | null;
+  agent_grade: string | null;
+  agent_nom: string | null;
+  date_perception: string;
+  heure_perception: string;
+  date_reintegration: string | null;
+  heure_reintegration: string | null;
+  statut: AffectationMaterielStatut;
+  observations: string | null;
+  agent_verifie: number;
+  agent_verifie_at: string | null;
+  signature_svg: string | null;
+  created_by: number | null;
+  agent_personnel_im?: string | null;
+  lignes?: AffectationMaterielLigne[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
+// Matériel Roulant (vehicle perception & reintegration — VHL / Moto)
+// ========================
+
+export type MaterielRoulantType = "VHL" | "Moto";
+export type MaterielRoulantStatut = "En service" | "Réintégré";
+
+export interface MaterielRoulant {
+  id: number;
+  date_perception: string;
+  heure_perception: string;
+  type_materiel: MaterielRoulantType;
+  numero_immatriculation: string | null;
+  description_vehicule: string | null;
+  agent_conducteur_personnel_id: number | null;
+  agent_conducteur_im: string | null;
+  agent_conducteur_grade: string | null;
+  agent_conducteur_nom: string | null;
+  chef_de_bord_personnel_id: number | null;
+  chef_de_bord_im: string | null;
+  chef_de_bord_grade: string | null;
+  chef_de_bord_nom: string | null;
+  kilometrage_depart: string | null;
+  niveau_carburant_depart: string | null;
+  heure_reintegration: string | null;
+  date_reintegration: string | null;
+  kilometrage_retour: string | null;
+  niveau_carburant_retour: string | null;
+  observations_techniques: string | null;
+  defaillances: string | null;
+  agent_verifie: number;
+  agent_verifie_at: string | null;
+  signature_svg: string | null;
+  statut: MaterielRoulantStatut;
+  created_by: number | null;
+  agent_conducteur_personnel_im?: string | null;
+  chef_de_bord_personnel_im?: string | null;
+  attachments?: MaterielRoulantAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaterielRoulantAttachment {
+  id: number;
+  materiel_roulant_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {
@@ -618,4 +725,50 @@ export interface AppSettings {
   sidebarWidth: number;
   fontSize: number;
   showStatusBar: boolean;
+}
+
+// ========================
+// Main courante Types (Sédentaire > Secrétariat & Poste)
+// ========================
+export type MainCouranteOrigine = "Secretariat" | "Poste";
+
+// Categories are now user-managed through a dedicated dialog on the form
+// page. The main_courante.categorie column stores the label string, so we
+// keep this as a plain string rather than a fixed union.
+export type MainCouranteCategorie = string;
+
+/** A row from the main_courante_categorie catalog table. */
+export interface MainCouranteCategorieItem {
+  id: number;
+  label: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MainCourante {
+  id: number;
+  date_evenement: string;
+  heure_evenement: string;
+  categorie: MainCouranteCategorie;
+  description: string;
+  origine: MainCouranteOrigine;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: MainCouranteAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MainCouranteAttachment {
+  id: number;
+  main_courante_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
 }

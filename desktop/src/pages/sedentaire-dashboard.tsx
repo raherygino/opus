@@ -12,6 +12,8 @@ import {
   Clock,
   Inbox,
   ChevronRight,
+  Package,
+  Car,
 } from "lucide-react";
 import logoPnSrc from "@/assets/img/logo-pn.png";
 import logoCspSrc from "@/assets/img/logo-csp.png";
@@ -22,11 +24,15 @@ import { getCorrespondanceList } from "@/lib/api/correspondance";
 import { getDeclarationPerteList } from "@/lib/api/declaration-perte";
 import { getPassationList } from "@/lib/api/passation";
 import { getPersonnelList } from "@/lib/api/personnel";
+import { getAffectationMaterielList } from "@/lib/api/materiel";
+import { getMaterielRoulantList } from "@/lib/api/materiel-roulant";
 import type {
   Correspondance,
   DeclarationPerte,
   Passation,
   Personnel,
+  AffectationMateriel,
+  MaterielRoulant,
 } from "@/types";
 
 const container = {
@@ -43,12 +49,14 @@ const MODULE_CORRESPONDANCE = "sedentaire_secretariat_correspondance";
 const MODULE_DECLARATION_PERTE = "sedentaire_secretariat_declaration_perte";
 const MODULE_PASSATION = "sedentaire_poste_passation";
 const MODULE_PERSONNEL = "personnel";
+const MODULE_MATERIELS = "sedentaire_poste_materiels";
+const MODULE_MATERIEL_ROULANT = "sedentaire_poste_materiel_roulant";
 
 interface ActivityItem {
   id: string;
   action: string;
   createdAt: string;
-  type: "correspondance" | "declaration" | "passation" | "personnel";
+  type: "correspondance" | "declaration" | "passation" | "personnel" | "materiel" | "materiel_roulant";
   path: string;
 }
 
@@ -78,17 +86,23 @@ export function SedentaireDashboard() {
   const [declarations, setDeclarations] = useState<DeclarationPerte[]>([]);
   const [passations, setPassations] = useState<Passation[]>([]);
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
+  const [materiels, setMateriels] = useState<AffectationMateriel[]>([]);
+  const [materielRoulant, setMaterielRoulant] = useState<MaterielRoulant[]>([]);
   const [loading, setLoading] = useState(true);
 
   const canViewCorrespondance = hasPermission(user, MODULE_CORRESPONDANCE, "can_view");
   const canViewDeclaration = hasPermission(user, MODULE_DECLARATION_PERTE, "can_view");
   const canViewPassation = hasPermission(user, MODULE_PASSATION, "can_view");
   const canViewPersonnel = hasPermission(user, MODULE_PERSONNEL, "can_view");
+  const canViewMateriels = hasPermission(user, MODULE_MATERIELS, "can_view");
+  const canViewMaterielRoulant = hasPermission(user, MODULE_MATERIEL_ROULANT, "can_view");
 
   const canCreateCorrespondance = hasPermission(user, MODULE_CORRESPONDANCE, "can_create");
   const canCreateDeclaration = hasPermission(user, MODULE_DECLARATION_PERTE, "can_create");
   const canCreatePassation = hasPermission(user, MODULE_PASSATION, "can_create");
   const canCreatePersonnel = hasPermission(user, MODULE_PERSONNEL, "can_create");
+  const canCreateMateriels = hasPermission(user, MODULE_MATERIELS, "can_create");
+  const canCreateMaterielRoulant = hasPermission(user, MODULE_MATERIEL_ROULANT, "can_create");
 
   useEffect(() => {
     loadDashboard();
@@ -125,6 +139,20 @@ export function SedentaireDashboard() {
         getPersonnelList()
           .then(setPersonnel)
           .catch(() => addNotification("error", "Erreur", "Impossible de charger le personnel")),
+      );
+    }
+    if (canViewMateriels) {
+      tasks.push(
+        getAffectationMaterielList()
+          .then(setMateriels)
+          .catch(() => addNotification("error", "Erreur", "Impossible de charger les matériels")),
+      );
+    }
+    if (canViewMaterielRoulant) {
+      tasks.push(
+        getMaterielRoulantList()
+          .then(setMaterielRoulant)
+          .catch(() => addNotification("error", "Erreur", "Impossible de charger le matériel roulant")),
       );
     }
     await Promise.all(tasks);
@@ -176,16 +204,38 @@ export function SedentaireDashboard() {
         path: "/sedentaire/poste/passation",
       });
     }
+    if (canViewMateriels) {
+      cards.push({
+        label: "Matériels",
+        value: materiels.length,
+        change: `${materiels.filter((m) => m.statut === "Assigné").length} assignés`,
+        icon: Package,
+        path: "/sedentaire/poste/materiels",
+      });
+    }
+    if (canViewMaterielRoulant) {
+      cards.push({
+        label: "Matériel roulant",
+        value: materielRoulant.length,
+        change: `${materielRoulant.filter((m) => m.statut === "En service").length} en service`,
+        icon: Car,
+        path: "/sedentaire/poste/materiel-roulant",
+      });
+    }
     return cards;
   }, [
     canViewCorrespondance,
     canViewPersonnel,
     canViewDeclaration,
     canViewPassation,
+    canViewMateriels,
+    canViewMaterielRoulant,
     correspondances,
     personnel,
     declarations,
     passations,
+    materiels,
+    materielRoulant,
   ]);
 
   // Merge recent items across all modules, sorted by created_at descending.
@@ -227,10 +277,28 @@ export function SedentaireDashboard() {
         path: `/personnel/${p.id}`,
       });
     });
+    materiels.forEach((m) => {
+      items.push({
+        id: `mat-${m.id}`,
+        action: `Affectation matériel #${m.id} — ${[m.agent_grade, m.agent_nom].filter(Boolean).join(" ")} (${(m.lignes ?? []).length} matériel(s))`,
+        createdAt: m.created_at,
+        type: "materiel",
+        path: `/sedentaire/poste/materiels/${m.id}`,
+      });
+    });
+    materielRoulant.forEach((m) => {
+      items.push({
+        id: `mr-${m.id}`,
+        action: `Perception ${m.type_materiel} #${m.id} — ${[m.agent_conducteur_grade, m.agent_conducteur_nom].filter(Boolean).join(" ")}`,
+        createdAt: m.created_at,
+        type: "materiel_roulant",
+        path: `/sedentaire/poste/materiel-roulant/${m.id}`,
+      });
+    });
     return items
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 8);
-  }, [correspondances, declarations, passations, personnel]);
+  }, [correspondances, declarations, passations, personnel, materiels, materielRoulant]);
 
   // Quick actions: navigate to the new-form route, gated by can_create.
   const quickActions = useMemo(() => {
@@ -263,12 +331,28 @@ export function SedentaireDashboard() {
         path: "/personnel/new",
       });
     }
+    if (canCreateMateriels) {
+      actions.push({
+        label: "Affecter du matériel",
+        icon: Package,
+        path: "/sedentaire/poste/materiels/new",
+      });
+    }
+    if (canCreateMaterielRoulant) {
+      actions.push({
+        label: "Perception véhicule",
+        icon: Car,
+        path: "/sedentaire/poste/materiel-roulant/new",
+      });
+    }
     return actions;
   }, [
     canCreateCorrespondance,
     canCreateDeclaration,
     canCreatePassation,
     canCreatePersonnel,
+    canCreateMateriels,
+    canCreateMaterielRoulant,
   ]);
 
   const activityDotColor: Record<ActivityItem["type"], string> = {
@@ -276,6 +360,8 @@ export function SedentaireDashboard() {
     declaration: "bg-amber-500/70",
     passation: "bg-purple-500/70",
     personnel: "bg-green-500/70",
+    materiel: "bg-teal-500/70",
+    materiel_roulant: "bg-orange-500/70",
   };
 
   return (

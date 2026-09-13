@@ -20,6 +20,7 @@ const MODULES = [
   { key: "sedentaire_poste_passation", label: "Sédentaire > Poste > Passation" },
   { key: "sedentaire_poste_armement", label: "Sédentaire > Poste > Armement" },
   { key: "sedentaire_poste_materiels", label: "Sédentaire > Poste > Matériels" },
+  { key: "sedentaire_poste_materiel_roulant", label: "Sédentaire > Poste > Matériel roulant" },
   { key: "sedentaire_poste_situation_gav", label: "Sédentaire > Poste > Situation GAV" },
   { key: "sedentaire_poste_main_courante", label: "Sédentaire > Poste > Main courante" },
   { key: "sedentaire_poste_renseignement", label: "Sédentaire > Poste > Renseignement" },

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.FileCopy
 import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,6 +65,9 @@ fun SedentaireDashboardScreen(
     onPersonnelList: () -> Unit,
     onPersonnelDetail: (Int) -> Unit,
     onCreatePersonnel: () -> Unit,
+    onMaterielsList: () -> Unit,
+    onMaterielDetail: (Int) -> Unit,
+    onCreateMateriel: () -> Unit,
     viewModel: SedentaireDashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -107,7 +111,8 @@ fun SedentaireDashboardScreen(
                     onCorrespondance = onCorrespondanceList,
                     onDeclaration = onDeclarationList,
                     onPassation = onPassationList,
-                    onPersonnel = onPersonnelList
+                    onPersonnel = onPersonnelList,
+                    onMateriels = onMaterielsList
                 )
 
                 RecentActivityCard(
@@ -118,6 +123,7 @@ fun SedentaireDashboardScreen(
                             ActivityType.DECLARATION -> onDeclarationDetail(item.targetId)
                             ActivityType.PASSATION -> onPassationDetail(item.targetId)
                             ActivityType.PERSONNEL -> onPersonnelDetail(item.targetId)
+                            ActivityType.MATERIEL -> onMaterielDetail(item.targetId)
                         }
                     }
                 )
@@ -127,7 +133,8 @@ fun SedentaireDashboardScreen(
                     onCorrespondance = onCreateCorrespondance,
                     onDeclaration = onCreateDeclaration,
                     onPassation = onCreatePassation,
-                    onPersonnel = onCreatePersonnel
+                    onPersonnel = onCreatePersonnel,
+                    onMateriel = onCreateMateriel
                 )
             }
         }
@@ -171,7 +178,8 @@ private fun StatCardsSection(
     onCorrespondance: () -> Unit,
     onDeclaration: () -> Unit,
     onPassation: () -> Unit,
-    onPersonnel: () -> Unit
+    onPersonnel: () -> Unit,
+    onMateriels: () -> Unit
 ) {
     val cards = buildList {
         if (state.canViewCorrespondance) {
@@ -208,6 +216,15 @@ private fun StatCardsSection(
                 description = "Total enregistré",
                 icon = Icons.Outlined.Handshake,
                 onClick = onPassation
+            ))
+        }
+        if (state.canViewMateriels) {
+            add(StatData(
+                label = "Matériels",
+                value = state.materiels.size.toString(),
+                description = "${state.materiels.count { it.statut.equals("Assigné", ignoreCase = true) }} assignés",
+                icon = Icons.Outlined.Inventory,
+                onClick = onMateriels
             ))
         }
     }
@@ -375,7 +392,8 @@ private fun QuickActionsCard(
     onCorrespondance: () -> Unit,
     onDeclaration: () -> Unit,
     onPassation: () -> Unit,
-    onPersonnel: () -> Unit
+    onPersonnel: () -> Unit,
+    onMateriel: () -> Unit
 ) {
     val actions = buildList {
         if (state.canCreateCorrespondance) {
@@ -389,6 +407,9 @@ private fun QuickActionsCard(
         }
         if (state.canCreatePersonnel) {
             add(QuickAction("Nouveau personnel", Icons.Outlined.People, onPersonnel))
+        }
+        if (state.canCreateMateriels) {
+            add(QuickAction("Affecter du matériel", Icons.Outlined.Inventory, onMateriel))
         }
     }
 
@@ -471,6 +492,7 @@ private fun activityDotColor(type: ActivityType): Color = when (type) {
     ActivityType.DECLARATION -> Color(0xFFD97706) // amber
     ActivityType.PASSATION -> Color(0xFF7C3AED) // purple
     ActivityType.PERSONNEL -> Color(0xFF16A34A) // green
+    ActivityType.MATERIEL -> Color(0xFF0D9488) // teal
 }
 
 /** Format an ISO timestamp (e.g. "2026-09-06 14:30:00") as a French relative time string. */
