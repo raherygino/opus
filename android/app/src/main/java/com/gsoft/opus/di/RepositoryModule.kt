@@ -15,6 +15,8 @@ import com.gsoft.opus.data.repository.QrAuthRepositoryImpl
 import com.gsoft.opus.data.repository.SettingsRepositoryImpl
 import com.gsoft.opus.data.repository.MaterielRepositoryImpl
 import com.gsoft.opus.data.repository.MaterielRoulantRepositoryImpl
+import com.gsoft.opus.data.repository.MainCouranteRepositoryImpl
+import com.gsoft.opus.data.repository.MainCouranteCategorieRepositoryImpl
 import com.gsoft.opus.domain.repository.ArmementRepository
 import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.AuthRepository
@@ -30,6 +32,8 @@ import com.gsoft.opus.domain.repository.QrAuthRepository
 import com.gsoft.opus.domain.repository.SettingsRepository
 import com.gsoft.opus.domain.repository.MaterielRepository
 import com.gsoft.opus.domain.repository.MaterielRoulantRepository
+import com.gsoft.opus.domain.repository.MainCouranteRepository
+import com.gsoft.opus.domain.repository.MainCouranteCategorieRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -99,4 +103,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMaterielRoulantRepository(impl: MaterielRoulantRepositoryImpl): MaterielRoulantRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMainCouranteRepository(impl: MainCouranteRepositoryImpl): MainCouranteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMainCouranteCategorieRepository(impl: MainCouranteCategorieRepositoryImpl): MainCouranteCategorieRepository
 }

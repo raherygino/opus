@@ -123,6 +123,17 @@ const MaterielRoulantDetail = lazy(() =>
   import("@/pages/materiel-roulant-detail").then((m) => ({ default: m.MaterielRoulantDetail })),
 );
 
+// Main courante (Sédentaire > Secrétariat & Poste — event logbook)
+const MainCouranteList = lazy(() =>
+  import("@/pages/main-courante-list").then((m) => ({ default: m.MainCouranteList })),
+);
+const MainCouranteForm = lazy(() =>
+  import("@/pages/main-courante-form").then((m) => ({ default: m.MainCouranteForm })),
+);
+const MainCouranteDetail = lazy(() =>
+  import("@/pages/main-courante-detail").then((m) => ({ default: m.MainCouranteDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -333,6 +344,46 @@ export default function App() {
                 }
               />
               <Route
+                path="secretariat/main-courante"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MainCouranteList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/main-courante/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MainCouranteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/main-courante/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MainCouranteDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/main-courante/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MainCouranteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
                 path="poste/passation"
                 element={
                   <ErrorBoundary>
@@ -528,6 +579,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <MaterielRoulantForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/main-courante"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MainCouranteList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/main-courante/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MainCouranteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/main-courante/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MainCouranteDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/main-courante/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MainCouranteForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

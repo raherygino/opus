@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Helpers\Response;
 use App\Models\MaterielRoulant;
+use App\Models\MaterielRoulantAttachment;
 use App\Models\Personnel;
 use App\Models\AuditLog;
 use App\Models\Notification;
@@ -231,6 +232,7 @@ class MaterielRoulantController
         if (!$row) {
             Response::notFound('Matériel roulant introuvable');
         }
+        $row['attachments'] = MaterielRoulantAttachment::getByMaterielRoulantId((int) $row['id']);
 
         $authUser = AuthController::getAuthenticatedUser();
         if ($authUser && !empty($authUser['sub'])) {
@@ -514,6 +516,16 @@ class MaterielRoulantController
         $materiel = MaterielRoulant::getById($id);
         if (!$materiel) {
             Response::notFound('Matériel roulant introuvable');
+        }
+
+        // Remove attachment files from disk before the cascade delete.
+        $config = require __DIR__ . '/../../config/app.php';
+        $uploadDir = rtrim($config['upload_dir'], '/') . '/materiels-roulants';
+        foreach (MaterielRoulantAttachment::getByMaterielRoulantId($id) as $attachment) {
+            $filePath = $uploadDir . '/' . $attachment['filename'];
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
         }
 
         MaterielRoulant::delete($id);

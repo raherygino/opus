@@ -5,11 +5,17 @@ import com.gsoft.opus.core.Resource
 import com.gsoft.opus.data.api.ApiService
 import com.gsoft.opus.data.api.dto.MaterielRoulantRequest
 import com.gsoft.opus.data.api.dto.ReintegrationMaterielRoulantRequest
+import com.gsoft.opus.data.api.dto.AttachmentTitleRequest
 import com.gsoft.opus.data.api.dto.toDomain
 import com.gsoft.opus.domain.model.MaterielRoulant
+import com.gsoft.opus.domain.model.MaterielRoulantAttachment
 import com.gsoft.opus.domain.repository.MaterielRoulantFormData
 import com.gsoft.opus.domain.repository.MaterielRoulantRepository
 import com.gsoft.opus.domain.repository.ReintegrationMaterielRoulantData
+import com.gsoft.opus.domain.repository.UploadFile
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.io.IOException
 import javax.inject.Inject
@@ -116,5 +122,50 @@ class MaterielRoulantRepositoryImpl @Inject constructor(
         apiService.deleteMaterielRoulant(id).extract("Impossible de supprimer le matériel roulant")
     } catch (e: Exception) {
         Resource.error(failureMessage(e, "deleteMaterielRoulant"))
+    }
+
+    // ─── Attachments ────────────────────────────────────────────────
+
+    override suspend fun getAttachments(materielRoulantId: Int): Resource<List<MaterielRoulantAttachment>> {
+        return try {
+            apiService.getMaterielRoulantAttachments(materielRoulantId)
+                .extract("Impossible de charger les pièces jointes")
+                .map { list -> list.map { it.toDomain() } }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, "getAttachments"))
+        }
+    }
+
+    override suspend fun addAttachment(materielRoulantId: Int, title: String, file: UploadFile): Resource<MaterielRoulantAttachment> {
+        return try {
+            val titleBody = title.toRequestBody("text/plain".toMediaTypeOrNull())
+            val fileBody = file.bytes.toRequestBody(file.mimeType?.toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData("file", file.fileName, fileBody)
+            apiService.createMaterielRoulantAttachment(materielRoulantId, titleBody, part)
+                .extract("Impossible d'ajouter la pièce jointe")
+                .map { it.toDomain() }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, "addAttachment"))
+        }
+    }
+
+    override suspend fun updateAttachmentTitle(materielRoulantId: Int, attachId: Int, title: String): Resource<MaterielRoulantAttachment> {
+        return try {
+            apiService.updateMaterielRoulantAttachmentTitle(materielRoulantId, attachId, AttachmentTitleRequest(title))
+                .extract("Impossible de modifier la pièce jointe")
+                .map { it.toDomain() }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, "updateAttachmentTitle"))
+        }
+    }
+
+    override suspend fun deleteAttachment(materielRoulantId: Int, attachId: Int): Resource<Unit> {
+        return try {
+            val response = apiService.deleteMaterielRoulantAttachment(materielRoulantId, attachId)
+            if (response.isSuccessful && response.body()?.success == true) Resource.success(Unit)
+            else Resource.error(response.body()?.message ?: "Impossible de supprimer la pièce jointe", response.code())
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, "deleteAttachment"))
+        }
     }
 }

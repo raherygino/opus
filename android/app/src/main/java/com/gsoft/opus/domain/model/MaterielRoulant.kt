@@ -36,6 +36,7 @@ data class MaterielRoulant(
     val signatureSvg: String?,
     val statut: String,
     val createdBy: Int?,
+    val attachments: List<MaterielRoulantAttachment> = emptyList(),
     val createdAt: String?,
     val updatedAt: String?
 ) {
@@ -63,3 +64,14 @@ data class MaterielRoulant(
     /** Whether defaillances were reported at reintegration. */
     val hasDefaillances: Boolean get() = !defaillances.isNullOrBlank()
 }
+
+data class MaterielRoulantAttachment(
+    val id: Int,
+    val materielRoulantId: Int,
+    val title: String,
+    val filename: String,
+    val originalFilename: String,
+    val mimeType: String?,
+    val fileSize: Long?,
+    val createdAt: String?
+)

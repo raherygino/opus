@@ -107,6 +107,9 @@ import com.gsoft.opus.presentation.materielroulant.MaterielRoulantScreen
 import com.gsoft.opus.presentation.materielroulant.MaterielRoulantDetailScreen
 import com.gsoft.opus.presentation.materielroulant.MaterielRoulantFormScreen
 import com.gsoft.opus.presentation.materielroulant.MaterielRoulantReintegrationScreen
+import com.gsoft.opus.presentation.maincourante.MainCouranteScreen
+import com.gsoft.opus.presentation.maincourante.MainCouranteDetailScreen
+import com.gsoft.opus.presentation.maincourante.MainCouranteFormScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -528,7 +531,16 @@ fun MainScreen(
                         )
                     }
                     composable(MainRoutes.Rapport.route) { ContextMenuItemScreens.Rapport() }
-                    composable(MainRoutes.MainCouranteSec.route) { ContextMenuItemScreens.MainCouranteSec() }
+                    composable(MainRoutes.MainCouranteSec.route) {
+                        MainCouranteScreen(
+                            onEntryClick = { id ->
+                                navController.navigate(MainRoutes.MainCouranteDetail.createRoute(id, "Secretariat"))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.MainCouranteForm.createRoute(0, "Secretariat"))
+                            }
+                        )
+                    }
 
                     // Sédentaire – Poste
                     composable(MainRoutes.Passation.route) {
@@ -581,7 +593,16 @@ fun MainScreen(
                         )
                     }
                     composable(MainRoutes.SituationGav.route) { ContextMenuItemScreens.SituationGav() }
-                    composable(MainRoutes.MainCourantePoste.route) { ContextMenuItemScreens.MainCourantePoste() }
+                    composable(MainRoutes.MainCourantePoste.route) {
+                        MainCouranteScreen(
+                            onEntryClick = { id ->
+                                navController.navigate(MainRoutes.MainCouranteDetail.createRoute(id, "Poste"))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.MainCouranteForm.createRoute(0, "Poste"))
+                            }
+                        )
+                    }
                     composable(MainRoutes.RenseignementSed.route) { ContextMenuItemScreens.RenseignementSed() }
 
                     // Division Service Général
@@ -1149,6 +1170,74 @@ fun MainScreen(
                         )
                     ) {
                         MaterielRoulantReintegrationScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Main courante management (event logbook — Secrétariat & Poste)
+                    composable(
+                        route = MainRoutes.MainCouranteDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("mainCouranteId") {
+                                type = androidx.navigation.NavType.IntType
+                            },
+                            androidx.navigation.navArgument("origine") {
+                                type = androidx.navigation.NavType.StringType
+                                defaultValue = "Secretariat"
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        MainCouranteDetailScreen(
+                            onEdit = { id ->
+                                val origine = it.arguments?.getString("origine") ?: "Secretariat"
+                                navController.navigate(MainRoutes.MainCouranteForm.createRoute(id, origine))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MainCouranteForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("mainCouranteId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            },
+                            androidx.navigation.navArgument("origine") {
+                                type = androidx.navigation.NavType.StringType
+                                defaultValue = "Secretariat"
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        MainCouranteFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )

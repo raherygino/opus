@@ -27,6 +27,10 @@ use App\Controllers\TypeArmeController;
 use App\Controllers\TypeMaterielController;
 use App\Controllers\AffectationMaterielController;
 use App\Controllers\MaterielRoulantController;
+use App\Controllers\MaterielRoulantAttachmentController;
+use App\Controllers\MainCouranteController;
+use App\Controllers\MainCouranteAttachmentController;
+use App\Controllers\MainCouranteCategorieController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -255,6 +259,37 @@ $router->post('/api/materiels-roulants',                    [MaterielRoulantCont
 $router->put('/api/materiels-roulants/{id}',                [MaterielRoulantController::class, 'update']);
 $router->post('/api/materiels-roulants/{id}/reintegration', [MaterielRoulantController::class, 'reintegrate']);
 $router->delete('/api/materiels-roulants/{id}',             [MaterielRoulantController::class, 'destroy']);
+$router->get('/api/materiels-roulants/{id}/attachments',                       [MaterielRoulantAttachmentController::class, 'index']);
+$router->post('/api/materiels-roulants/{id}/attachments',                      [MaterielRoulantAttachmentController::class, 'store']);
+$router->put('/api/materiels-roulants/{id}/attachments/{attachId}',            [MaterielRoulantAttachmentController::class, 'update']);
+$router->delete('/api/materiels-roulants/{id}/attachments/{attachId}',          [MaterielRoulantAttachmentController::class, 'destroy']);
+$router->get('/api/materiels-roulants/{id}/attachments/{attachId}/download',   [MaterielRoulantAttachmentController::class, 'download']);
+
+// ========================
+// Main courante Routes (Sédentaire > Secrétariat & Poste)
+// ========================
+$router->get('/api/main-courante',           [MainCouranteController::class, 'index']);
+$router->get('/api/main-courante/{id}',      [MainCouranteController::class, 'show']);
+$router->post('/api/main-courante',          [MainCouranteController::class, 'store']);
+$router->put('/api/main-courante/{id}',      [MainCouranteController::class, 'update']);
+$router->delete('/api/main-courante/{id}',   [MainCouranteController::class, 'destroy']);
+
+// ========================
+// Main courante Attachment Routes
+// ========================
+$router->get('/api/main-courante/{id}/attachments',                       [MainCouranteAttachmentController::class, 'index']);
+$router->post('/api/main-courante/{id}/attachments',                      [MainCouranteAttachmentController::class, 'store']);
+$router->put('/api/main-courante/{id}/attachments/{attachId}',            [MainCouranteAttachmentController::class, 'update']);
+$router->delete('/api/main-courante/{id}/attachments/{attachId}',         [MainCouranteAttachmentController::class, 'destroy']);
+$router->get('/api/main-courante/{id}/attachments/{attachId}/download',   [MainCouranteAttachmentController::class, 'download']);
+
+// ========================
+// Main courante Categories (label catalog managed by users)
+// ========================
+$router->get('/api/main-courante-categories',          [MainCouranteCategorieController::class, 'index']);
+$router->post('/api/main-courante-categories',         [MainCouranteCategorieController::class, 'store']);
+$router->put('/api/main-courante-categories/{id}',    [MainCouranteCategorieController::class, 'update']);
+$router->delete('/api/main-courante-categories/{id}', [MainCouranteCategorieController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

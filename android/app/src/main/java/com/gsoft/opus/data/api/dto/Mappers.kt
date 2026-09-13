@@ -10,6 +10,9 @@ import com.gsoft.opus.domain.model.AffectationMateriel
 import com.gsoft.opus.domain.model.AffectationMaterielLigne
 import com.gsoft.opus.domain.model.TypeMateriel
 import com.gsoft.opus.domain.model.MaterielRoulant
+import com.gsoft.opus.domain.model.MaterielRoulantAttachment
+import com.gsoft.opus.domain.model.MainCourante
+import com.gsoft.opus.domain.model.MainCouranteAttachment
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -443,6 +446,45 @@ fun MaterielRoulantDto.toDomain(): MaterielRoulant = MaterielRoulant(
     signatureSvg = signatureSvg,
     statut = statut,
     createdBy = createdBy,
+    attachments = attachments?.map { it.toDomain() } ?: emptyList(),
     createdAt = createdAt,
     updatedAt = updatedAt
+)
+
+fun MaterielRoulantAttachmentDto.toDomain(): MaterielRoulantAttachment = MaterielRoulantAttachment(
+    id = id,
+    materielRoulantId = materielRoulantId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+fun MainCouranteDto.toDomain(): MainCourante = MainCourante(
+    id = id,
+    dateEvenement = dateEvenement,
+    heureEvenement = heureEvenement,
+    categorie = categorie,
+    description = description,
+    origine = origine,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    attachments = attachments?.map { it.toDomain() } ?: emptyList()
+)
+
+fun MainCouranteAttachmentDto.toDomain(): MainCouranteAttachment = MainCouranteAttachment(
+    id = id,
+    mainCouranteId = mainCouranteId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
 )

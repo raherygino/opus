@@ -10,7 +10,9 @@ import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.MaterielRoulantFormData
 import com.gsoft.opus.domain.repository.MaterielRoulantRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
+import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
+import com.gsoft.opus.presentation.personnel.AttachmentItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +48,8 @@ data class MaterielRoulantFormUiState(
     val signatureSvg: String? = null,
     // Whether the current signature came from the personnel's data (vs drawn).
     val signatureFromPersonnel: Boolean = false,
+    // Attachments (files associated with the perception).
+    val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
     val saved: Boolean = false
 )
@@ -107,6 +111,13 @@ class MaterielRoulantFormViewModel @Inject constructor(
             when (val result = materielRoulantRepository.getMaterielRoulant(materielId)) {
                 is Resource.Success -> {
                     val m = result.data
+                    val atts = m.attachments.map {
+                        AttachmentItem(
+                            id = it.id,
+                            title = it.title,
+                            existingFilename = it.originalFilename
+                        )
+                    }
                     _state.update {
                         it.copy(
                             isEdit = true,
@@ -121,7 +132,8 @@ class MaterielRoulantFormViewModel @Inject constructor(
                             kilometrageDepart = m.kilometrageDepart ?: "",
                             niveauCarburantDepart = m.niveauCarburantDepart ?: "",
                             verified = m.agentVerifie,
-                            signatureSvg = m.signatureSvg
+                            signatureSvg = m.signatureSvg,
+                            attachments = atts
                         )
                     }
                 }
@@ -157,6 +169,35 @@ class MaterielRoulantFormViewModel @Inject constructor(
     fun setCodeSecret(v: String) { _state.update { it.copy(codeSecret = v) } }
     fun setSignatureSvg(svg: String?) {
         _state.update { it.copy(signatureSvg = svg, signatureFromPersonnel = false) }
+    }
+
+    // ─── Attachments ─────────────────────────────────────────────────
+    fun addAttachment() {
+        _state.update { it.copy(attachments = it.attachments + AttachmentItem()) }
+    }
+
+    fun updateAttachmentTitle(index: Int, title: String) {
+        _state.update { s ->
+            s.copy(attachments = s.attachments.mapIndexed { i, a -> if (i == index) a.copy(title = title) else a })
+        }
+    }
+
+    fun setAttachmentFile(index: Int, file: UploadFile) {
+        _state.update { s ->
+            s.copy(attachments = s.attachments.mapIndexed { i, a -> if (i == index) a.copy(uploadFile = file) else a })
+        }
+    }
+
+    fun removeAttachment(index: Int) {
+        _state.update { s ->
+            val list = s.attachments.toMutableList()
+            if (list[index].id != null) {
+                list[index] = list[index].copy(isDeleted = true)
+            } else {
+                list.removeAt(index)
+            }
+            s.copy(attachments = list)
+        }
     }
 
     /**
@@ -254,10 +295,33 @@ class MaterielRoulantFormViewModel @Inject constructor(
                 materielRoulantRepository.createMaterielRoulant(data)
             }
             when (result) {
-                is Resource.Success -> _state.update { it.copy(isSaving = false, saved = true) }
+                is Resource.Success -> {
+                    val savedId = if (s.isEdit) materielId else result.data.id
+                    handleAttachments(savedId)
+                }
                 is Resource.Error -> _state.update { it.copy(isSaving = false, errorMessage = result.message) }
                 is Resource.Loading -> {}
             }
         }
+    }
+
+    private suspend fun handleAttachments(savedId: Int) {
+        val s = _state.value
+        for (a in s.attachments.filter { it.isDeleted && it.id != null }) {
+            materielRoulantRepository.deleteAttachment(savedId, a.id!!)
+        }
+        for (a in s.attachments.filter { !it.isDeleted }) {
+            if (a.id != null && a.uploadFile != null) {
+                materielRoulantRepository.deleteAttachment(savedId, a.id)
+                if (a.title.isNotBlank()) {
+                    materielRoulantRepository.addAttachment(savedId, a.title, a.uploadFile)
+                }
+            } else if (a.id != null && a.title.isNotBlank()) {
+                materielRoulantRepository.updateAttachmentTitle(savedId, a.id, a.title)
+            } else if (a.uploadFile != null && a.title.isNotBlank()) {
+                materielRoulantRepository.addAttachment(savedId, a.title, a.uploadFile)
+            }
+        }
+        _state.update { it.copy(isSaving = false, saved = true) }
     }
 }

@@ -453,6 +453,19 @@ export interface MaterielRoulant {
   created_by: number | null;
   agent_conducteur_personnel_im?: string | null;
   chef_de_bord_personnel_im?: string | null;
+  attachments?: MaterielRoulantAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaterielRoulantAttachment {
+  id: number;
+  materiel_roulant_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -712,4 +725,50 @@ export interface AppSettings {
   sidebarWidth: number;
   fontSize: number;
   showStatusBar: boolean;
+}
+
+// ========================
+// Main courante Types (Sédentaire > Secrétariat & Poste)
+// ========================
+export type MainCouranteOrigine = "Secretariat" | "Poste";
+
+// Categories are now user-managed through a dedicated dialog on the form
+// page. The main_courante.categorie column stores the label string, so we
+// keep this as a plain string rather than a fixed union.
+export type MainCouranteCategorie = string;
+
+/** A row from the main_courante_categorie catalog table. */
+export interface MainCouranteCategorieItem {
+  id: number;
+  label: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MainCourante {
+  id: number;
+  date_evenement: string;
+  heure_evenement: string;
+  categorie: MainCouranteCategorie;
+  description: string;
+  origine: MainCouranteOrigine;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: MainCouranteAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MainCouranteAttachment {
+  id: number;
+  main_courante_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
 }

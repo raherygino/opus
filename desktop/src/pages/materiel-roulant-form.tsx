@@ -8,6 +8,11 @@ import {
   getMaterielRoulantById,
   createMaterielRoulant,
   updateMaterielRoulant,
+  getMaterielRoulantAttachments,
+  createMaterielRoulantAttachment,
+  updateMaterielRoulantAttachmentTitle,
+  deleteMaterielRoulantAttachment,
+  getMaterielRoulantAttachmentDownloadUrl,
   type MaterielRoulantPayload,
 } from "@/lib/api/materiel-roulant";
 import { getPersonnelList, verifyPersonnelCodeSecret } from "@/lib/api/personnel";
@@ -18,11 +23,19 @@ import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
 import { strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
-import { ArrowLeft, Loader2, Save, Car, UserCheck, Calendar, Gauge, Fuel, KeyRound, CheckCircle2, PenLine } from "lucide-react";
-import type { Personnel, MaterielRoulantType } from "@/types";
+import { ArrowLeft, Loader2, Save, Car, UserCheck, Calendar, Gauge, Fuel, KeyRound, CheckCircle2, PenLine, Paperclip, Plus, Trash2, Download } from "lucide-react";
+import type { Personnel, MaterielRoulantType, MaterielRoulantAttachment } from "@/types";
 import { MATERIEL_ROULANT_MODULE } from "@/pages/materiel-roulant-management";
 
 const LIST_PATH = "/sedentaire/poste/materiel-roulant";
+
+interface AttachmentItem {
+  id?: number;
+  title: string;
+  file?: File;
+  existingFile?: string;
+  _delete?: boolean;
+}
 
 function todayIso(): string {
   const d = new Date();
@@ -66,6 +79,8 @@ export function MaterielRoulantForm() {
   const [signatureSvg, setSignatureSvg] = useState<string | null>(null);
   const [signatureFromPersonnel, setSignatureFromPersonnel] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
+  // Attachments (files associated with the perception).
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
 
   const canEdit = hasPermission(user, MATERIEL_ROULANT_MODULE, "can_edit");
 
@@ -101,6 +116,15 @@ export function MaterielRoulantForm() {
       });
       setVerified(!!data.agent_verifie);
       setSignatureSvg(data.signature_svg ?? null);
+
+      const atts = await getMaterielRoulantAttachments(Number(id));
+      setAttachments(
+        atts.map((x: MaterielRoulantAttachment) => ({
+          id: x.id,
+          title: x.title,
+          existingFile: x.original_filename,
+        })),
+      );
     } catch {
       addNotification("error", "Erreur", "Matériel roulant introuvable");
       navigate(LIST_PATH);
@@ -162,6 +186,31 @@ export function MaterielRoulantForm() {
     setSignatureFromPersonnel(false);
   }
 
+  // ─── Attachments ─────────────────────────────────────────────────────
+  function addAttachment() {
+    setAttachments((prev) => [...prev, { title: "", file: undefined }]);
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments((prev) => {
+      const updated = [...prev];
+      if (updated[index].id) {
+        updated[index] = { ...updated[index], _delete: true };
+      } else {
+        updated.splice(index, 1);
+      }
+      return updated;
+    });
+  }
+
+  function updateAttachment(index: number, data: Partial<AttachmentItem>) {
+    setAttachments((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], ...data };
+      return updated;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -178,6 +227,13 @@ export function MaterielRoulantForm() {
     // time and cannot be modified.
     if (!isEdit && !verified) {
       addNotification("error", "Erreur", "L'identité du conducteur doit être vérifiée via le code secret avant d'enregistrer la perception");
+      return;
+    }
+    const incompleteAttachment = attachments.some(
+      (a) => !a._delete && !a.id && (!a.title.trim() || !a.file),
+    );
+    if (incompleteAttachment) {
+      addNotification("error", "Erreur", "Chaque pièce jointe doit avoir un titre et un fichier");
       return;
     }
 
@@ -205,13 +261,34 @@ export function MaterielRoulantForm() {
             }),
       };
 
+      let materielRoulantId: number;
       if (isEdit) {
-        await updateMaterielRoulant(Number(id), payload);
+        materielRoulantId = Number(id);
+        await updateMaterielRoulant(materielRoulantId, payload);
         addNotification("success", "Modifiée", "Perception modifiée avec succès");
       } else {
-        await createMaterielRoulant(payload);
+        const created = await createMaterielRoulant(payload);
+        materielRoulantId = created.id;
         addNotification("success", "Créée", "Perception enregistrée avec succès");
       }
+
+      // Persist attachment changes (create / update title / replace file / delete).
+      for (const a of attachments.filter((x) => x._delete && x.id)) {
+        await deleteMaterielRoulantAttachment(materielRoulantId, a.id!);
+      }
+      for (const a of attachments.filter((x) => !x._delete)) {
+        if (a.id) {
+          if (a.file) {
+            await deleteMaterielRoulantAttachment(materielRoulantId, a.id);
+            await createMaterielRoulantAttachment(materielRoulantId, a.title, a.file);
+          } else if (a.title) {
+            await updateMaterielRoulantAttachmentTitle(materielRoulantId, a.id, a.title);
+          }
+        } else if (a.file) {
+          await createMaterielRoulantAttachment(materielRoulantId, a.title, a.file);
+        }
+      }
+
       navigate(LIST_PATH);
     } catch (err: unknown) {
       let msg = "Impossible d'enregistrer la perception";
@@ -559,6 +636,85 @@ export function MaterielRoulantForm() {
                 placeholder="Ex : 80.0"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Pièces jointes */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              Pièces jointes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {attachments.filter((a) => !a._delete).length === 0 && (
+              <p className="text-sm text-muted-foreground">Aucune pièce jointe</p>
+            )}
+
+            {attachments.map((att, index) =>
+              att._delete ? null : (
+                <div
+                  key={att.id || `attachment-${index}`}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
+                >
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      placeholder="Titre de la pièce jointe"
+                      value={att.title}
+                      onChange={(e) => updateAttachment(index, { title: e.target.value })}
+                      className="h-8 text-sm"
+                    />
+                    {att.id && att.existingFile && id && (
+                      <a
+                        href={getMaterielRoulantAttachmentDownloadUrl(Number(id), att.id)}
+                        download
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" />
+                        {att.existingFile}
+                      </a>
+                    )}
+                    {att.file && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Paperclip className="h-3 w-3" />
+                        {att.file.name}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="file"
+                      className="w-40 h-8 text-xs"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) updateAttachment(index, { file });
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => removeAttachment(index)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ),
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={addAttachment}
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter une pièce jointe
+            </Button>
           </CardContent>
         </Card>
 

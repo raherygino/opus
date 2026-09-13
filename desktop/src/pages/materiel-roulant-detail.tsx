@@ -7,13 +7,16 @@ import { hasPermission } from "@/lib/permissions";
 import {
   getMaterielRoulantById,
   reintegrateMaterielRoulant,
+  getMaterielRoulantAttachmentDownloadUrl,
   type ReintegrationMaterielRoulantPayload,
 } from "@/lib/api/materiel-roulant";
+import { isImageFile } from "@/lib/utils/attachment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import {
   ArrowLeft,
   Loader2,
@@ -26,8 +29,11 @@ import {
   Wrench,
   AlertTriangle,
   CheckCircle2,
+  Paperclip,
+  Download,
+  Eye,
 } from "lucide-react";
-import type { MaterielRoulant } from "@/types";
+import type { MaterielRoulant, MaterielRoulantAttachment } from "@/types";
 import { formatDate, formatHeure } from "@/pages/passation-list";
 import { MATERIEL_ROULANT_MODULE } from "@/pages/materiel-roulant-management";
 
@@ -74,6 +80,7 @@ export function MaterielRoulantDetail() {
     defaillances: "",
   });
   const [reintError, setReintError] = useState<string | null>(null);
+  const [viewerTarget, setViewerTarget] = useState<MaterielRoulantAttachment | null>(null);
 
   useEffect(() => {
     loadItem();
@@ -375,6 +382,53 @@ export function MaterielRoulantDetail() {
         </>
       )}
 
+      {/* Pièces jointes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Paperclip className="h-4 w-4" />
+            Pièces jointes ({item.attachments?.length ?? 0})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {(item.attachments ?? []).length === 0 && (
+            <p className="text-sm text-muted-foreground">Aucune pièce jointe</p>
+          )}
+          {(item.attachments ?? []).map((att: MaterielRoulantAttachment) => (
+            <div
+              key={att.id}
+              className="flex items-center justify-between rounded-lg border border-border p-3"
+            >
+              <div>
+                <p className="text-sm font-medium">{att.title}</p>
+                <p className="text-xs text-muted-foreground">{att.original_filename}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                {isImageFile(att.mime_type, att.original_filename) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Aperçu"
+                    onClick={() => setViewerTarget(att)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                <a
+                  href={getMaterielRoulantAttachmentDownloadUrl(item.id, att.id)}
+                  download
+                >
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* Reintegration dialog */}
       {reintOpen && (
         <div
@@ -513,6 +567,17 @@ export function MaterielRoulantDetail() {
           </motion.div>
         </div>
       )}
+
+      <ImageViewerDialog
+        open={viewerTarget !== null}
+        src={
+          viewerTarget
+            ? getMaterielRoulantAttachmentDownloadUrl(item.id, viewerTarget.id)
+            : ""
+        }
+        title={viewerTarget?.title}
+        onClose={() => setViewerTarget(null)}
+      />
     </motion.div>
   );
 }

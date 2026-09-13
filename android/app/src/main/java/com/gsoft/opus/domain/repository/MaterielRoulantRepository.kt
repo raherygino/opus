@@ -2,6 +2,7 @@ package com.gsoft.opus.domain.repository
 
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.MaterielRoulant
+import com.gsoft.opus.domain.model.MaterielRoulantAttachment
 
 /** Input data for creating/updating a matériel roulant perception. */
 data class MaterielRoulantFormData(
@@ -41,4 +42,9 @@ interface MaterielRoulantRepository {
     suspend fun updateMaterielRoulant(id: Int, data: MaterielRoulantFormData): Resource<MaterielRoulant>
     suspend fun reintegrateMaterielRoulant(id: Int, data: ReintegrationMaterielRoulantData): Resource<MaterielRoulant>
     suspend fun deleteMaterielRoulant(id: Int): Resource<Unit>
+
+    suspend fun getAttachments(materielRoulantId: Int): Resource<List<MaterielRoulantAttachment>>
+    suspend fun addAttachment(materielRoulantId: Int, title: String, file: UploadFile): Resource<MaterielRoulantAttachment>
+    suspend fun updateAttachmentTitle(materielRoulantId: Int, attachId: Int, title: String): Resource<MaterielRoulantAttachment>
+    suspend fun deleteAttachment(materielRoulantId: Int, attachId: Int): Resource<Unit>
 }

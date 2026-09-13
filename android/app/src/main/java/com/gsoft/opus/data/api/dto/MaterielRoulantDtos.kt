@@ -34,6 +34,7 @@ data class MaterielRoulantDto(
     @SerializedName("signature_svg") val signatureSvg: String? = null,
     @SerializedName("statut") val statut: String,
     @SerializedName("created_by") val createdBy: Int? = null,
+    @SerializedName("attachments") val attachments: List<MaterielRoulantAttachmentDto>? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )
@@ -61,4 +62,15 @@ data class ReintegrationMaterielRoulantRequest(
     @SerializedName("niveau_carburant_retour") val niveauCarburantRetour: String? = null,
     @SerializedName("observations_techniques") val observationsTechniques: String? = null,
     @SerializedName("defaillances") val defaillances: String? = null
+)
+
+data class MaterielRoulantAttachmentDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("materiel_roulant_id") val materielRoulantId: Int,
+    @SerializedName("title") val title: String,
+    @SerializedName("filename") val filename: String,
+    @SerializedName("original_filename") val originalFilename: String,
+    @SerializedName("mime_type") val mimeType: String? = null,
+    @SerializedName("file_size") val fileSize: Long? = null,
+    @SerializedName("created_at") val createdAt: String? = null
 )

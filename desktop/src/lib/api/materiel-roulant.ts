@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api-client";
 import type {
   ApiResponse,
   MaterielRoulant,
+  MaterielRoulantAttachment,
   MaterielRoulantType,
 } from "@/types";
 
@@ -87,4 +88,62 @@ export async function reintegrateMaterielRoulant(
 
 export async function deleteMaterielRoulant(id: number): Promise<void> {
   await apiClient.delete(`/materiels-roulants/${id}`);
+}
+
+// ========================
+// Attachment API
+// ========================
+
+export async function getMaterielRoulantAttachments(
+  materielRoulantId: number,
+): Promise<MaterielRoulantAttachment[]> {
+  const { data } = await apiClient.get<ApiResponse<MaterielRoulantAttachment[]>>(
+    `/materiels-roulants/${materielRoulantId}/attachments`,
+  );
+  return data.data;
+}
+
+export async function createMaterielRoulantAttachment(
+  materielRoulantId: number,
+  title: string,
+  file: File,
+): Promise<MaterielRoulantAttachment> {
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("file", file);
+  const { data } = await apiClient.post<ApiResponse<MaterielRoulantAttachment>>(
+    `/materiels-roulants/${materielRoulantId}/attachments`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return data.data;
+}
+
+export async function updateMaterielRoulantAttachmentTitle(
+  materielRoulantId: number,
+  attachId: number,
+  title: string,
+): Promise<MaterielRoulantAttachment> {
+  const { data } = await apiClient.put<ApiResponse<MaterielRoulantAttachment>>(
+    `/materiels-roulants/${materielRoulantId}/attachments/${attachId}`,
+    { title },
+  );
+  return data.data;
+}
+
+export async function deleteMaterielRoulantAttachment(
+  materielRoulantId: number,
+  attachId: number,
+): Promise<void> {
+  await apiClient.delete(
+    `/materiels-roulants/${materielRoulantId}/attachments/${attachId}`,
+  );
+}
+
+export function getMaterielRoulantAttachmentDownloadUrl(
+  materielRoulantId: number,
+  attachId: number,
+): string {
+  const baseUrl = import.meta.env.VITE_API_URL || "/api";
+  return `${baseUrl}/materiels-roulants/${materielRoulantId}/attachments/${attachId}/download`;
 }
