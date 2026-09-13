@@ -772,3 +772,135 @@ export interface MainCouranteAttachment {
   created_at: string;
   updated_at: string;
 }
+
+// ========================
+// Plainte (Police Judiciaire) — ENTRÉE + SORTIE
+// ========================
+
+export type PlainteEntreeType = "ST_PARQUET" | "PLAINTE_DIRECTE" | "RAPPORT_POLICE";
+export type PlainteSortieNature = "DAT" | "DEFERREMENT";
+
+export interface PlainteEntree {
+  id: number;
+  type: PlainteEntreeType;
+  date_plainte: string;
+  numero_dossier: string;
+  numero_st: string | null;
+  opj_personnel_id: number | null;
+  enqueteur_personnel_id: number | null;
+  partie_civile: string | null;
+  mise_en_cause: string | null;
+  adresse_pc: string | null;
+  infraction: string | null;
+  prejudice: string | null;
+  lieu_infraction: string | null;
+  heure_infraction: string | null;
+  observation: string | null;
+  created_by: number | null;
+  opj_prenoms?: string | null;
+  opj_nom?: string | null;
+  opj_grade?: string | null;
+  opj_im?: string | null;
+  enqueteur_prenoms?: string | null;
+  enqueteur_nom?: string | null;
+  enqueteur_grade?: string | null;
+  enqueteur_im?: string | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: PlainteEntreeAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlainteEntreeAttachment {
+  id: number;
+  plainte_entree_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Lightweight ENTRÉE summary returned by /api/plaintes-entree/without-sortie. */
+export interface PlainteEntreeSummary {
+  id: number;
+  type: PlainteEntreeType;
+  numero_dossier: string;
+  date_plainte: string;
+  partie_civile: string | null;
+  mise_en_cause: string | null;
+  infraction: string | null;
+  opj_prenoms?: string | null;
+  opj_nom?: string | null;
+  opj_grade?: string | null;
+}
+
+export interface PlainteSortie {
+  id: number;
+  plainte_entree_id: number;
+  nature: PlainteSortieNature;
+  date_sortie: string;
+  numero: string;
+  numero_ttr: string | null;
+  nom_substitut: string | null;
+  date_deferrement: string | null;
+  observation: string | null;
+  created_by: number | null;
+  entree_type?: PlainteEntreeType | null;
+  entree_numero_dossier?: string | null;
+  entree_date_plainte?: string | null;
+  entree_infraction?: string | null;
+  entree_mise_en_cause?: string | null;
+  entree_partie_civile?: string | null;
+  entree_opj_prenoms?: string | null;
+  entree_opj_nom?: string | null;
+  entree_opj_grade?: string | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: PlainteSortieAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlainteSortieAttachment {
+  id: number;
+  plainte_sortie_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlainteEntreeInput {
+  type: PlainteEntreeType;
+  date_plainte: string;
+  numero_st?: string | null;
+  opj_personnel_id?: number | null;
+  enqueteur_personnel_id?: number | null;
+  partie_civile?: string | null;
+  mise_en_cause?: string | null;
+  adresse_pc?: string | null;
+  infraction?: string | null;
+  prejudice?: string | null;
+  lieu_infraction?: string | null;
+  heure_infraction?: string | null;
+  observation?: string | null;
+}
+
+export interface PlainteSortieInput {
+  plainte_entree_id: number;
+  nature: PlainteSortieNature;
+  date_sortie: string;
+  numero_ttr: string;
+  nom_substitut: string;
+  date_deferrement?: string | null;
+  observation?: string | null;
+}

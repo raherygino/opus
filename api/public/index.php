@@ -31,6 +31,10 @@ use App\Controllers\MaterielRoulantAttachmentController;
 use App\Controllers\MainCouranteController;
 use App\Controllers\MainCouranteAttachmentController;
 use App\Controllers\MainCouranteCategorieController;
+use App\Controllers\PlainteEntreeController;
+use App\Controllers\PlainteEntreeAttachmentController;
+use App\Controllers\PlainteSortieController;
+use App\Controllers\PlainteSortieAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -290,6 +294,37 @@ $router->get('/api/main-courante-categories',          [MainCouranteCategorieCon
 $router->post('/api/main-courante-categories',         [MainCouranteCategorieController::class, 'store']);
 $router->put('/api/main-courante-categories/{id}',    [MainCouranteCategorieController::class, 'update']);
 $router->delete('/api/main-courante-categories/{id}', [MainCouranteCategorieController::class, 'destroy']);
+
+// ========================
+// Plainte ENTRÉE (Police Judiciaire — incoming complaints)
+// ========================
+$router->get('/api/plaintes-entree',                          [PlainteEntreeController::class, 'index']);
+$router->get('/api/plaintes-entree/without-sortie',           [PlainteEntreeController::class, 'withoutSortie']);
+$router->get('/api/plaintes-entree/{id}',                     [PlainteEntreeController::class, 'show']);
+$router->post('/api/plaintes-entree',                         [PlainteEntreeController::class, 'store']);
+$router->put('/api/plaintes-entree/{id}',                     [PlainteEntreeController::class, 'update']);
+$router->delete('/api/plaintes-entree/{id}',                  [PlainteEntreeController::class, 'destroy']);
+
+$router->get('/api/plaintes-entree/{id}/attachments',                       [PlainteEntreeAttachmentController::class, 'index']);
+$router->post('/api/plaintes-entree/{id}/attachments',                      [PlainteEntreeAttachmentController::class, 'store']);
+$router->put('/api/plaintes-entree/{id}/attachments/{attachId}',            [PlainteEntreeAttachmentController::class, 'update']);
+$router->delete('/api/plaintes-entree/{id}/attachments/{attachId}',         [PlainteEntreeAttachmentController::class, 'destroy']);
+$router->get('/api/plaintes-entree/{id}/attachments/{attachId}/download',   [PlainteEntreeAttachmentController::class, 'download']);
+
+// ========================
+// Plainte SORTIE (Police Judiciaire — outgoing processing of an ENTRÉE)
+// ========================
+$router->get('/api/plaintes-sortie',                          [PlainteSortieController::class, 'index']);
+$router->get('/api/plaintes-sortie/{id}',                     [PlainteSortieController::class, 'show']);
+$router->post('/api/plaintes-sortie',                         [PlainteSortieController::class, 'store']);
+$router->put('/api/plaintes-sortie/{id}',                     [PlainteSortieController::class, 'update']);
+$router->delete('/api/plaintes-sortie/{id}',                  [PlainteSortieController::class, 'destroy']);
+
+$router->get('/api/plaintes-sortie/{id}/attachments',                       [PlainteSortieAttachmentController::class, 'index']);
+$router->post('/api/plaintes-sortie/{id}/attachments',                      [PlainteSortieAttachmentController::class, 'store']);
+$router->put('/api/plaintes-sortie/{id}/attachments/{attachId}',            [PlainteSortieAttachmentController::class, 'update']);
+$router->delete('/api/plaintes-sortie/{id}/attachments/{attachId}',         [PlainteSortieAttachmentController::class, 'destroy']);
+$router->get('/api/plaintes-sortie/{id}/attachments/{attachId}/download',   [PlainteSortieAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

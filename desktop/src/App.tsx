@@ -35,6 +35,23 @@ const PjDashboard = lazy(() =>
   import("@/pages/pj-dashboard").then((m) => ({ default: m.PjDashboard })),
 );
 
+// Plainte (Police Judiciaire)
+const PlainteList = lazy(() =>
+  import("@/pages/plainte-list").then((m) => ({ default: m.PlainteList })),
+);
+const PlainteForm = lazy(() =>
+  import("@/pages/plainte-form").then((m) => ({ default: m.PlainteForm })),
+);
+const PlainteDetail = lazy(() =>
+  import("@/pages/plainte-detail").then((m) => ({ default: m.PlainteDetail })),
+);
+const PlainteSortieForm = lazy(() =>
+  import("@/pages/plainte-sortie-form").then((m) => ({ default: m.PlainteSortieForm })),
+);
+const PlainteSortieDetail = lazy(() =>
+  import("@/pages/plainte-sortie-detail").then((m) => ({ default: m.PlainteSortieDetail })),
+);
+
 // Personnel
 const PersonnelTabs = lazy(() =>
   import("@/pages/personnel-tabs").then((m) => ({ default: m.PersonnelTabs })),
@@ -657,6 +674,77 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<DashboardSkeleton />}>
                       <PjDashboard />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Plainte ENTRÉE + SORTIE */}
+              <Route
+                path="plainte"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="plainte/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="plainte/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="plainte/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="plainte/sortie/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteSortieForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="plainte/sortie/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteSortieDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="plainte/sortie/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PlainteSortieForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

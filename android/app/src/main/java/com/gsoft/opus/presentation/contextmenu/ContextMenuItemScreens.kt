@@ -251,10 +251,23 @@ object ContextMenuItemScreens {
 
     @Composable
     fun Plainte() {
-        PlaceholderScreen(
-            title = "Plainte",
-            description = "Plainte reçue",
-            icon = Icons.Outlined.Description
+        val navController = androidx.navigation.compose.rememberNavController()
+        com.gsoft.opus.presentation.plainte.PlainteScreen(
+            onEntryClick = { id ->
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.PlainteDetail.createRoute(id))
+            },
+            onSortieClick = { id ->
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.PlainteSortieDetail.createRoute(id))
+            },
+            onCreateEntree = {
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.PlainteForm.createRoute(0))
+            },
+            onCreateSortie = {
+                // For SORTIE creation, the user must first pick an existing ENTRÉE.
+                // We navigate to the SORTIE form with entreeId=0; the form will
+                // load the without-sortie list and prompt selection if needed.
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.PlainteSortieForm.createRoute(0, 0))
+            }
         )
     }
 

@@ -22,6 +22,13 @@ import com.gsoft.opus.data.api.dto.MainCouranteAttachmentDto
 import com.gsoft.opus.data.api.dto.MainCouranteCategorieDto
 import com.gsoft.opus.data.api.dto.MainCouranteCategorieRequest
 import com.gsoft.opus.data.api.dto.MainCouranteRequest
+import com.gsoft.opus.data.api.dto.PlainteEntreeDto
+import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
+import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
+import com.gsoft.opus.data.api.dto.PlainteEntreeRequest
+import com.gsoft.opus.data.api.dto.PlainteSortieDto
+import com.gsoft.opus.data.api.dto.PlainteSortieAttachmentDto
+import com.gsoft.opus.data.api.dto.PlainteSortieRequest
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
 import com.gsoft.opus.data.api.dto.TypeArmeRequest
@@ -677,5 +684,105 @@ interface ApiService {
     @DELETE("api/main-courante-categories/{id}")
     suspend fun deleteMainCouranteCategorie(
         @Path("id") id: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ─── Plainte ENTRÉE (Police Judiciaire — incoming complaints) ───
+
+    @GET("api/plaintes-entree")
+    suspend fun getPlainteEntreeList(
+        @Query("type") type: String? = null,
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<PlainteEntreeDto>>>
+
+    @GET("api/plaintes-entree/without-sortie")
+    suspend fun getPlaintesEntreeWithoutSortie(): Response<ApiResponse<List<PlainteEntreeSummaryDto>>>
+
+    @GET("api/plaintes-entree/{id}")
+    suspend fun getPlainteEntree(@Path("id") id: Int): Response<ApiResponse<PlainteEntreeDto>>
+
+    @POST("api/plaintes-entree")
+    suspend fun createPlainteEntree(@Body request: PlainteEntreeRequest): Response<ApiResponse<PlainteEntreeDto>>
+
+    @PUT("api/plaintes-entree/{id}")
+    suspend fun updatePlainteEntree(@Path("id") id: Int, @Body request: PlainteEntreeRequest): Response<ApiResponse<PlainteEntreeDto>>
+
+    @DELETE("api/plaintes-entree/{id}")
+    suspend fun deletePlainteEntree(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Plainte ENTRÉE Attachments ──────────────────────────────────
+
+    @GET("api/plaintes-entree/{id}/attachments")
+    suspend fun getPlainteEntreeAttachments(@Path("id") id: Int): Response<ApiResponse<List<PlainteEntreeAttachmentDto>>>
+
+    @Multipart
+    @POST("api/plaintes-entree/{id}/attachments")
+    suspend fun createPlainteEntreeAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<PlainteEntreeAttachmentDto>>
+
+    @PUT("api/plaintes-entree/{id}/attachments/{attachId}")
+    suspend fun updatePlainteEntreeAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<PlainteEntreeAttachmentDto>>
+
+    @DELETE("api/plaintes-entree/{id}/attachments/{attachId}")
+    suspend fun deletePlainteEntreeAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ─── Plainte SORTIE (Police Judiciaire — outgoing processing) ───
+
+    @GET("api/plaintes-sortie")
+    suspend fun getPlainteSortieList(
+        @Query("nature") nature: String? = null,
+        @Query("entree_id") entreeId: Int? = null,
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<PlainteSortieDto>>>
+
+    @GET("api/plaintes-sortie/{id}")
+    suspend fun getPlainteSortie(@Path("id") id: Int): Response<ApiResponse<PlainteSortieDto>>
+
+    @POST("api/plaintes-sortie")
+    suspend fun createPlainteSortie(@Body request: PlainteSortieRequest): Response<ApiResponse<PlainteSortieDto>>
+
+    @PUT("api/plaintes-sortie/{id}")
+    suspend fun updatePlainteSortie(@Path("id") id: Int, @Body request: PlainteSortieRequest): Response<ApiResponse<PlainteSortieDto>>
+
+    @DELETE("api/plaintes-sortie/{id}")
+    suspend fun deletePlainteSortie(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Plainte SORTIE Attachments ──────────────────────────────────
+
+    @GET("api/plaintes-sortie/{id}/attachments")
+    suspend fun getPlainteSortieAttachments(@Path("id") id: Int): Response<ApiResponse<List<PlainteSortieAttachmentDto>>>
+
+    @Multipart
+    @POST("api/plaintes-sortie/{id}/attachments")
+    suspend fun createPlainteSortieAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<PlainteSortieAttachmentDto>>
+
+    @PUT("api/plaintes-sortie/{id}/attachments/{attachId}")
+    suspend fun updatePlainteSortieAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<PlainteSortieAttachmentDto>>
+
+    @DELETE("api/plaintes-sortie/{id}/attachments/{attachId}")
+    suspend fun deletePlainteSortieAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
 }

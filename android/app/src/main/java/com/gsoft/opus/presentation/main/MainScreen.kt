@@ -110,6 +110,11 @@ import com.gsoft.opus.presentation.materielroulant.MaterielRoulantReintegrationS
 import com.gsoft.opus.presentation.maincourante.MainCouranteScreen
 import com.gsoft.opus.presentation.maincourante.MainCouranteDetailScreen
 import com.gsoft.opus.presentation.maincourante.MainCouranteFormScreen
+import com.gsoft.opus.presentation.plainte.PlainteDetailScreen
+import com.gsoft.opus.presentation.plainte.PlainteFormScreen
+import com.gsoft.opus.presentation.plainte.PlainteScreen
+import com.gsoft.opus.presentation.plainte.PlainteSortieDetailScreen
+import com.gsoft.opus.presentation.plainte.PlainteSortieFormScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -1238,6 +1243,129 @@ fun MainScreen(
                         }
                     ) {
                         MainCouranteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Plainte (Police Judiciaire) — ENTRÉE + SORTIE
+                    composable(
+                        route = MainRoutes.PlainteDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteEntreeId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PlainteForm.createRoute(id))
+                            },
+                            onCreateSortie = { entreeId ->
+                                navController.navigate(MainRoutes.PlainteSortieForm.createRoute(0, entreeId))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PlainteForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteEntreeId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PlainteSortieDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteSortieId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteSortieDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PlainteSortieForm.createRoute(id, 0))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PlainteSortieForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteSortieId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            },
+                            androidx.navigation.navArgument("plainteEntreeId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteSortieFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )

@@ -171,4 +171,20 @@ sealed class MainRoutes(val route: String) {
         fun createRoute(mainCouranteId: Int = 0, origine: String = "Secretariat") =
             "sed_main_courante_form?mainCouranteId=$mainCouranteId&origine=$origine"
     }
+
+    // Plainte (Police Judiciaire) — ENTRÉE + SORTIE
+    data object PlainteDetail : MainRoutes("pj_plainte_detail/{plainteEntreeId}") {
+        fun createRoute(plainteEntreeId: Int) = "pj_plainte_detail/$plainteEntreeId"
+    }
+    data object PlainteForm : MainRoutes("pj_plainte_form?plainteEntreeId={plainteEntreeId}") {
+        fun createRoute(plainteEntreeId: Int = 0) =
+            "pj_plainte_form?plainteEntreeId=$plainteEntreeId"
+    }
+    data object PlainteSortieDetail : MainRoutes("pj_plainte_sortie_detail/{plainteSortieId}") {
+        fun createRoute(plainteSortieId: Int) = "pj_plainte_sortie_detail/$plainteSortieId"
+    }
+    data object PlainteSortieForm : MainRoutes("pj_plainte_sortie_form?plainteSortieId={plainteSortieId}&plainteEntreeId={plainteEntreeId}") {
+        fun createRoute(plainteSortieId: Int = 0, plainteEntreeId: Int = 0) =
+            "pj_plainte_sortie_form?plainteSortieId=$plainteSortieId&plainteEntreeId=$plainteEntreeId"
+    }
 }
