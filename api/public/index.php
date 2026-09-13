@@ -26,6 +26,7 @@ use App\Controllers\ArmeController;
 use App\Controllers\TypeArmeController;
 use App\Controllers\TypeMaterielController;
 use App\Controllers\AffectationMaterielController;
+use App\Controllers\MaterielRoulantController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -244,6 +245,16 @@ $router->post('/api/affectations-materiels',                   [AffectationMater
 $router->put('/api/affectations-materiels/{id}',               [AffectationMaterielController::class, 'update']);
 $router->post('/api/affectations-materiels/{id}/reintegration', [AffectationMaterielController::class, 'reintegrate']);
 $router->delete('/api/affectations-materiels/{id}',            [AffectationMaterielController::class, 'destroy']);
+
+// ========================
+// Matériel Roulant Routes (vehicle perception & reintegration — VHL / Moto)
+// ========================
+$router->get('/api/materiels-roulants',                     [MaterielRoulantController::class, 'index']);
+$router->get('/api/materiels-roulants/{id}',                [MaterielRoulantController::class, 'show']);
+$router->post('/api/materiels-roulants',                    [MaterielRoulantController::class, 'store']);
+$router->put('/api/materiels-roulants/{id}',                [MaterielRoulantController::class, 'update']);
+$router->post('/api/materiels-roulants/{id}/reintegration', [MaterielRoulantController::class, 'reintegrate']);
+$router->delete('/api/materiels-roulants/{id}',             [MaterielRoulantController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

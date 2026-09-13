@@ -147,4 +147,16 @@ sealed class MainRoutes(val route: String) {
     data object MaterielReintegration : MainRoutes("sed_materiel_reintegration/{affectationId}") {
         fun createRoute(affectationId: Int) = "sed_materiel_reintegration/$affectationId"
     }
+
+    // Matériel roulant management (vehicle perception & reintegration — VHL / Moto)
+    data object MaterielRoulant : MainRoutes("sed_materiel_roulant")
+    data object MaterielRoulantDetail : MainRoutes("sed_materiel_roulant_detail/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_roulant_detail/$affectationId"
+    }
+    data object MaterielRoulantForm : MainRoutes("sed_materiel_roulant_form?affectationId={affectationId}") {
+        fun createRoute(affectationId: Int = 0) = "sed_materiel_roulant_form?affectationId=$affectationId"
+    }
+    data object MaterielRoulantReintegration : MainRoutes("sed_materiel_roulant_reintegration/{affectationId}") {
+        fun createRoute(affectationId: Int) = "sed_materiel_roulant_reintegration/$affectationId"
+    }
 }

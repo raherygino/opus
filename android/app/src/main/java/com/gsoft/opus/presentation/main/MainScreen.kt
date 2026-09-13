@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.LocalPolice
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Message
@@ -102,6 +103,10 @@ import com.gsoft.opus.presentation.materiel.MaterielScreen
 import com.gsoft.opus.presentation.materiel.MaterielDetailScreen
 import com.gsoft.opus.presentation.materiel.MaterielFormScreen
 import com.gsoft.opus.presentation.materiel.MaterielReintegrationScreen
+import com.gsoft.opus.presentation.materielroulant.MaterielRoulantScreen
+import com.gsoft.opus.presentation.materielroulant.MaterielRoulantDetailScreen
+import com.gsoft.opus.presentation.materielroulant.MaterielRoulantFormScreen
+import com.gsoft.opus.presentation.materielroulant.MaterielRoulantReintegrationScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -213,6 +218,7 @@ fun MainScreen(
             "sed_armement" to MainRoutes.Armement.route,
             "sed_arme" to MainRoutes.Arme.route,
             "sed_materiels" to MainRoutes.Materiels.route,
+            "sed_materiel_roulant" to MainRoutes.MaterielRoulant.route,
             "sed_situation_gav" to MainRoutes.SituationGav.route,
             "sed_main_courante_poste" to MainRoutes.MainCourantePoste.route,
             "sed_renseignement" to MainRoutes.RenseignementSed.route,
@@ -558,6 +564,19 @@ fun MainScreen(
                             },
                             onReintegrate = { id ->
                                 navController.navigate(MainRoutes.MaterielReintegration.createRoute(id))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.MaterielRoulant.route) {
+                        MaterielRoulantScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.MaterielRoulantDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.MaterielRoulantForm.createRoute(0))
+                            },
+                            onReintegrate = { id ->
+                                navController.navigate(MainRoutes.MaterielRoulantReintegration.createRoute(id))
                             }
                         )
                     }
@@ -1088,6 +1107,53 @@ fun MainScreen(
                         )
                     }
 
+                    // Matériel roulant management (vehicle perception & reintegration)
+                    composable(
+                        route = MainRoutes.MaterielRoulantDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("affectationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) {
+                        MaterielRoulantDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.MaterielRoulantForm.createRoute(id))
+                            },
+                            onReintegrate = { id ->
+                                navController.navigate(MainRoutes.MaterielRoulantReintegration.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MaterielRoulantForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("affectationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        )
+                    ) {
+                        MaterielRoulantFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MaterielRoulantReintegration.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("affectationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) {
+                        MaterielRoulantReintegrationScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
                         SignaturePairingScreen(
@@ -1450,6 +1516,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
             ContextMenuItem(id = "sed_armement", title = "Armement", icon = Icons.Outlined.Security, module = "sedentaire_poste_armement"),
             ContextMenuItem(id = "sed_arme", title = "Armes", icon = Icons.Outlined.GpsFixed, module = "sedentaire_poste_arme"),
             ContextMenuItem(id = "sed_materiels", title = "Matériels", icon = Icons.Outlined.Inventory, module = "sedentaire_poste_materiels"),
+            ContextMenuItem(id = "sed_materiel_roulant", title = "Matériel roulant", icon = Icons.Outlined.DirectionsCar, module = "sedentaire_poste_materiel_roulant"),
             ContextMenuItem(id = "sed_situation_gav", title = "Situation GAV", icon = Icons.Outlined.ViewColumn, module = "sedentaire_poste_situation_gav"),
             ContextMenuItem(id = "sed_main_courante_poste", title = "Main courante", icon = Icons.Outlined.NoteAlt, module = "sedentaire_poste_main_courante"),
             ContextMenuItem(id = "sed_renseignement", title = "Envoi de renseignement", icon = Icons.Outlined.Message, module = "sedentaire_poste_renseignement"),

@@ -417,6 +417,47 @@ export interface AffectationMateriel {
 }
 
 // ========================
+// Matériel Roulant (vehicle perception & reintegration — VHL / Moto)
+// ========================
+
+export type MaterielRoulantType = "VHL" | "Moto";
+export type MaterielRoulantStatut = "En service" | "Réintégré";
+
+export interface MaterielRoulant {
+  id: number;
+  date_perception: string;
+  heure_perception: string;
+  type_materiel: MaterielRoulantType;
+  numero_immatriculation: string | null;
+  description_vehicule: string | null;
+  agent_conducteur_personnel_id: number | null;
+  agent_conducteur_im: string | null;
+  agent_conducteur_grade: string | null;
+  agent_conducteur_nom: string | null;
+  chef_de_bord_personnel_id: number | null;
+  chef_de_bord_im: string | null;
+  chef_de_bord_grade: string | null;
+  chef_de_bord_nom: string | null;
+  kilometrage_depart: string | null;
+  niveau_carburant_depart: string | null;
+  heure_reintegration: string | null;
+  date_reintegration: string | null;
+  kilometrage_retour: string | null;
+  niveau_carburant_retour: string | null;
+  observations_techniques: string | null;
+  defaillances: string | null;
+  agent_verifie: number;
+  agent_verifie_at: string | null;
+  signature_svg: string | null;
+  statut: MaterielRoulantStatut;
+  created_by: number | null;
+  agent_conducteur_personnel_im?: string | null;
+  chef_de_bord_personnel_im?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
 // Mouvement Types
 // ========================
 export interface Mouvement {

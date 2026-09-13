@@ -14,6 +14,7 @@ import com.gsoft.opus.data.repository.PersonnelRepositoryImpl
 import com.gsoft.opus.data.repository.QrAuthRepositoryImpl
 import com.gsoft.opus.data.repository.SettingsRepositoryImpl
 import com.gsoft.opus.data.repository.MaterielRepositoryImpl
+import com.gsoft.opus.data.repository.MaterielRoulantRepositoryImpl
 import com.gsoft.opus.domain.repository.ArmementRepository
 import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.AuthRepository
@@ -28,6 +29,7 @@ import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.QrAuthRepository
 import com.gsoft.opus.domain.repository.SettingsRepository
 import com.gsoft.opus.domain.repository.MaterielRepository
+import com.gsoft.opus.domain.repository.MaterielRoulantRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -93,4 +95,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMaterielRepository(impl: MaterielRepositoryImpl): MaterielRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMaterielRoulantRepository(impl: MaterielRoulantRepositoryImpl): MaterielRoulantRepository
 }

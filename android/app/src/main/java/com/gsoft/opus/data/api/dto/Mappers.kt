@@ -9,6 +9,7 @@ import com.gsoft.opus.domain.model.AuthResult
 import com.gsoft.opus.domain.model.AffectationMateriel
 import com.gsoft.opus.domain.model.AffectationMaterielLigne
 import com.gsoft.opus.domain.model.TypeMateriel
+import com.gsoft.opus.domain.model.MaterielRoulant
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -410,6 +411,38 @@ fun AffectationMaterielDto.toDomain(): AffectationMateriel = AffectationMateriel
     signatureSvg = signatureSvg,
     createdBy = createdBy,
     lignes = lignes?.map { it.toDomain() } ?: emptyList(),
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun MaterielRoulantDto.toDomain(): MaterielRoulant = MaterielRoulant(
+    id = id,
+    datePerception = datePerception,
+    heurePerception = heurePerception,
+    typeMateriel = typeMateriel,
+    numeroImmatriculation = numeroImmatriculation,
+    descriptionVehicule = descriptionVehicule,
+    agentConducteurPersonnelId = agentConducteurPersonnelId,
+    agentConducteurIm = agentConducteurIm,
+    agentConducteurGrade = agentConducteurGrade,
+    agentConducteurNom = agentConducteurNom,
+    chefDeBordPersonnelId = chefDeBordPersonnelId,
+    chefDeBordIm = chefDeBordIm,
+    chefDeBordGrade = chefDeBordGrade,
+    chefDeBordNom = chefDeBordNom,
+    kilometrageDepart = kilometrageDepart,
+    niveauCarburantDepart = niveauCarburantDepart,
+    heureReintegration = heureReintegration,
+    dateReintegration = dateReintegration,
+    kilometrageRetour = kilometrageRetour,
+    niveauCarburantRetour = niveauCarburantRetour,
+    observationsTechniques = observationsTechniques,
+    defaillances = defaillances,
+    agentVerifie = agentVerifie == 1,
+    agentVerifieAt = agentVerifieAt,
+    signatureSvg = signatureSvg,
+    statut = statut,
+    createdBy = createdBy,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

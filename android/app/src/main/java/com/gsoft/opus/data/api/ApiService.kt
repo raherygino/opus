@@ -13,6 +13,9 @@ import com.gsoft.opus.data.api.dto.AffectationMaterielRequest
 import com.gsoft.opus.data.api.dto.ReintegrationMaterielRequest
 import com.gsoft.opus.data.api.dto.TypeMaterielDto
 import com.gsoft.opus.data.api.dto.TypeMaterielRequest
+import com.gsoft.opus.data.api.dto.MaterielRoulantDto
+import com.gsoft.opus.data.api.dto.MaterielRoulantRequest
+import com.gsoft.opus.data.api.dto.ReintegrationMaterielRoulantRequest
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
 import com.gsoft.opus.data.api.dto.TypeArmeRequest
@@ -547,4 +550,28 @@ interface ApiService {
 
     @DELETE("api/affectations-materiels/{id}")
     suspend fun deleteAffectationMateriel(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── MaterielRoulant (vehicle perception & reintegration — VHL / Moto) ───
+
+    @GET("api/materiels-roulants")
+    suspend fun getMaterielRoulantList(
+        @Query("search") search: String? = null,
+        @Query("statut") statut: String? = null,
+        @Query("type_materiel") typeMateriel: String? = null
+    ): Response<ApiResponse<List<MaterielRoulantDto>>>
+
+    @GET("api/materiels-roulants/{id}")
+    suspend fun getMaterielRoulant(@Path("id") id: Int): Response<ApiResponse<MaterielRoulantDto>>
+
+    @POST("api/materiels-roulants")
+    suspend fun createMaterielRoulant(@Body request: MaterielRoulantRequest): Response<ApiResponse<MaterielRoulantDto>>
+
+    @PUT("api/materiels-roulants/{id}")
+    suspend fun updateMaterielRoulant(@Path("id") id: Int, @Body request: MaterielRoulantRequest): Response<ApiResponse<MaterielRoulantDto>>
+
+    @POST("api/materiels-roulants/{id}/reintegration")
+    suspend fun reintegrateMaterielRoulant(@Path("id") id: Int, @Body request: ReintegrationMaterielRoulantRequest): Response<ApiResponse<MaterielRoulantDto>>
+
+    @DELETE("api/materiels-roulants/{id}")
+    suspend fun deleteMaterielRoulant(@Path("id") id: Int): Response<ApiResponse<Nothing>>
 }

@@ -112,6 +112,17 @@ const MaterielDetail = lazy(() =>
   import("@/pages/materiel-detail").then((m) => ({ default: m.MaterielDetail })),
 );
 
+// Matériel Roulant (Sédentaire > Poste — vehicle perception & reintegration)
+const MaterielRoulantManagement = lazy(() =>
+  import("@/pages/materiel-roulant-management").then((m) => ({ default: m.MaterielRoulantManagement })),
+);
+const MaterielRoulantForm = lazy(() =>
+  import("@/pages/materiel-roulant-form").then((m) => ({ default: m.MaterielRoulantForm })),
+);
+const MaterielRoulantDetail = lazy(() =>
+  import("@/pages/materiel-roulant-detail").then((m) => ({ default: m.MaterielRoulantDetail })),
+);
+
 // Profile
 const ProfilePage = lazy(() =>
   import("@/pages/profile").then((m) => ({ default: m.ProfilePage })),
@@ -477,6 +488,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <MaterielForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiel-roulant"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MaterielRoulantManagement />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiel-roulant/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MaterielRoulantForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiel-roulant/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MaterielRoulantDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/materiel-roulant/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <MaterielRoulantForm />
                     </Suspense>
                   </ErrorBoundary>
                 }
