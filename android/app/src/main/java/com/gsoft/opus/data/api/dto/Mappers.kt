@@ -38,6 +38,8 @@ import com.gsoft.opus.domain.model.PlainteEntreeAttachment
 import com.gsoft.opus.domain.model.PlainteEntreeSummary
 import com.gsoft.opus.domain.model.PlainteSortie
 import com.gsoft.opus.domain.model.PlainteSortieAttachment
+import com.gsoft.opus.domain.model.Convocation
+import com.gsoft.opus.domain.model.ConvocationAttachment
 import com.gsoft.opus.domain.model.User
 
 fun UserDto.toDomain(): User = User(
@@ -584,6 +586,41 @@ fun PlainteSortieDto.toDomain(): PlainteSortie = PlainteSortie(
 fun PlainteSortieAttachmentDto.toDomain(): PlainteSortieAttachment = PlainteSortieAttachment(
     id = id,
     plainteSortieId = plainteSortieId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+// ========================
+// Convocation mappers
+// ========================
+
+fun ConvocationDto.toDomain(): Convocation = Convocation(
+    id = id,
+    type = type,
+    dateConvocation = dateConvocation,
+    numero = numero,
+    nom = nom,
+    adresse = adresse,
+    infraction = infraction,
+    personneAccuseRecu = personneAccuseRecu,
+    numeroDossier = numeroDossier,
+    observation = observation,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    attachments = attachments?.map { it.toDomain() } ?: emptyList()
+)
+
+fun ConvocationAttachmentDto.toDomain(): ConvocationAttachment = ConvocationAttachment(
+    id = id,
+    convocationId = convocationId,
     title = title,
     filename = filename,
     originalFilename = originalFilename,

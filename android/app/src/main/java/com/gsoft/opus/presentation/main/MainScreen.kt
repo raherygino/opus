@@ -115,6 +115,8 @@ import com.gsoft.opus.presentation.plainte.PlainteFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteScreen
 import com.gsoft.opus.presentation.plainte.PlainteSortieDetailScreen
 import com.gsoft.opus.presentation.plainte.PlainteSortieFormScreen
+import com.gsoft.opus.presentation.convocation.ConvocationDetailScreen
+import com.gsoft.opus.presentation.convocation.ConvocationFormScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -1366,6 +1368,65 @@ fun MainScreen(
                         }
                     ) {
                         PlainteSortieFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Convocation (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.ConvocationDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("convocationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ConvocationDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ConvocationForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ConvocationForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("convocationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ConvocationFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )

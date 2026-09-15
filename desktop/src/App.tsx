@@ -52,6 +52,17 @@ const PlainteSortieDetail = lazy(() =>
   import("@/pages/plainte-sortie-detail").then((m) => ({ default: m.PlainteSortieDetail })),
 );
 
+// Convocation (Police Judiciaire)
+const ConvocationList = lazy(() =>
+  import("@/pages/convocation-list").then((m) => ({ default: m.ConvocationList })),
+);
+const ConvocationForm = lazy(() =>
+  import("@/pages/convocation-form").then((m) => ({ default: m.ConvocationForm })),
+);
+const ConvocationDetail = lazy(() =>
+  import("@/pages/convocation-detail").then((m) => ({ default: m.ConvocationDetail })),
+);
+
 // Personnel
 const PersonnelTabs = lazy(() =>
   import("@/pages/personnel-tabs").then((m) => ({ default: m.PersonnelTabs })),
@@ -745,6 +756,47 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<TableSkeleton />}>
                       <PlainteSortieForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Convocation */}
+              <Route
+                path="convocation"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ConvocationList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="convocation/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ConvocationForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="convocation/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ConvocationDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="convocation/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ConvocationForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

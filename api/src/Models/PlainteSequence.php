@@ -18,6 +18,8 @@ use PDO;
  *   PD     → N°{seq}/TRIMO/PD/{YY}
  *   RP     → N°{seq}/TRIMO/RP/{YY}
  *   SORTIE → N°{seq}/MSP/DGPN/DGA/DRSP-1/CSP/A-TRIMO/{YY}
+ *   COV_ST → N°{seq}/MSP/SG/DGPN/DRSP.1/CSP/A-TRIMO/ST/MC/COV/{YY}
+ *   COV_PD → N°{seq}/MSP/SG/DGPN/DRSP.1/CSP/A-TRIMO/PD/MC/COV/{YY}
  *
  * {YY} is the 2-digit year (e.g. 26 for 2026) and {seq} is zero-padded to
  * 3 digits (e.g. 001).
@@ -30,6 +32,8 @@ class PlainteSequence
         'PD'     => 'N°{seq}/TRIMO/PD/{yy}',
         'RP'     => 'N°{seq}/TRIMO/RP/{yy}',
         'SORTIE' => 'N°{seq}/MSP/DGPN/DGA/DRSP-1/CSP/A-TRIMO/{yy}',
+        'COV_ST' => 'N°{seq}/MSP/SG/DGPN/DRSP.1/CSP/A-TRIMO/ST/MC/COV/{yy}',
+        'COV_PD' => 'N°{seq}/MSP/SG/DGPN/DRSP.1/CSP/A-TRIMO/PD/MC/COV/{yy}',
     ];
 
     /** ENTRÉE type → sequence type_key map. */
@@ -37,6 +41,12 @@ class PlainteSequence
         'ST_PARQUET'      => 'ST',
         'PLAINTE_DIRECTE' => 'PD',
         'RAPPORT_POLICE'  => 'RP',
+    ];
+
+    /** CONVOCATION type → sequence type_key map. */
+    public const CONVOCATION_TYPE_TO_KEY = [
+        'ST_PARQUET'      => 'COV_ST',
+        'PLAINTE_DIRECTE' => 'COV_PD',
     ];
 
     /**

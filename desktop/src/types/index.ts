@@ -906,3 +906,53 @@ export interface PlainteSortieInput {
   date_deferrement?: string | null;
   observation?: string | null;
 }
+
+// ========================
+// Convocation (Police Judiciaire)
+// ========================
+
+export type ConvocationType = "ST_PARQUET" | "PLAINTE_DIRECTE";
+
+export interface Convocation {
+  id: number;
+  type: ConvocationType;
+  date_convocation: string;
+  numero: string;
+  nom: string;
+  adresse: string | null;
+  infraction: string | null;
+  personne_accuse_recu: string | null;
+  numero_dossier: string | null;
+  observation: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: ConvocationAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConvocationAttachment {
+  id: number;
+  convocation_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConvocationInput {
+  type: ConvocationType;
+  date_convocation: string;
+  numero?: string | null;
+  nom: string;
+  adresse?: string | null;
+  infraction?: string | null;
+  personne_accuse_recu?: string | null;
+  numero_dossier?: string | null;
+  observation?: string | null;
+}

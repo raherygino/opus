@@ -35,6 +35,8 @@ use App\Controllers\PlainteEntreeController;
 use App\Controllers\PlainteEntreeAttachmentController;
 use App\Controllers\PlainteSortieController;
 use App\Controllers\PlainteSortieAttachmentController;
+use App\Controllers\ConvocationController;
+use App\Controllers\ConvocationAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -327,6 +329,22 @@ $router->post('/api/plaintes-sortie/{id}/attachments',                      [Pla
 $router->put('/api/plaintes-sortie/{id}/attachments/{attachId}',            [PlainteSortieAttachmentController::class, 'update']);
 $router->delete('/api/plaintes-sortie/{id}/attachments/{attachId}',         [PlainteSortieAttachmentController::class, 'destroy']);
 $router->get('/api/plaintes-sortie/{id}/attachments/{attachId}/download',   [PlainteSortieAttachmentController::class, 'download']);
+
+// ========================
+// Convocation Routes (Police Judiciaire — Convocation)
+// ========================
+$router->get('/api/convocations',                          [ConvocationController::class, 'index']);
+$router->get('/api/convocations/next-number',              [ConvocationController::class, 'nextNumber']);
+$router->get('/api/convocations/{id}',                     [ConvocationController::class, 'show']);
+$router->post('/api/convocations',                         [ConvocationController::class, 'store']);
+$router->put('/api/convocations/{id}',                     [ConvocationController::class, 'update']);
+$router->delete('/api/convocations/{id}',                  [ConvocationController::class, 'destroy']);
+
+$router->get('/api/convocations/{id}/attachments',                       [ConvocationAttachmentController::class, 'index']);
+$router->post('/api/convocations/{id}/attachments',                      [ConvocationAttachmentController::class, 'store']);
+$router->put('/api/convocations/{id}/attachments/{attachId}',            [ConvocationAttachmentController::class, 'update']);
+$router->delete('/api/convocations/{id}/attachments/{attachId}',         [ConvocationAttachmentController::class, 'destroy']);
+$router->get('/api/convocations/{id}/attachments/{attachId}/download',   [ConvocationAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

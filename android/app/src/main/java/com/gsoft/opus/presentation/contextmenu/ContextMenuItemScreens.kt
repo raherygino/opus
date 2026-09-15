@@ -291,10 +291,14 @@ object ContextMenuItemScreens {
 
     @Composable
     fun Convocation() {
-        PlaceholderScreen(
-            title = "Convocation",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.Email
+        val navController = androidx.navigation.compose.rememberNavController()
+        com.gsoft.opus.presentation.convocation.ConvocationScreen(
+            onItemClick = { id ->
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.ConvocationDetail.createRoute(id))
+            },
+            onCreate = {
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.ConvocationForm.createRoute(0))
+            }
         )
     }
 

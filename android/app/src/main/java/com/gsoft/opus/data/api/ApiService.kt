@@ -30,6 +30,9 @@ import com.gsoft.opus.data.api.dto.PlainteNextNumberDto
 import com.gsoft.opus.data.api.dto.PlainteSortieDto
 import com.gsoft.opus.data.api.dto.PlainteSortieAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteSortieRequest
+import com.gsoft.opus.data.api.dto.ConvocationDto
+import com.gsoft.opus.data.api.dto.ConvocationRequest
+import com.gsoft.opus.data.api.dto.ConvocationAttachmentDto
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
 import com.gsoft.opus.data.api.dto.TypeArmeRequest
@@ -789,6 +792,56 @@ interface ApiService {
 
     @DELETE("api/plaintes-sortie/{id}/attachments/{attachId}")
     suspend fun deletePlainteSortieAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Convocation (Police Judiciaire — Convocation)
+    // ========================
+    @GET("api/convocations")
+    suspend fun getConvocationList(
+        @Query("type") type: String? = null,
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<ConvocationDto>>>
+
+    @GET("api/convocations/next-number")
+    suspend fun getConvocationNextNumber(@Query("type") type: String): Response<ApiResponse<PlainteNextNumberDto>>
+
+    @GET("api/convocations/{id}")
+    suspend fun getConvocation(@Path("id") id: Int): Response<ApiResponse<ConvocationDto>>
+
+    @POST("api/convocations")
+    suspend fun createConvocation(@Body request: ConvocationRequest): Response<ApiResponse<ConvocationDto>>
+
+    @PUT("api/convocations/{id}")
+    suspend fun updateConvocation(@Path("id") id: Int, @Body request: ConvocationRequest): Response<ApiResponse<ConvocationDto>>
+
+    @DELETE("api/convocations/{id}")
+    suspend fun deleteConvocation(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/convocations/{id}/attachments")
+    suspend fun getConvocationAttachments(@Path("id") id: Int): Response<ApiResponse<List<ConvocationAttachmentDto>>>
+
+    @Multipart
+    @POST("api/convocations/{id}/attachments")
+    suspend fun createConvocationAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ConvocationAttachmentDto>>
+
+    @PUT("api/convocations/{id}/attachments/{attachId}")
+    suspend fun updateConvocationAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<ConvocationAttachmentDto>>
+
+    @DELETE("api/convocations/{id}/attachments/{attachId}")
+    suspend fun deleteConvocationAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
