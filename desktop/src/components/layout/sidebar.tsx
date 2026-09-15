@@ -56,6 +56,7 @@ import {
   BellRing,
   Smartphone,
   Crosshair,
+  Search as SearchIcon,
 } from "lucide-react";
 
 interface NavItem {
@@ -104,6 +105,7 @@ const DIVISION_MODULES: Record<string, string[]> = {
     "pj_requisition",
     "pj_personne_recherchee",
     "pj_objets",
+    "pj_perquisition",
     "pj_deferrement",
     "pj_renseignement",
   ],
@@ -229,6 +231,7 @@ function buildNavItems(user: User): NavItem[] {
       { icon: FileUp, label: "Réquisition", path: "/pj/requisition", module: "pj_requisition" },
       { icon: UserRoundSearch, label: "Personne recherchée", path: "/pj/personne-recherchee", module: "pj_personne_recherchee" },
       { icon: Box, label: "Objets", path: "/pj/objets", module: "pj_objets" },
+      { icon: SearchIcon, label: "Perquisition", path: "/pj/perquisition", module: "pj_perquisition" },
       { icon: Gavel, label: "Registre de déferrement", path: "/pj/registre-deferrement", module: "pj_deferrement" },
       { icon: MessageCircleMore, label: "Renseignement", path: "/pj/renseignement", module: "pj_renseignement" },
     ].filter((c) => hasVisibleNavItem(user, c));

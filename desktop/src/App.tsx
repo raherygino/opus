@@ -63,6 +63,89 @@ const ConvocationDetail = lazy(() =>
   import("@/pages/convocation-detail").then((m) => ({ default: m.ConvocationDetail })),
 );
 
+// Garde à Vue (Police Judiciaire)
+const GardeAVueList = lazy(() =>
+  import("@/pages/garde-a-vue-list").then((m) => ({ default: m.GardeAVueList })),
+);
+const GardeAVueForm = lazy(() =>
+  import("@/pages/garde-a-vue-form").then((m) => ({ default: m.GardeAVueForm })),
+);
+const GardeAVueDetail = lazy(() =>
+  import("@/pages/garde-a-vue-detail").then((m) => ({ default: m.GardeAVueDetail })),
+);
+
+// Requisition (Police Judiciaire)
+const RequisitionList = lazy(() =>
+  import("@/pages/requisition-list").then((m) => ({ default: m.RequisitionList })),
+);
+const RequisitionForm = lazy(() =>
+  import("@/pages/requisition-form").then((m) => ({ default: m.RequisitionForm })),
+);
+const RequisitionDetail = lazy(() =>
+  import("@/pages/requisition-detail").then((m) => ({ default: m.RequisitionDetail })),
+);
+
+// Personne Recherchée (Police Judiciaire)
+const PersonneRechercheeList = lazy(() =>
+  import("@/pages/personne-recherchee-list").then((m) => ({ default: m.PersonneRechercheeList })),
+);
+const PersonneRechercheeForm = lazy(() =>
+  import("@/pages/personne-recherchee-form").then((m) => ({ default: m.PersonneRechercheeForm })),
+);
+const PersonneRechercheeDetail = lazy(() =>
+  import("@/pages/personne-recherchee-detail").then((m) => ({ default: m.PersonneRechercheeDetail })),
+);
+
+// Objet (Police Judiciaire — OBJET SAISI / OBJET TROUVÉ tabs)
+const ObjetList = lazy(() =>
+  import("@/pages/objet-list").then((m) => ({ default: m.ObjetList })),
+);
+const ObjetSaisiForm = lazy(() =>
+  import("@/pages/objet-saisi-form").then((m) => ({ default: m.ObjetSaisiForm })),
+);
+const ObjetSaisiDetail = lazy(() =>
+  import("@/pages/objet-saisi-detail").then((m) => ({ default: m.ObjetSaisiDetail })),
+);
+const ObjetTrouveForm = lazy(() =>
+  import("@/pages/objet-trouve-form").then((m) => ({ default: m.ObjetTrouveForm })),
+);
+const ObjetTrouveDetail = lazy(() =>
+  import("@/pages/objet-trouve-detail").then((m) => ({ default: m.ObjetTrouveDetail })),
+);
+
+// Perquisition (Police Judiciaire)
+const PerquisitionList = lazy(() =>
+  import("@/pages/perquisition-list").then((m) => ({ default: m.PerquisitionList })),
+);
+const PerquisitionForm = lazy(() =>
+  import("@/pages/perquisition-form").then((m) => ({ default: m.PerquisitionForm })),
+);
+const PerquisitionDetail = lazy(() =>
+  import("@/pages/perquisition-detail").then((m) => ({ default: m.PerquisitionDetail })),
+);
+
+// Renseignement (Police Judiciaire)
+const RenseignementPjList = lazy(() =>
+  import("@/pages/renseignement-pj-list").then((m) => ({ default: m.RenseignementPjList })),
+);
+const RenseignementPjForm = lazy(() =>
+  import("@/pages/renseignement-pj-form").then((m) => ({ default: m.RenseignementPjForm })),
+);
+const RenseignementPjDetail = lazy(() =>
+  import("@/pages/renseignement-pj-detail").then((m) => ({ default: m.RenseignementPjDetail })),
+);
+
+// Mandat (Police Judiciaire)
+const MandatList = lazy(() =>
+  import("@/pages/mandat-list").then((m) => ({ default: m.MandatList })),
+);
+const MandatForm = lazy(() =>
+  import("@/pages/mandat-form").then((m) => ({ default: m.MandatForm })),
+);
+const MandatDetail = lazy(() =>
+  import("@/pages/mandat-detail").then((m) => ({ default: m.MandatDetail })),
+);
+
 // Personnel
 const PersonnelTabs = lazy(() =>
   import("@/pages/personnel-tabs").then((m) => ({ default: m.PersonnelTabs })),
@@ -797,6 +880,323 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<TableSkeleton />}>
                       <ConvocationForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Garde à Vue */}
+              <Route
+                path="gav"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <GardeAVueList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="gav/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <GardeAVueForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="gav/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <GardeAVueDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="gav/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <GardeAVueForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Requisition */}
+              <Route
+                path="requisition"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RequisitionList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="requisition/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RequisitionForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="requisition/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RequisitionDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="requisition/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RequisitionForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Personne Recherchée */}
+              <Route
+                path="personne-recherchee"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PersonneRechercheeList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="personne-recherchee/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PersonneRechercheeForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="personne-recherchee/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PersonneRechercheeDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="personne-recherchee/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PersonneRechercheeForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Objets (tabbed: saisi / trouvé) */}
+              <Route
+                path="objets"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="objets/saisi/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetSaisiForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="objets/saisi/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetSaisiDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="objets/saisi/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetSaisiForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="objets/trouve/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetTrouveForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="objets/trouve/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetTrouveDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="objets/trouve/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ObjetTrouveForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Perquisition */}
+              <Route
+                path="perquisition"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PerquisitionList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="perquisition/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PerquisitionForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="perquisition/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PerquisitionDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="perquisition/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <PerquisitionForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Renseignement */}
+              <Route
+                path="renseignement"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RenseignementPjList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="renseignement/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RenseignementPjForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="renseignement/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RenseignementPjDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="renseignement/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RenseignementPjForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Mandat */}
+              <Route
+                path="mandat"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MandatList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="mandat/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MandatForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="mandat/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MandatDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="mandat/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <MandatForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

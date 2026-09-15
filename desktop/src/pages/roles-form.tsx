@@ -43,6 +43,7 @@ const MODULES = [
   { key: "pj_requisition", label: "Police Judiciaire > Réquisition" },
   { key: "pj_personne_recherchee", label: "Police Judiciaire > Personne recherchée" },
   { key: "pj_objets", label: "Police Judiciaire > Objets" },
+  { key: "pj_perquisition", label: "Police Judiciaire > Perquisition" },
   { key: "pj_deferrement", label: "Police Judiciaire > Registre de déferrement" },
   { key: "pj_renseignement", label: "Police Judiciaire > Renseignement" },
   { key: "cartographie", label: "Cartographie" },

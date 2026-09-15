@@ -34,6 +34,9 @@ class PlainteSequence
         'SORTIE' => 'N°{seq}/MSP/DGPN/DGA/DRSP-1/CSP/A-TRIMO/{yy}',
         'COV_ST' => 'N°{seq}/MSP/SG/DGPN/DRSP.1/CSP/A-TRIMO/ST/MC/COV/{yy}',
         'COV_PD' => 'N°{seq}/MSP/SG/DGPN/DRSP.1/CSP/A-TRIMO/PD/MC/COV/{yy}',
+        'REQ'    => 'N°{seq}/MSP/SG/DGPN/DRSP.1/REQ/CSP/A-TRIMO/{yy}',
+        'PEQ'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/PEQ/CSP/TRIMO/{yy}',
+        'MAN'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/MAN/CSP/TRIMO/{yy}',
     ];
 
     /** ENTRÉE type → sequence type_key map. */
@@ -48,6 +51,15 @@ class PlainteSequence
         'ST_PARQUET'      => 'COV_ST',
         'PLAINTE_DIRECTE' => 'COV_PD',
     ];
+
+    /** REQUISITION sequence type_key (single sequence for all requisition types). */
+    public const REQUISITION_KEY = 'REQ';
+
+    /** PERQUISITION sequence type_key. */
+    public const PERQUISITION_KEY = 'PEQ';
+
+    /** MANDAT sequence type_key. */
+    public const MANDAT_KEY = 'MAN';
 
     /**
      * Generate the next dossier/record number for the given type_key.

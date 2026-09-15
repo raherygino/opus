@@ -956,3 +956,388 @@ export interface ConvocationInput {
   numero_dossier?: string | null;
   observation?: string | null;
 }
+
+// ========================
+// Garde à Vue (Police Judiciaire)
+// ========================
+
+export interface GardeAVue {
+  id: number;
+  nom: string;
+  prenoms: string | null;
+  date_naissance: string | null;
+  adresse: string | null;
+  enqueteur_permance: string | null;
+  opj_gav: string | null;
+  motif: string | null;
+  etat_sante: string | null;
+  droits_notifies: string | null;
+  personne_contacter: string | null;
+  debut_gav: string | null;
+  fin_gav: string | null;
+  prolongation_gav: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: GardeAVueAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GardeAVueAttachment {
+  id: number;
+  garde_a_vue_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GardeAVueInput {
+  nom: string;
+  prenoms?: string | null;
+  date_naissance?: string | null;
+  adresse?: string | null;
+  enqueteur_permance?: string | null;
+  opj_gav?: string | null;
+  motif?: string | null;
+  etat_sante?: string | null;
+  droits_notifies?: string | null;
+  personne_contacter?: string | null;
+  debut_gav?: string | null;
+  fin_gav?: string | null;
+  prolongation_gav?: string | null;
+}
+
+// ========================
+// Requisition (Police Judiciaire)
+// ========================
+
+export interface Requisition {
+  id: number;
+  type: string;
+  date_requisition: string;
+  numero: string;
+  numero_ttr: string | null;
+  nom_substitut: string | null;
+  affaire: string;
+  numero_dossier: string | null;
+  opj: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: RequisitionAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RequisitionAttachment {
+  id: number;
+  requisition_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RequisitionInput {
+  type: string;
+  date_requisition: string;
+  numero?: string | null;
+  numero_ttr?: string | null;
+  nom_substitut?: string | null;
+  affaire: string;
+  numero_dossier?: string | null;
+  opj?: string | null;
+}
+
+// ========================
+// Personne Recherchée (Police Judiciaire)
+// ========================
+
+export interface PersonneRecherchee {
+  id: number;
+  nom: string;
+  adresse: string | null;
+  motif: string;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  photo_count: number;
+  photos?: PersonneRechercheePhoto[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PersonneRechercheePhoto {
+  id: number;
+  personne_recherchee_id: number;
+  caption: string | null;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  width: number | null;
+  height: number | null;
+  capture_source: "CAMERA" | "GALLERY" | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PersonneRechercheeInput {
+  nom: string;
+  adresse?: string | null;
+  motif: string;
+}
+
+// ========================
+// Objet (Police Judiciaire — OBJET SAISI / OBJET TROUVÉ tabs)
+// ========================
+
+export type ObjetSaisiType =
+  | "TELEPHONE"
+  | "ORDINATEUR"
+  | "VEHICULE"
+  | "DOCUMENT"
+  | "ARGENT"
+  | "ARME"
+  | "EFFETS_PERSONNELS"
+  | "AUTRE";
+
+export const OBJET_SAISI_TYPE_LABELS: Record<ObjetSaisiType, string> = {
+  TELEPHONE: "Téléphone",
+  ORDINATEUR: "Ordinateur",
+  VEHICULE: "Véhicule",
+  DOCUMENT: "Document",
+  ARGENT: "Argent",
+  ARME: "Arme",
+  EFFETS_PERSONNELS: "Effets personnels",
+  AUTRE: "Autre",
+};
+
+export type ObjetTrouveMotif = "REQUISITION" | "SUR_PERSONNE" | "PERQUISITION";
+
+export const OBJET_TROUVE_MOTIF_LABELS: Record<ObjetTrouveMotif, string> = {
+  REQUISITION: "Réquisition",
+  SUR_PERSONNE: "Sur une personne",
+  PERQUISITION: "Perquisition",
+};
+
+export interface ObjetSaisi {
+  id: number;
+  numero_dossier: string | null;
+  motif: string;
+  type_objet: ObjetSaisiType;
+  proprietaire: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: ObjetSaisiAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ObjetSaisiAttachment {
+  id: number;
+  objet_saisi_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ObjetSaisiInput {
+  numero_dossier?: string | null;
+  motif: string;
+  type_objet: ObjetSaisiType | "";
+  proprietaire?: string | null;
+}
+
+export interface ObjetTrouve {
+  id: number;
+  affaire: string;
+  motif_decouverte: ObjetTrouveMotif;
+  restitution: 0 | 1;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: ObjetTrouveAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ObjetTrouveAttachment {
+  id: number;
+  objet_trouve_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ObjetTrouveInput {
+  affaire: string;
+  motif_decouverte: ObjetTrouveMotif | "";
+  restitution: boolean;
+}
+
+// ========================
+// Perquisition (Police Judiciaire)
+// ========================
+
+export interface Perquisition {
+  id: number;
+  numero: string;
+  numero_ttr: string | null;
+  substitut: string | null;
+  affaire: string;
+  motif: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: PerquisitionAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PerquisitionAttachment {
+  id: number;
+  perquisition_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PerquisitionInput {
+  numero?: string | null;
+  numero_ttr?: string | null;
+  substitut?: string | null;
+  affaire: string;
+  motif?: string | null;
+}
+
+// ========================
+// Renseignement PJ (Police Judiciaire)
+// ========================
+
+export interface RenseignementPj {
+  id: number;
+  nature_infraction: string;
+  date_lieu_faits: string | null;
+  circonstances: string | null;
+  prejudices: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: RenseignementPjAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RenseignementPjAttachment {
+  id: number;
+  renseignement_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RenseignementPjInput {
+  nature_infraction: string;
+  date_lieu_faits?: string | null;
+  circonstances?: string | null;
+  prejudices?: string | null;
+}
+
+// ========================
+// Mandat (Police Judiciaire)
+// ========================
+
+export type MandatType = "AMENER" | "COMPARUTION" | "ARRET" | "DEPOT";
+
+export const MANDAT_TYPES: { value: MandatType; label: string }[] = [
+  { value: "AMENER", label: "Mandat d'amener" },
+  { value: "COMPARUTION", label: "Mandat de comparution" },
+  { value: "ARRET", label: "Mandat d'arrêt" },
+  { value: "DEPOT", label: "Mandat de dépôt" },
+];
+
+export function getMandatTypeLabel(type: string): string {
+  return MANDAT_TYPES.find((t) => t.value === type)?.label ?? type;
+}
+
+export interface Mandat {
+  id: number;
+  numero: string;
+  type: string;
+  autorite: string | null;
+  personne_nom: string;
+  date_lieu_naissance: string | null;
+  motif: string | null;
+  qualification_infraction: string | null;
+  opj_execution: string | null;
+  date_heure_execution: string | null;
+  lieu_execution: string | null;
+  observations: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: MandatAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MandatAttachment {
+  id: number;
+  mandat_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MandatInput {
+  numero?: string | null;
+  type: MandatType | "";
+  autorite?: string | null;
+  personne_nom: string;
+  date_lieu_naissance?: string | null;
+  motif?: string | null;
+  qualification_infraction?: string | null;
+  opj_execution?: string | null;
+  date_heure_execution?: string | null;
+  lieu_execution?: string | null;
+  observations?: string | null;
+}

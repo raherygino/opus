@@ -33,6 +33,34 @@ import com.gsoft.opus.data.api.dto.PlainteSortieRequest
 import com.gsoft.opus.data.api.dto.ConvocationDto
 import com.gsoft.opus.data.api.dto.ConvocationRequest
 import com.gsoft.opus.data.api.dto.ConvocationAttachmentDto
+import com.gsoft.opus.data.api.dto.GardeAVueDto
+import com.gsoft.opus.data.api.dto.GardeAVueRequest
+import com.gsoft.opus.data.api.dto.GardeAVueAttachmentDto
+import com.gsoft.opus.data.api.dto.RequisitionDto
+import com.gsoft.opus.data.api.dto.RequisitionRequest
+import com.gsoft.opus.data.api.dto.RequisitionAttachmentDto
+import com.gsoft.opus.data.api.dto.RequisitionNextNumberDto
+import com.gsoft.opus.data.api.dto.PersonneRechercheeDto
+import com.gsoft.opus.data.api.dto.PersonneRechercheeRequest
+import com.gsoft.opus.data.api.dto.PersonneRechercheePhotoDto
+import com.gsoft.opus.data.api.dto.PersonneRechercheePhotoCaptionRequest
+import com.gsoft.opus.data.api.dto.ObjetSaisiDto
+import com.gsoft.opus.data.api.dto.ObjetSaisiRequest
+import com.gsoft.opus.data.api.dto.ObjetSaisiAttachmentDto
+import com.gsoft.opus.data.api.dto.ObjetTrouveDto
+import com.gsoft.opus.data.api.dto.ObjetTrouveRequest
+import com.gsoft.opus.data.api.dto.PerquisitionAttachmentDto
+import com.gsoft.opus.data.api.dto.PerquisitionDto
+import com.gsoft.opus.data.api.dto.PerquisitionNextNumberDto
+import com.gsoft.opus.data.api.dto.PerquisitionRequest
+import com.gsoft.opus.data.api.dto.RenseignementPjAttachmentDto
+import com.gsoft.opus.data.api.dto.RenseignementPjDto
+import com.gsoft.opus.data.api.dto.RenseignementPjRequest
+import com.gsoft.opus.data.api.dto.MandatAttachmentDto
+import com.gsoft.opus.data.api.dto.MandatDto
+import com.gsoft.opus.data.api.dto.MandatNextNumberDto
+import com.gsoft.opus.data.api.dto.MandatRequest
+import com.gsoft.opus.data.api.dto.ObjetTrouveAttachmentDto
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
 import com.gsoft.opus.data.api.dto.TypeArmeRequest
@@ -845,4 +873,379 @@ interface ApiService {
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Garde à Vue (Police Judiciaire — GAV)
+    // ========================
+    @GET("api/garde-a-vue")
+    suspend fun getGardeAVueList(
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<GardeAVueDto>>>
+
+    @GET("api/garde-a-vue/{id}")
+    suspend fun getGardeAVue(@Path("id") id: Int): Response<ApiResponse<GardeAVueDto>>
+
+    @POST("api/garde-a-vue")
+    suspend fun createGardeAVue(@Body request: GardeAVueRequest): Response<ApiResponse<GardeAVueDto>>
+
+    @PUT("api/garde-a-vue/{id}")
+    suspend fun updateGardeAVue(@Path("id") id: Int, @Body request: GardeAVueRequest): Response<ApiResponse<GardeAVueDto>>
+
+    @DELETE("api/garde-a-vue/{id}")
+    suspend fun deleteGardeAVue(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/garde-a-vue/{id}/attachments")
+    suspend fun getGardeAVueAttachments(@Path("id") id: Int): Response<ApiResponse<List<GardeAVueAttachmentDto>>>
+
+    @Multipart
+    @POST("api/garde-a-vue/{id}/attachments")
+    suspend fun createGardeAVueAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<GardeAVueAttachmentDto>>
+
+    @PUT("api/garde-a-vue/{id}/attachments/{attachId}")
+    suspend fun updateGardeAVueAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<GardeAVueAttachmentDto>>
+
+    @DELETE("api/garde-a-vue/{id}/attachments/{attachId}")
+    suspend fun deleteGardeAVueAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Requisition (Police Judiciaire)
+    // ========================
+    @GET("api/requisitions")
+    suspend fun getRequisitionList(
+        @Query("type") type: String? = null,
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null
+    ): Response<ApiResponse<List<RequisitionDto>>>
+
+    @GET("api/requisitions/next-number")
+    suspend fun getRequisitionNextNumber(): Response<ApiResponse<RequisitionNextNumberDto>>
+
+    @GET("api/requisitions/{id}")
+    suspend fun getRequisition(@Path("id") id: Int): Response<ApiResponse<RequisitionDto>>
+
+    @POST("api/requisitions")
+    suspend fun createRequisition(@Body request: RequisitionRequest): Response<ApiResponse<RequisitionDto>>
+
+    @PUT("api/requisitions/{id}")
+    suspend fun updateRequisition(@Path("id") id: Int, @Body request: RequisitionRequest): Response<ApiResponse<RequisitionDto>>
+
+    @DELETE("api/requisitions/{id}")
+    suspend fun deleteRequisition(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/requisitions/{id}/attachments")
+    suspend fun getRequisitionAttachments(@Path("id") id: Int): Response<ApiResponse<List<RequisitionAttachmentDto>>>
+
+    @Multipart
+    @POST("api/requisitions/{id}/attachments")
+    suspend fun createRequisitionAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<RequisitionAttachmentDto>>
+
+    @PUT("api/requisitions/{id}/attachments/{attachId}")
+    suspend fun updateRequisitionAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<RequisitionAttachmentDto>>
+
+    @DELETE("api/requisitions/{id}/attachments/{attachId}")
+    suspend fun deleteRequisitionAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Personne Recherchée (Police Judiciaire)
+    // ========================
+    @GET("api/personne-recherchee")
+    suspend fun getPersonneRechercheeList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<PersonneRechercheeDto>>>
+
+    @GET("api/personne-recherchee/{id}")
+    suspend fun getPersonneRecherchee(@Path("id") id: Int): Response<ApiResponse<PersonneRechercheeDto>>
+
+    @POST("api/personne-recherchee")
+    suspend fun createPersonneRecherchee(@Body request: PersonneRechercheeRequest): Response<ApiResponse<PersonneRechercheeDto>>
+
+    @PUT("api/personne-recherchee/{id}")
+    suspend fun updatePersonneRecherchee(@Path("id") id: Int, @Body request: PersonneRechercheeRequest): Response<ApiResponse<PersonneRechercheeDto>>
+
+    @DELETE("api/personne-recherchee/{id}")
+    suspend fun deletePersonneRecherchee(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // Dedicated multi-image endpoints (NOT the generic attachment system)
+    @GET("api/personne-recherchee/{id}/photos")
+    suspend fun getPersonneRechercheePhotos(@Path("id") id: Int): Response<ApiResponse<List<PersonneRechercheePhotoDto>>>
+
+    @Multipart
+    @POST("api/personne-recherchee/{id}/photos")
+    suspend fun createPersonneRechercheePhoto(
+        @Path("id") id: Int,
+        @Part("caption") caption: RequestBody,
+        @Part("capture_source") captureSource: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<PersonneRechercheePhotoDto>>
+
+    @PUT("api/personne-recherchee/{id}/photos/{photoId}")
+    suspend fun updatePersonneRechercheePhotoCaption(
+        @Path("id") id: Int,
+        @Path("photoId") photoId: Int,
+        @Body body: PersonneRechercheePhotoCaptionRequest
+    ): Response<ApiResponse<PersonneRechercheePhotoDto>>
+
+    @DELETE("api/personne-recherchee/{id}/photos/{photoId}")
+    suspend fun deletePersonneRechercheePhoto(
+        @Path("id") id: Int,
+        @Path("photoId") photoId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Objet Saisi (Police Judiciaire — OBJET SAISI tab)
+    // ========================
+    @GET("api/objets/saisi")
+    suspend fun getObjetSaisiList(
+        @Query("type_objet") typeObjet: String? = null,
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<ObjetSaisiDto>>>
+
+    @GET("api/objets/saisi/{id}")
+    suspend fun getObjetSaisi(@Path("id") id: Int): Response<ApiResponse<ObjetSaisiDto>>
+
+    @POST("api/objets/saisi")
+    suspend fun createObjetSaisi(@Body request: ObjetSaisiRequest): Response<ApiResponse<ObjetSaisiDto>>
+
+    @PUT("api/objets/saisi/{id}")
+    suspend fun updateObjetSaisi(@Path("id") id: Int, @Body request: ObjetSaisiRequest): Response<ApiResponse<ObjetSaisiDto>>
+
+    @DELETE("api/objets/saisi/{id}")
+    suspend fun deleteObjetSaisi(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/objets/saisi/{id}/attachments")
+    suspend fun getObjetSaisiAttachments(@Path("id") id: Int): Response<ApiResponse<List<ObjetSaisiAttachmentDto>>>
+
+    @Multipart
+    @POST("api/objets/saisi/{id}/attachments")
+    suspend fun createObjetSaisiAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ObjetSaisiAttachmentDto>>
+
+    @PUT("api/objets/saisi/{id}/attachments/{attachId}")
+    suspend fun updateObjetSaisiAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<ObjetSaisiAttachmentDto>>
+
+    @DELETE("api/objets/saisi/{id}/attachments/{attachId}")
+    suspend fun deleteObjetSaisiAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Objet Trouvé (Police Judiciaire — OBJET TROUVÉ tab)
+    // ========================
+    @GET("api/objets/trouve")
+    suspend fun getObjetTrouveList(
+        @Query("motif_decouverte") motifDecouverte: String? = null,
+        @Query("restitution") restitution: Boolean? = null,
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<ObjetTrouveDto>>>
+
+    @GET("api/objets/trouve/{id}")
+    suspend fun getObjetTrouve(@Path("id") id: Int): Response<ApiResponse<ObjetTrouveDto>>
+
+    @POST("api/objets/trouve")
+    suspend fun createObjetTrouve(@Body request: ObjetTrouveRequest): Response<ApiResponse<ObjetTrouveDto>>
+
+    @PUT("api/objets/trouve/{id}")
+    suspend fun updateObjetTrouve(@Path("id") id: Int, @Body request: ObjetTrouveRequest): Response<ApiResponse<ObjetTrouveDto>>
+
+    @DELETE("api/objets/trouve/{id}")
+    suspend fun deleteObjetTrouve(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/objets/trouve/{id}/attachments")
+    suspend fun getObjetTrouveAttachments(@Path("id") id: Int): Response<ApiResponse<List<ObjetTrouveAttachmentDto>>>
+
+    @Multipart
+    @POST("api/objets/trouve/{id}/attachments")
+    suspend fun createObjetTrouveAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ObjetTrouveAttachmentDto>>
+
+    @PUT("api/objets/trouve/{id}/attachments/{attachId}")
+    suspend fun updateObjetTrouveAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<ObjetTrouveAttachmentDto>>
+
+    @DELETE("api/objets/trouve/{id}/attachments/{attachId}")
+    suspend fun deleteObjetTrouveAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Perquisition (Police Judiciaire)
+    // ========================
+
+    @GET("api/perquisitions")
+    suspend fun getPerquisitionList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<PerquisitionDto>>>
+
+    @GET("api/perquisitions/next-number")
+    suspend fun getPerquisitionNextNumber(): Response<ApiResponse<PerquisitionNextNumberDto>>
+
+    @GET("api/perquisitions/{id}")
+    suspend fun getPerquisition(@Path("id") id: Int): Response<ApiResponse<PerquisitionDto>>
+
+    @POST("api/perquisitions")
+    suspend fun createPerquisition(@Body data: PerquisitionRequest): Response<ApiResponse<PerquisitionDto>>
+
+    @PUT("api/perquisitions/{id}")
+    suspend fun updatePerquisition(@Path("id") id: Int, @Body data: PerquisitionRequest): Response<ApiResponse<PerquisitionDto>>
+
+    @DELETE("api/perquisitions/{id}")
+    suspend fun deletePerquisition(@Path("id") id: Int): Response<ApiResponse<Unit>>
+
+    @GET("api/perquisitions/{id}/attachments")
+    suspend fun getPerquisitionAttachments(@Path("id") id: Int): Response<ApiResponse<List<PerquisitionAttachmentDto>>>
+
+    @Multipart
+    @POST("api/perquisitions/{id}/attachments")
+    suspend fun createPerquisitionAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<PerquisitionAttachmentDto>>
+
+    @PUT("api/perquisitions/{id}/attachments/{attachId}")
+    suspend fun updatePerquisitionAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<PerquisitionAttachmentDto>>
+
+    @DELETE("api/perquisitions/{id}/attachments/{attachId}")
+    suspend fun deletePerquisitionAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Unit>>
+
+    // ========================
+    // Renseignement PJ (Police Judiciaire)
+    // ========================
+
+    @GET("api/renseignements-pj")
+    suspend fun getRenseignementPjList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<RenseignementPjDto>>>
+
+    @GET("api/renseignements-pj/{id}")
+    suspend fun getRenseignementPj(@Path("id") id: Int): Response<ApiResponse<RenseignementPjDto>>
+
+    @POST("api/renseignements-pj")
+    suspend fun createRenseignementPj(@Body data: RenseignementPjRequest): Response<ApiResponse<RenseignementPjDto>>
+
+    @PUT("api/renseignements-pj/{id}")
+    suspend fun updateRenseignementPj(@Path("id") id: Int, @Body data: RenseignementPjRequest): Response<ApiResponse<RenseignementPjDto>>
+
+    @DELETE("api/renseignements-pj/{id}")
+    suspend fun deleteRenseignementPj(@Path("id") id: Int): Response<ApiResponse<Unit>>
+
+    @GET("api/renseignements-pj/{id}/attachments")
+    suspend fun getRenseignementPjAttachments(@Path("id") id: Int): Response<ApiResponse<List<RenseignementPjAttachmentDto>>>
+
+    @Multipart
+    @POST("api/renseignements-pj/{id}/attachments")
+    suspend fun createRenseignementPjAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<RenseignementPjAttachmentDto>>
+
+    @PUT("api/renseignements-pj/{id}/attachments/{attachId}")
+    suspend fun updateRenseignementPjAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<RenseignementPjAttachmentDto>>
+
+    @DELETE("api/renseignements-pj/{id}/attachments/{attachId}")
+    suspend fun deleteRenseignementPjAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Unit>>
+
+    // ========================
+    // Mandat (Police Judiciaire)
+    // ========================
+
+    @GET("api/mandats")
+    suspend fun getMandatList(
+        @Query("search") search: String? = null,
+        @Query("type") type: String? = null
+    ): Response<ApiResponse<List<MandatDto>>>
+
+    @GET("api/mandats/next-number")
+    suspend fun peekMandatNumber(): Response<ApiResponse<MandatNextNumberDto>>
+
+    @GET("api/mandats/{id}")
+    suspend fun getMandat(@Path("id") id: Int): Response<ApiResponse<MandatDto>>
+
+    @POST("api/mandats")
+    suspend fun createMandat(@Body data: MandatRequest): Response<ApiResponse<MandatDto>>
+
+    @PUT("api/mandats/{id}")
+    suspend fun updateMandat(@Path("id") id: Int, @Body data: MandatRequest): Response<ApiResponse<MandatDto>>
+
+    @DELETE("api/mandats/{id}")
+    suspend fun deleteMandat(@Path("id") id: Int): Response<ApiResponse<Unit>>
+
+    @GET("api/mandats/{id}/attachments")
+    suspend fun getMandatAttachments(@Path("id") id: Int): Response<ApiResponse<List<MandatAttachmentDto>>>
+
+    @Multipart
+    @POST("api/mandats/{id}/attachments")
+    suspend fun createMandatAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<MandatAttachmentDto>>
+
+    @PUT("api/mandats/{id}/attachments/{attachId}")
+    suspend fun updateMandatAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<MandatAttachmentDto>>
+
+    @DELETE("api/mandats/{id}/attachments/{attachId}")
+    suspend fun deleteMandatAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Unit>>
 }
