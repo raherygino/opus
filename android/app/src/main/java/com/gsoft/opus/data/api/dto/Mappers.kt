@@ -33,6 +33,13 @@ import com.gsoft.opus.domain.model.MouvementAttachment
 import com.gsoft.opus.domain.model.Permission
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.model.PersonnelAttachment
+import com.gsoft.opus.domain.model.PlainteEntree
+import com.gsoft.opus.domain.model.PlainteEntreeAttachment
+import com.gsoft.opus.domain.model.PlainteEntreeSummary
+import com.gsoft.opus.domain.model.PlainteSortie
+import com.gsoft.opus.domain.model.PlainteSortieAttachment
+import com.gsoft.opus.domain.model.Convocation
+import com.gsoft.opus.domain.model.ConvocationAttachment
 import com.gsoft.opus.domain.model.User
 
 fun UserDto.toDomain(): User = User(
@@ -481,6 +488,139 @@ fun MainCouranteDto.toDomain(): MainCourante = MainCourante(
 fun MainCouranteAttachmentDto.toDomain(): MainCouranteAttachment = MainCouranteAttachment(
     id = id,
     mainCouranteId = mainCouranteId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+// ── Plainte ENTRÉE / SORTIE ────────────────────────────────────────
+
+fun PlainteEntreeDto.toDomain(): PlainteEntree = PlainteEntree(
+    id = id,
+    type = type,
+    datePlainte = datePlainte,
+    numeroDossier = numeroDossier,
+    numeroSt = numeroSt,
+    opjPersonnelId = opjPersonnelId,
+    enqueteurPersonnelId = enqueteurPersonnelId,
+    partieCivile = partieCivile,
+    miseEnCause = miseEnCause,
+    adressePc = adressePc,
+    infraction = infraction,
+    prejudice = prejudice,
+    lieuInfraction = lieuInfraction,
+    heureInfraction = heureInfraction,
+    observation = observation,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    opjPrenoms = opjPrenoms,
+    opjNom = opjNom,
+    opjGrade = opjGrade,
+    opjIm = opjIm,
+    enqueteurPrenoms = enqueteurPrenoms,
+    enqueteurNom = enqueteurNom,
+    enqueteurGrade = enqueteurGrade,
+    enqueteurIm = enqueteurIm,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    attachments = attachments?.map { it.toDomain() } ?: emptyList()
+)
+
+fun PlainteEntreeAttachmentDto.toDomain(): PlainteEntreeAttachment = PlainteEntreeAttachment(
+    id = id,
+    plainteEntreeId = plainteEntreeId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+fun PlainteEntreeSummaryDto.toDomain(): PlainteEntreeSummary = PlainteEntreeSummary(
+    id = id,
+    type = type,
+    numeroDossier = numeroDossier,
+    datePlainte = datePlainte,
+    partieCivile = partieCivile,
+    miseEnCause = miseEnCause,
+    infraction = infraction,
+    opjPrenoms = opjPrenoms,
+    opjNom = opjNom,
+    opjGrade = opjGrade
+)
+
+fun PlainteSortieDto.toDomain(): PlainteSortie = PlainteSortie(
+    id = id,
+    plainteEntreeId = plainteEntreeId,
+    nature = nature,
+    dateSortie = dateSortie,
+    numero = numero,
+    numeroTtr = numeroTtr,
+    nomSubstitut = nomSubstitut,
+    dateDeferrement = dateDeferrement,
+    observation = observation,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    entreeType = entreeType,
+    entreeNumeroDossier = entreeNumeroDossier,
+    entreeDatePlainte = entreeDatePlainte,
+    entreeInfraction = entreeInfraction,
+    entreeMiseEnCause = entreeMiseEnCause,
+    entreePartieCivile = entreePartieCivile,
+    entreeOpjPrenoms = entreeOpjPrenoms,
+    entreeOpjNom = entreeOpjNom,
+    entreeOpjGrade = entreeOpjGrade,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    attachments = attachments?.map { it.toDomain() } ?: emptyList()
+)
+
+fun PlainteSortieAttachmentDto.toDomain(): PlainteSortieAttachment = PlainteSortieAttachment(
+    id = id,
+    plainteSortieId = plainteSortieId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+// ========================
+// Convocation mappers
+// ========================
+
+fun ConvocationDto.toDomain(): Convocation = Convocation(
+    id = id,
+    type = type,
+    dateConvocation = dateConvocation,
+    numero = numero,
+    nom = nom,
+    adresse = adresse,
+    infraction = infraction,
+    personneAccuseRecu = personneAccuseRecu,
+    numeroDossier = numeroDossier,
+    observation = observation,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    attachments = attachments?.map { it.toDomain() } ?: emptyList()
+)
+
+fun ConvocationAttachmentDto.toDomain(): ConvocationAttachment = ConvocationAttachment(
+    id = id,
+    convocationId = convocationId,
     title = title,
     filename = filename,
     originalFilename = originalFilename,

@@ -31,6 +31,29 @@ use App\Controllers\MaterielRoulantAttachmentController;
 use App\Controllers\MainCouranteController;
 use App\Controllers\MainCouranteAttachmentController;
 use App\Controllers\MainCouranteCategorieController;
+use App\Controllers\PlainteEntreeController;
+use App\Controllers\PlainteEntreeAttachmentController;
+use App\Controllers\PlainteSortieController;
+use App\Controllers\PlainteSortieAttachmentController;
+use App\Controllers\ConvocationController;
+use App\Controllers\ConvocationAttachmentController;
+use App\Controllers\GardeAVueController;
+use App\Controllers\GardeAVueAttachmentController;
+use App\Controllers\RequisitionController;
+use App\Controllers\RequisitionAttachmentController;
+use App\Controllers\PersonneRechercheeController;
+use App\Controllers\ObjetSaisiController;
+use App\Controllers\ObjetSaisiAttachmentController;
+use App\Controllers\ObjetTrouveController;
+use App\Controllers\ObjetTrouveAttachmentController;
+use App\Controllers\PerquisitionController;
+use App\Controllers\PerquisitionAttachmentController;
+use App\Controllers\RenseignementPjController;
+use App\Controllers\RenseignementPjAttachmentController;
+use App\Controllers\MandatController;
+use App\Controllers\MandatAttachmentController;
+use App\Controllers\ArrestationController;
+use App\Controllers\ArrestationAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -290,6 +313,194 @@ $router->get('/api/main-courante-categories',          [MainCouranteCategorieCon
 $router->post('/api/main-courante-categories',         [MainCouranteCategorieController::class, 'store']);
 $router->put('/api/main-courante-categories/{id}',    [MainCouranteCategorieController::class, 'update']);
 $router->delete('/api/main-courante-categories/{id}', [MainCouranteCategorieController::class, 'destroy']);
+
+// ========================
+// Plainte ENTRÉE (Police Judiciaire — incoming complaints)
+// ========================
+$router->get('/api/plaintes-entree',                          [PlainteEntreeController::class, 'index']);
+$router->get('/api/plaintes-entree/without-sortie',           [PlainteEntreeController::class, 'withoutSortie']);
+$router->get('/api/plaintes-entree/next-number',              [PlainteEntreeController::class, 'nextNumber']);
+$router->get('/api/plaintes-entree/{id}',                     [PlainteEntreeController::class, 'show']);
+$router->post('/api/plaintes-entree',                         [PlainteEntreeController::class, 'store']);
+$router->put('/api/plaintes-entree/{id}',                     [PlainteEntreeController::class, 'update']);
+$router->delete('/api/plaintes-entree/{id}',                  [PlainteEntreeController::class, 'destroy']);
+
+$router->get('/api/plaintes-entree/{id}/attachments',                       [PlainteEntreeAttachmentController::class, 'index']);
+$router->post('/api/plaintes-entree/{id}/attachments',                      [PlainteEntreeAttachmentController::class, 'store']);
+$router->put('/api/plaintes-entree/{id}/attachments/{attachId}',            [PlainteEntreeAttachmentController::class, 'update']);
+$router->delete('/api/plaintes-entree/{id}/attachments/{attachId}',         [PlainteEntreeAttachmentController::class, 'destroy']);
+$router->get('/api/plaintes-entree/{id}/attachments/{attachId}/download',   [PlainteEntreeAttachmentController::class, 'download']);
+
+// ========================
+// Plainte SORTIE (Police Judiciaire — outgoing processing of an ENTRÉE)
+// ========================
+$router->get('/api/plaintes-sortie',                          [PlainteSortieController::class, 'index']);
+$router->get('/api/plaintes-sortie/next-number',              [PlainteSortieController::class, 'nextNumber']);
+$router->get('/api/plaintes-sortie/{id}',                     [PlainteSortieController::class, 'show']);
+$router->post('/api/plaintes-sortie',                         [PlainteSortieController::class, 'store']);
+$router->put('/api/plaintes-sortie/{id}',                     [PlainteSortieController::class, 'update']);
+$router->delete('/api/plaintes-sortie/{id}',                  [PlainteSortieController::class, 'destroy']);
+
+$router->get('/api/plaintes-sortie/{id}/attachments',                       [PlainteSortieAttachmentController::class, 'index']);
+$router->post('/api/plaintes-sortie/{id}/attachments',                      [PlainteSortieAttachmentController::class, 'store']);
+$router->put('/api/plaintes-sortie/{id}/attachments/{attachId}',            [PlainteSortieAttachmentController::class, 'update']);
+$router->delete('/api/plaintes-sortie/{id}/attachments/{attachId}',         [PlainteSortieAttachmentController::class, 'destroy']);
+$router->get('/api/plaintes-sortie/{id}/attachments/{attachId}/download',   [PlainteSortieAttachmentController::class, 'download']);
+
+// ========================
+// Convocation Routes (Police Judiciaire — Convocation)
+// ========================
+$router->get('/api/convocations',                          [ConvocationController::class, 'index']);
+$router->get('/api/convocations/next-number',              [ConvocationController::class, 'nextNumber']);
+$router->get('/api/convocations/{id}',                     [ConvocationController::class, 'show']);
+$router->post('/api/convocations',                         [ConvocationController::class, 'store']);
+$router->put('/api/convocations/{id}',                     [ConvocationController::class, 'update']);
+$router->delete('/api/convocations/{id}',                  [ConvocationController::class, 'destroy']);
+
+$router->get('/api/convocations/{id}/attachments',                       [ConvocationAttachmentController::class, 'index']);
+$router->post('/api/convocations/{id}/attachments',                      [ConvocationAttachmentController::class, 'store']);
+$router->put('/api/convocations/{id}/attachments/{attachId}',            [ConvocationAttachmentController::class, 'update']);
+$router->delete('/api/convocations/{id}/attachments/{attachId}',         [ConvocationAttachmentController::class, 'destroy']);
+$router->get('/api/convocations/{id}/attachments/{attachId}/download',   [ConvocationAttachmentController::class, 'download']);
+
+// ========================
+// Garde à Vue Routes (Police Judiciaire — GAV)
+// ========================
+$router->get('/api/garde-a-vue',                          [GardeAVueController::class, 'index']);
+$router->get('/api/garde-a-vue/{id}',                     [GardeAVueController::class, 'show']);
+$router->post('/api/garde-a-vue',                         [GardeAVueController::class, 'store']);
+$router->put('/api/garde-a-vue/{id}',                     [GardeAVueController::class, 'update']);
+$router->delete('/api/garde-a-vue/{id}',                  [GardeAVueController::class, 'destroy']);
+
+$router->get('/api/garde-a-vue/{id}/attachments',                       [GardeAVueAttachmentController::class, 'index']);
+$router->post('/api/garde-a-vue/{id}/attachments',                      [GardeAVueAttachmentController::class, 'store']);
+$router->put('/api/garde-a-vue/{id}/attachments/{attachId}',            [GardeAVueAttachmentController::class, 'update']);
+$router->delete('/api/garde-a-vue/{id}/attachments/{attachId}',         [GardeAVueAttachmentController::class, 'destroy']);
+$router->get('/api/garde-a-vue/{id}/attachments/{attachId}/download',   [GardeAVueAttachmentController::class, 'download']);
+
+// ========================
+// Requisition Routes (Police Judiciaire)
+// ========================
+$router->get('/api/requisitions',                          [RequisitionController::class, 'index']);
+$router->get('/api/requisitions/next-number',               [RequisitionController::class, 'nextNumber']);
+$router->get('/api/requisitions/{id}',                     [RequisitionController::class, 'show']);
+$router->post('/api/requisitions',                         [RequisitionController::class, 'store']);
+$router->put('/api/requisitions/{id}',                     [RequisitionController::class, 'update']);
+$router->delete('/api/requisitions/{id}',                  [RequisitionController::class, 'destroy']);
+
+$router->get('/api/requisitions/{id}/attachments',                       [RequisitionAttachmentController::class, 'index']);
+$router->post('/api/requisitions/{id}/attachments',                      [RequisitionAttachmentController::class, 'store']);
+$router->put('/api/requisitions/{id}/attachments/{attachId}',            [RequisitionAttachmentController::class, 'update']);
+$router->delete('/api/requisitions/{id}/attachments/{attachId}',         [RequisitionAttachmentController::class, 'destroy']);
+$router->get('/api/requisitions/{id}/attachments/{attachId}/download',   [RequisitionAttachmentController::class, 'download']);
+
+// ========================
+// Personne Recherchée Routes (Police Judiciaire)
+// ========================
+$router->get('/api/personne-recherchee',                                   [PersonneRechercheeController::class, 'index']);
+$router->get('/api/personne-recherchee/{id}',                              [PersonneRechercheeController::class, 'show']);
+$router->post('/api/personne-recherchee',                                  [PersonneRechercheeController::class, 'store']);
+$router->put('/api/personne-recherchee/{id}',                              [PersonneRechercheeController::class, 'update']);
+$router->delete('/api/personne-recherchee/{id}',                           [PersonneRechercheeController::class, 'destroy']);
+
+// Dedicated multi-image endpoints (NOT the generic attachment system)
+$router->get('/api/personne-recherchee/{id}/photos',                       [PersonneRechercheeController::class, 'photosIndex']);
+$router->post('/api/personne-recherchee/{id}/photos',                      [PersonneRechercheeController::class, 'photosStore']);
+$router->put('/api/personne-recherchee/{id}/photos/{photoId}',             [PersonneRechercheeController::class, 'photosUpdate']);
+$router->delete('/api/personne-recherchee/{id}/photos/{photoId}',          [PersonneRechercheeController::class, 'photosDestroy']);
+$router->get('/api/personne-recherchee/{id}/photos/{photoId}/download',    [PersonneRechercheeController::class, 'photosDownload']);
+
+// ========================
+// Objet Routes (Police Judiciaire — OBJET SAISI / OBJET TROUVÉ)
+// ========================
+// Objet Saisi
+$router->get('/api/objets/saisi',                                            [ObjetSaisiController::class, 'index']);
+$router->get('/api/objets/saisi/{id}',                                       [ObjetSaisiController::class, 'show']);
+$router->post('/api/objets/saisi',                                           [ObjetSaisiController::class, 'store']);
+$router->put('/api/objets/saisi/{id}',                                       [ObjetSaisiController::class, 'update']);
+$router->delete('/api/objets/saisi/{id}',                                    [ObjetSaisiController::class, 'destroy']);
+
+$router->get('/api/objets/saisi/{id}/attachments',                           [ObjetSaisiAttachmentController::class, 'index']);
+$router->post('/api/objets/saisi/{id}/attachments',                          [ObjetSaisiAttachmentController::class, 'store']);
+$router->put('/api/objets/saisi/{id}/attachments/{attachId}',                [ObjetSaisiAttachmentController::class, 'update']);
+$router->delete('/api/objets/saisi/{id}/attachments/{attachId}',             [ObjetSaisiAttachmentController::class, 'destroy']);
+$router->get('/api/objets/saisi/{id}/attachments/{attachId}/download',       [ObjetSaisiAttachmentController::class, 'download']);
+
+// Objet Trouvé
+$router->get('/api/objets/trouve',                                           [ObjetTrouveController::class, 'index']);
+$router->get('/api/objets/trouve/{id}',                                      [ObjetTrouveController::class, 'show']);
+$router->post('/api/objets/trouve',                                          [ObjetTrouveController::class, 'store']);
+$router->put('/api/objets/trouve/{id}',                                      [ObjetTrouveController::class, 'update']);
+$router->delete('/api/objets/trouve/{id}',                                   [ObjetTrouveController::class, 'destroy']);
+
+$router->get('/api/objets/trouve/{id}/attachments',                          [ObjetTrouveAttachmentController::class, 'index']);
+$router->post('/api/objets/trouve/{id}/attachments',                         [ObjetTrouveAttachmentController::class, 'store']);
+$router->put('/api/objets/trouve/{id}/attachments/{attachId}',               [ObjetTrouveAttachmentController::class, 'update']);
+$router->delete('/api/objets/trouve/{id}/attachments/{attachId}',            [ObjetTrouveAttachmentController::class, 'destroy']);
+$router->get('/api/objets/trouve/{id}/attachments/{attachId}/download',      [ObjetTrouveAttachmentController::class, 'download']);
+
+// ========================
+// Perquisition Routes (Police Judiciaire)
+// ========================
+$router->get('/api/perquisitions',                                           [PerquisitionController::class, 'index']);
+$router->get('/api/perquisitions/next-number',                               [PerquisitionController::class, 'nextNumber']);
+$router->get('/api/perquisitions/{id}',                                      [PerquisitionController::class, 'show']);
+$router->post('/api/perquisitions',                                          [PerquisitionController::class, 'store']);
+$router->put('/api/perquisitions/{id}',                                      [PerquisitionController::class, 'update']);
+$router->delete('/api/perquisitions/{id}',                                   [PerquisitionController::class, 'destroy']);
+
+$router->get('/api/perquisitions/{id}/attachments',                          [PerquisitionAttachmentController::class, 'index']);
+$router->post('/api/perquisitions/{id}/attachments',                         [PerquisitionAttachmentController::class, 'store']);
+$router->put('/api/perquisitions/{id}/attachments/{attachId}',               [PerquisitionAttachmentController::class, 'update']);
+$router->delete('/api/perquisitions/{id}/attachments/{attachId}',            [PerquisitionAttachmentController::class, 'destroy']);
+$router->get('/api/perquisitions/{id}/attachments/{attachId}/download',      [PerquisitionAttachmentController::class, 'download']);
+
+// ========================
+// Renseignement PJ Routes (Police Judiciaire)
+// ========================
+$router->get('/api/renseignements-pj',                                       [RenseignementPjController::class, 'index']);
+$router->get('/api/renseignements-pj/{id}',                                  [RenseignementPjController::class, 'show']);
+$router->post('/api/renseignements-pj',                                      [RenseignementPjController::class, 'store']);
+$router->put('/api/renseignements-pj/{id}',                                  [RenseignementPjController::class, 'update']);
+$router->delete('/api/renseignements-pj/{id}',                               [RenseignementPjController::class, 'destroy']);
+
+$router->get('/api/renseignements-pj/{id}/attachments',                      [RenseignementPjAttachmentController::class, 'index']);
+$router->post('/api/renseignements-pj/{id}/attachments',                     [RenseignementPjAttachmentController::class, 'store']);
+$router->put('/api/renseignements-pj/{id}/attachments/{attachId}',           [RenseignementPjAttachmentController::class, 'update']);
+$router->delete('/api/renseignements-pj/{id}/attachments/{attachId}',        [RenseignementPjAttachmentController::class, 'destroy']);
+$router->get('/api/renseignements-pj/{id}/attachments/{attachId}/download',  [RenseignementPjAttachmentController::class, 'download']);
+
+// ========================
+// Mandat Routes (Police Judiciaire)
+// ========================
+$router->get('/api/mandats',                                                 [MandatController::class, 'index']);
+$router->get('/api/mandats/next-number',                                     [MandatController::class, 'nextNumber']);
+$router->get('/api/mandats/{id}',                                            [MandatController::class, 'show']);
+$router->post('/api/mandats',                                                [MandatController::class, 'store']);
+$router->put('/api/mandats/{id}',                                            [MandatController::class, 'update']);
+$router->delete('/api/mandats/{id}',                                         [MandatController::class, 'destroy']);
+
+$router->get('/api/mandats/{id}/attachments',                                [MandatAttachmentController::class, 'index']);
+$router->post('/api/mandats/{id}/attachments',                               [MandatAttachmentController::class, 'store']);
+$router->put('/api/mandats/{id}/attachments/{attachId}',                     [MandatAttachmentController::class, 'update']);
+$router->delete('/api/mandats/{id}/attachments/{attachId}',                  [MandatAttachmentController::class, 'destroy']);
+$router->get('/api/mandats/{id}/attachments/{attachId}/download',            [MandatAttachmentController::class, 'download']);
+
+// ========================
+// Arrestation Routes (Police Judiciaire)
+// ========================
+$router->get('/api/arrestations',                                                 [ArrestationController::class, 'index']);
+$router->get('/api/arrestations/next-number',                                     [ArrestationController::class, 'nextNumber']);
+$router->get('/api/arrestations/{id}',                                            [ArrestationController::class, 'show']);
+$router->post('/api/arrestations',                                                [ArrestationController::class, 'store']);
+$router->put('/api/arrestations/{id}',                                            [ArrestationController::class, 'update']);
+$router->delete('/api/arrestations/{id}',                                         [ArrestationController::class, 'destroy']);
+
+$router->get('/api/arrestations/{id}/attachments',                                [ArrestationAttachmentController::class, 'index']);
+$router->post('/api/arrestations/{id}/attachments',                               [ArrestationAttachmentController::class, 'store']);
+$router->put('/api/arrestations/{id}/attachments/{attachId}',                     [ArrestationAttachmentController::class, 'update']);
+$router->delete('/api/arrestations/{id}/attachments/{attachId}',                  [ArrestationAttachmentController::class, 'destroy']);
+$router->get('/api/arrestations/{id}/attachments/{attachId}/download',            [ArrestationAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

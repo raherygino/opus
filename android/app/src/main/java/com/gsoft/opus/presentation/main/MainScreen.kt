@@ -110,6 +110,36 @@ import com.gsoft.opus.presentation.materielroulant.MaterielRoulantReintegrationS
 import com.gsoft.opus.presentation.maincourante.MainCouranteScreen
 import com.gsoft.opus.presentation.maincourante.MainCouranteDetailScreen
 import com.gsoft.opus.presentation.maincourante.MainCouranteFormScreen
+import com.gsoft.opus.presentation.plainte.PlainteDetailScreen
+import com.gsoft.opus.presentation.plainte.PlainteFormScreen
+import com.gsoft.opus.presentation.plainte.PlainteScreen
+import com.gsoft.opus.presentation.plainte.PlainteSortieDetailScreen
+import com.gsoft.opus.presentation.plainte.PlainteSortieFormScreen
+import com.gsoft.opus.presentation.convocation.ConvocationDetailScreen
+import com.gsoft.opus.presentation.convocation.ConvocationFormScreen
+import com.gsoft.opus.presentation.gardeavue.GardeAVueDetailScreen
+import com.gsoft.opus.presentation.gardeavue.GardeAVueFormScreen
+import com.gsoft.opus.presentation.requisition.RequisitionDetailScreen
+import com.gsoft.opus.presentation.requisition.RequisitionFormScreen
+import com.gsoft.opus.presentation.personnerecherchee.PersonneRechercheeDetailScreen
+import com.gsoft.opus.presentation.personnerecherchee.PersonneRechercheeFormScreen
+import com.gsoft.opus.presentation.objet.ObjetScreen
+import com.gsoft.opus.presentation.objet.ObjetSaisiDetailScreen
+import com.gsoft.opus.presentation.objet.ObjetSaisiFormScreen
+import com.gsoft.opus.presentation.objet.ObjetTrouveDetailScreen
+import com.gsoft.opus.presentation.objet.ObjetTrouveFormScreen
+import com.gsoft.opus.presentation.perquisition.PerquisitionDetailScreen
+import com.gsoft.opus.presentation.perquisition.PerquisitionFormScreen
+import com.gsoft.opus.presentation.perquisition.PerquisitionScreen
+import com.gsoft.opus.presentation.renseignementpj.RenseignementPjDetailScreen
+import com.gsoft.opus.presentation.renseignementpj.RenseignementPjFormScreen
+import com.gsoft.opus.presentation.renseignementpj.RenseignementPjScreen
+import com.gsoft.opus.presentation.mandat.MandatDetailScreen
+import com.gsoft.opus.presentation.mandat.MandatFormScreen
+import com.gsoft.opus.presentation.mandat.MandatScreen
+import com.gsoft.opus.presentation.arrestation.ArrestationDetailScreen
+import com.gsoft.opus.presentation.arrestation.ArrestationFormScreen
+import com.gsoft.opus.presentation.arrestation.ArrestationScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -122,6 +152,7 @@ import com.gsoft.opus.presentation.personnel.PersonnelBrowseScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
 import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
 import com.gsoft.opus.presentation.sedentaire.SedentaireDashboardScreen
+import com.gsoft.opus.presentation.pjdashboard.PjDashboardScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
@@ -246,6 +277,7 @@ fun MainScreen(
             "pj_requisition" to MainRoutes.Requisition.route,
             "pj_personne_recherchee" to MainRoutes.PersonneRecherchee.route,
             "pj_objets" to MainRoutes.Objets.route,
+            "pj_perquisition" to MainRoutes.Perquisition.route,
             "pj_registre_deferrement" to MainRoutes.RegistreDeferrement.route,
             "pj_renseignement" to MainRoutes.RenseignementPj.route,
             "cartographie" to MainRoutes.Cartographie.route,
@@ -619,18 +651,133 @@ fun MainScreen(
                     composable(MainRoutes.RenseignementSg.route) { ContextMenuItemScreens.RenseignementSg() }
 
                     // Division Police Judiciaire
-                    composable(MainRoutes.PjDashboard.route) { ContextMenuItemScreens.PjDashboard() }
+                    composable(MainRoutes.PjDashboard.route) {
+                        PjDashboardScreen(
+                            onPlainteList = { navController.navigate(MainRoutes.Plainte.route) },
+                            onPlainteDetail = { id -> navController.navigate(MainRoutes.PlainteDetail.createRoute(id)) },
+                            onCreatePlainte = { navController.navigate(MainRoutes.PlainteForm.createRoute(0)) },
+                            onEnquete = { navController.navigate(MainRoutes.RegistreEnquete.route) },
+                            onMandatList = { navController.navigate(MainRoutes.Mandat.route) },
+                            onMandatDetail = { id -> navController.navigate(MainRoutes.MandatDetail.createRoute(id)) },
+                            onCreateMandat = { navController.navigate(MainRoutes.MandatForm.createRoute(0)) },
+                            onConvocationList = { navController.navigate(MainRoutes.Convocation.route) },
+                            onConvocationDetail = { id -> navController.navigate(MainRoutes.ConvocationDetail.createRoute(id)) },
+                            onCreateConvocation = { navController.navigate(MainRoutes.ConvocationForm.createRoute(0)) },
+                            onArrestationList = { navController.navigate(MainRoutes.Arrestation.route) },
+                            onArrestationDetail = { id -> navController.navigate(MainRoutes.ArrestationDetail.createRoute(id)) },
+                            onCreateArrestation = { navController.navigate(MainRoutes.ArrestationForm.createRoute(0)) },
+                            onGavList = { navController.navigate(MainRoutes.Gav.route) },
+                            onGavDetail = { id -> navController.navigate(MainRoutes.GardeAVueDetail.createRoute(id)) },
+                            onCreateGav = { navController.navigate(MainRoutes.GardeAVueForm.createRoute(0)) },
+                            onRequisitionList = { navController.navigate(MainRoutes.Requisition.route) },
+                            onRequisitionDetail = { id -> navController.navigate(MainRoutes.RequisitionDetail.createRoute(id)) },
+                            onCreateRequisition = { navController.navigate(MainRoutes.RequisitionForm.createRoute(0)) },
+                            onPersonneRechercheeList = { navController.navigate(MainRoutes.PersonneRecherchee.route) },
+                            onPersonneRechercheeDetail = { id -> navController.navigate(MainRoutes.PersonneRechercheeDetail.createRoute(id)) },
+                            onCreatePersonneRecherchee = { navController.navigate(MainRoutes.PersonneRechercheeForm.createRoute(0)) },
+                            onObjetsList = { navController.navigate(MainRoutes.Objets.route) },
+                            onObjetSaisiDetail = { id -> navController.navigate(MainRoutes.ObjetSaisiDetail.createRoute(id)) },
+                            onObjetTrouveDetail = { id -> navController.navigate(MainRoutes.ObjetTrouveDetail.createRoute(id)) },
+                            onCreateObjet = { navController.navigate(MainRoutes.ObjetSaisiForm.createRoute(0)) },
+                            onPerquisitionList = { navController.navigate(MainRoutes.Perquisition.route) },
+                            onPerquisitionDetail = { id -> navController.navigate(MainRoutes.PerquisitionDetail.createRoute(id)) },
+                            onCreatePerquisition = { navController.navigate(MainRoutes.PerquisitionForm.createRoute(0)) },
+                            onDeferrement = { navController.navigate(MainRoutes.RegistreDeferrement.route) },
+                            onRenseignementList = { navController.navigate(MainRoutes.RenseignementPj.route) },
+                            onRenseignementDetail = { id -> navController.navigate(MainRoutes.RenseignementPjDetail.createRoute(id)) },
+                            onCreateRenseignement = { navController.navigate(MainRoutes.RenseignementPjForm.createRoute(0)) }
+                        )
+                    }
                     composable(MainRoutes.Plainte.route) { ContextMenuItemScreens.Plainte() }
                     composable(MainRoutes.RegistreEnquete.route) { ContextMenuItemScreens.RegistreEnquete() }
-                    composable(MainRoutes.Mandat.route) { ContextMenuItemScreens.Mandat() }
+                    composable(MainRoutes.Mandat.route) {
+                        MandatScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.MandatDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.MandatForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Convocation.route) { ContextMenuItemScreens.Convocation() }
-                    composable(MainRoutes.Arrestation.route) { ContextMenuItemScreens.Arrestation() }
-                    composable(MainRoutes.Gav.route) { ContextMenuItemScreens.Gav() }
-                    composable(MainRoutes.Requisition.route) { ContextMenuItemScreens.Requisition() }
-                    composable(MainRoutes.PersonneRecherchee.route) { ContextMenuItemScreens.PersonneRecherchee() }
-                    composable(MainRoutes.Objets.route) { ContextMenuItemScreens.Objets() }
+                    composable(MainRoutes.Arrestation.route) {
+                        ArrestationScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.ArrestationDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.ArrestationForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.Gav.route) {
+                        com.gsoft.opus.presentation.gardeavue.GardeAVueScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.GardeAVueDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.GardeAVueForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.Requisition.route) {
+                        com.gsoft.opus.presentation.requisition.RequisitionScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.RequisitionDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.RequisitionForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.PersonneRecherchee.route) {
+                        com.gsoft.opus.presentation.personnerecherchee.PersonneRechercheeScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.PersonneRechercheeDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.PersonneRechercheeForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.Objets.route) {
+                        ObjetScreen(
+                            onSaisiClick = { id ->
+                                navController.navigate(MainRoutes.ObjetSaisiDetail.createRoute(id))
+                            },
+                            onTrouveClick = { id ->
+                                navController.navigate(MainRoutes.ObjetTrouveDetail.createRoute(id))
+                            },
+                            onCreateSaisi = {
+                                navController.navigate(MainRoutes.ObjetSaisiForm.createRoute(0))
+                            },
+                            onCreateTrouve = {
+                                navController.navigate(MainRoutes.ObjetTrouveForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.Perquisition.route) {
+                        PerquisitionScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.PerquisitionDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.PerquisitionForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.RegistreDeferrement.route) { ContextMenuItemScreens.RegistreDeferrement() }
-                    composable(MainRoutes.RenseignementPj.route) { ContextMenuItemScreens.RenseignementPj() }
+                    composable(MainRoutes.RenseignementPj.route) {
+                        RenseignementPjScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.RenseignementPjDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.RenseignementPjForm.createRoute(0))
+                            }
+                        )
+                    }
 
                     // Global modules
                     composable(MainRoutes.Cartographie.route) { ContextMenuItemScreens.Cartographie() }
@@ -1243,6 +1390,712 @@ fun MainScreen(
                         )
                     }
 
+                    // Plainte (Police Judiciaire) — ENTRÉE + SORTIE
+                    composable(
+                        route = MainRoutes.PlainteDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteEntreeId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PlainteForm.createRoute(id))
+                            },
+                            onCreateSortie = { entreeId ->
+                                navController.navigate(MainRoutes.PlainteSortieForm.createRoute(0, entreeId))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PlainteForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteEntreeId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PlainteSortieDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteSortieId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteSortieDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PlainteSortieForm.createRoute(id, 0))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PlainteSortieForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("plainteSortieId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            },
+                            androidx.navigation.navArgument("plainteEntreeId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PlainteSortieFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Convocation (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.ConvocationDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("convocationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ConvocationDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ConvocationForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ConvocationForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("convocationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ConvocationFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Garde à Vue (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.GardeAVueDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("gardeAVueId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        GardeAVueDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.GardeAVueForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.GardeAVueForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("gardeAVueId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        GardeAVueFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Requisition (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.RequisitionDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("requisitionId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RequisitionDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.RequisitionForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RequisitionForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("requisitionId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RequisitionFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Personne Recherchée (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.PersonneRechercheeDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("personneRechercheeId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PersonneRechercheeDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PersonneRechercheeForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PersonneRechercheeForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("personneRechercheeId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PersonneRechercheeFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Objet Saisi (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.ObjetSaisiDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("objetId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ObjetSaisiDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ObjetSaisiForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ObjetSaisiForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("objetId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ObjetSaisiFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Objet Trouvé (Police Judiciaire)
+                    composable(
+                        route = MainRoutes.ObjetTrouveDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("objetId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ObjetTrouveDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ObjetTrouveForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ObjetTrouveForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("objetId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ObjetTrouveFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PerquisitionDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("perquisitionId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PerquisitionDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.PerquisitionForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.PerquisitionForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("perquisitionId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        PerquisitionFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RenseignementPjDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("renseignementId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RenseignementPjDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.RenseignementPjForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RenseignementPjForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("renseignementId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RenseignementPjFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MandatDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("mandatId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        MandatDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.MandatForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.MandatForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("mandatId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        MandatFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        route = MainRoutes.ArrestationDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("arrestationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArrestationDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ArrestationForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ArrestationForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("arrestationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArrestationFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
                     // Signature pad pairing
                     composable(MainRoutes.SignaturePairing.route) {
                         SignaturePairingScreen(
@@ -1554,6 +2407,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
         "pj_requisition",
         "pj_personne_recherchee",
         "pj_objets",
+        "pj_perquisition",
         "pj_deferrement",
         "pj_renseignement",
     ),
@@ -1652,6 +2506,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
             ContextMenuItem(id = "pj_requisition", title = "Réquisition", icon = Icons.Outlined.FilePresent, module = "pj_requisition"),
             ContextMenuItem(id = "pj_personne_recherchee", title = "Personne recherchée", icon = Icons.Outlined.PersonSearch, module = "pj_personne_recherchee"),
             ContextMenuItem(id = "pj_objets", title = "Objets", icon = Icons.Outlined.Inventory2, module = "pj_objets"),
+            ContextMenuItem(id = "pj_perquisition", title = "Perquisition", icon = Icons.Outlined.FindInPage, module = "pj_perquisition"),
             ContextMenuItem(id = "pj_registre_deferrement", title = "Registre de déferrement", icon = Icons.Outlined.Gavel, module = "pj_deferrement"),
             ContextMenuItem(id = "pj_renseignement", title = "Renseignement", icon = Icons.Outlined.Message, module = "pj_renseignement"),
         ).filter { hasVisibleItem(user, it) }

@@ -17,6 +17,17 @@ import com.gsoft.opus.data.repository.MaterielRepositoryImpl
 import com.gsoft.opus.data.repository.MaterielRoulantRepositoryImpl
 import com.gsoft.opus.data.repository.MainCouranteRepositoryImpl
 import com.gsoft.opus.data.repository.MainCouranteCategorieRepositoryImpl
+import com.gsoft.opus.data.repository.PlainteRepositoryImpl
+import com.gsoft.opus.data.repository.ConvocationRepositoryImpl
+import com.gsoft.opus.data.repository.GardeAVueRepositoryImpl
+import com.gsoft.opus.data.repository.RequisitionRepositoryImpl
+import com.gsoft.opus.data.repository.PersonneRechercheeRepositoryImpl
+import com.gsoft.opus.data.repository.ObjetSaisiRepositoryImpl
+import com.gsoft.opus.data.repository.ObjetTrouveRepositoryImpl
+import com.gsoft.opus.data.repository.PerquisitionRepositoryImpl
+import com.gsoft.opus.data.repository.RenseignementPjRepositoryImpl
+import com.gsoft.opus.data.repository.MandatRepositoryImpl
+import com.gsoft.opus.data.repository.ArrestationRepositoryImpl
 import com.gsoft.opus.domain.repository.ArmementRepository
 import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.AuthRepository
@@ -34,6 +45,17 @@ import com.gsoft.opus.domain.repository.MaterielRepository
 import com.gsoft.opus.domain.repository.MaterielRoulantRepository
 import com.gsoft.opus.domain.repository.MainCouranteRepository
 import com.gsoft.opus.domain.repository.MainCouranteCategorieRepository
+import com.gsoft.opus.domain.repository.PlainteRepository
+import com.gsoft.opus.domain.repository.ConvocationRepository
+import com.gsoft.opus.domain.repository.GardeAVueRepository
+import com.gsoft.opus.domain.repository.RequisitionRepository
+import com.gsoft.opus.domain.repository.PersonneRechercheeRepository
+import com.gsoft.opus.domain.repository.ObjetSaisiRepository
+import com.gsoft.opus.domain.repository.ObjetTrouveRepository
+import com.gsoft.opus.domain.repository.PerquisitionRepository
+import com.gsoft.opus.domain.repository.RenseignementPjRepository
+import com.gsoft.opus.domain.repository.MandatRepository
+import com.gsoft.opus.domain.repository.ArrestationRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -111,4 +133,48 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMainCouranteCategorieRepository(impl: MainCouranteCategorieRepositoryImpl): MainCouranteCategorieRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlainteRepository(impl: PlainteRepositoryImpl): PlainteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindConvocationRepository(impl: ConvocationRepositoryImpl): ConvocationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGardeAVueRepository(impl: GardeAVueRepositoryImpl): GardeAVueRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRequisitionRepository(impl: RequisitionRepositoryImpl): RequisitionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPersonneRechercheeRepository(impl: PersonneRechercheeRepositoryImpl): PersonneRechercheeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindObjetSaisiRepository(impl: ObjetSaisiRepositoryImpl): ObjetSaisiRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindObjetTrouveRepository(impl: ObjetTrouveRepositoryImpl): ObjetTrouveRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPerquisitionRepository(impl: PerquisitionRepositoryImpl): PerquisitionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRenseignementPjRepository(impl: RenseignementPjRepositoryImpl): RenseignementPjRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMandatRepository(impl: MandatRepositoryImpl): MandatRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindArrestationRepository(impl: ArrestationRepositoryImpl): ArrestationRepository
 }

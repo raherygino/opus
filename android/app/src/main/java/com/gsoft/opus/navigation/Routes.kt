@@ -57,6 +57,7 @@ sealed class MainRoutes(val route: String) {
     data object Requisition : MainRoutes("pj_requisition")
     data object PersonneRecherchee : MainRoutes("pj_personne_recherchee")
     data object Objets : MainRoutes("pj_objets")
+    data object Perquisition : MainRoutes("pj_perquisition")
     data object RegistreDeferrement : MainRoutes("pj_registre_deferrement")
     data object RenseignementPj : MainRoutes("pj_renseignement")
 
@@ -170,5 +171,109 @@ sealed class MainRoutes(val route: String) {
     data object MainCouranteForm : MainRoutes("sed_main_courante_form?mainCouranteId={mainCouranteId}&origine={origine}") {
         fun createRoute(mainCouranteId: Int = 0, origine: String = "Secretariat") =
             "sed_main_courante_form?mainCouranteId=$mainCouranteId&origine=$origine"
+    }
+
+    // Plainte (Police Judiciaire) — ENTRÉE + SORTIE
+    data object PlainteDetail : MainRoutes("pj_plainte_detail/{plainteEntreeId}") {
+        fun createRoute(plainteEntreeId: Int) = "pj_plainte_detail/$plainteEntreeId"
+    }
+    data object PlainteForm : MainRoutes("pj_plainte_form?plainteEntreeId={plainteEntreeId}") {
+        fun createRoute(plainteEntreeId: Int = 0) =
+            "pj_plainte_form?plainteEntreeId=$plainteEntreeId"
+    }
+    data object PlainteSortieDetail : MainRoutes("pj_plainte_sortie_detail/{plainteSortieId}") {
+        fun createRoute(plainteSortieId: Int) = "pj_plainte_sortie_detail/$plainteSortieId"
+    }
+    data object PlainteSortieForm : MainRoutes("pj_plainte_sortie_form?plainteSortieId={plainteSortieId}&plainteEntreeId={plainteEntreeId}") {
+        fun createRoute(plainteSortieId: Int = 0, plainteEntreeId: Int = 0) =
+            "pj_plainte_sortie_form?plainteSortieId=$plainteSortieId&plainteEntreeId=$plainteEntreeId"
+    }
+
+    // Convocation (Police Judiciaire)
+    data object ConvocationDetail : MainRoutes("pj_convocation_detail/{convocationId}") {
+        fun createRoute(convocationId: Int) = "pj_convocation_detail/$convocationId"
+    }
+    data object ConvocationForm : MainRoutes("pj_convocation_form?convocationId={convocationId}") {
+        fun createRoute(convocationId: Int = 0) =
+            "pj_convocation_form?convocationId=$convocationId"
+    }
+
+    // Garde à Vue (Police Judiciaire)
+    data object GardeAVueDetail : MainRoutes("pj_gav_detail/{gardeAVueId}") {
+        fun createRoute(gardeAVueId: Int) = "pj_gav_detail/$gardeAVueId"
+    }
+    data object GardeAVueForm : MainRoutes("pj_gav_form?gardeAVueId={gardeAVueId}") {
+        fun createRoute(gardeAVueId: Int = 0) =
+            "pj_gav_form?gardeAVueId=$gardeAVueId"
+    }
+
+    // Requisition (Police Judiciaire)
+    data object RequisitionDetail : MainRoutes("pj_requisition_detail/{requisitionId}") {
+        fun createRoute(requisitionId: Int) = "pj_requisition_detail/$requisitionId"
+    }
+    data object RequisitionForm : MainRoutes("pj_requisition_form?requisitionId={requisitionId}") {
+        fun createRoute(requisitionId: Int = 0) =
+            "pj_requisition_form?requisitionId=$requisitionId"
+    }
+
+    // Personne Recherchée (Police Judiciaire)
+    data object PersonneRechercheeDetail : MainRoutes("pj_personne_recherchee_detail/{personneRechercheeId}") {
+        fun createRoute(personneRechercheeId: Int) = "pj_personne_recherchee_detail/$personneRechercheeId"
+    }
+    data object PersonneRechercheeForm : MainRoutes("pj_personne_recherchee_form?personneRechercheeId={personneRechercheeId}") {
+        fun createRoute(personneRechercheeId: Int = 0) =
+            "pj_personne_recherchee_form?personneRechercheeId=$personneRechercheeId"
+    }
+
+    // Objet Saisi / Trouvé (Police Judiciaire)
+    data object ObjetSaisiDetail : MainRoutes("pj_objet_saisi_detail/{objetId}") {
+        fun createRoute(objetId: Int) = "pj_objet_saisi_detail/$objetId"
+    }
+    data object ObjetSaisiForm : MainRoutes("pj_objet_saisi_form?objetId={objetId}") {
+        fun createRoute(objetId: Int = 0) =
+            "pj_objet_saisi_form?objetId=$objetId"
+    }
+    data object ObjetTrouveDetail : MainRoutes("pj_objet_trouve_detail/{objetId}") {
+        fun createRoute(objetId: Int) = "pj_objet_trouve_detail/$objetId"
+    }
+    data object ObjetTrouveForm : MainRoutes("pj_objet_trouve_form?objetId={objetId}") {
+        fun createRoute(objetId: Int = 0) =
+            "pj_objet_trouve_form?objetId=$objetId"
+    }
+
+    // Perquisition (Police Judiciaire)
+    data object PerquisitionDetail : MainRoutes("pj_perquisition_detail/{perquisitionId}") {
+        fun createRoute(perquisitionId: Int) = "pj_perquisition_detail/$perquisitionId"
+    }
+    data object PerquisitionForm : MainRoutes("pj_perquisition_form?perquisitionId={perquisitionId}") {
+        fun createRoute(perquisitionId: Int = 0) =
+            "pj_perquisition_form?perquisitionId=$perquisitionId"
+    }
+
+    // Renseignement PJ (Police Judiciaire)
+    data object RenseignementPjDetail : MainRoutes("pj_renseignement_detail/{renseignementId}") {
+        fun createRoute(renseignementId: Int) = "pj_renseignement_detail/$renseignementId"
+    }
+    data object RenseignementPjForm : MainRoutes("pj_renseignement_form?renseignementId={renseignementId}") {
+        fun createRoute(renseignementId: Int = 0) =
+            "pj_renseignement_form?renseignementId=$renseignementId"
+    }
+
+    // Mandat (Police Judiciaire)
+    data object MandatDetail : MainRoutes("pj_mandat_detail/{mandatId}") {
+        fun createRoute(mandatId: Int) = "pj_mandat_detail/$mandatId"
+    }
+    data object MandatForm : MainRoutes("pj_mandat_form?mandatId={mandatId}") {
+        fun createRoute(mandatId: Int = 0) =
+            "pj_mandat_form?mandatId=$mandatId"
+    }
+
+    // Arrestation (Police Judiciaire)
+    data object ArrestationDetail : MainRoutes("pj_arrestation_detail/{arrestationId}") {
+        fun createRoute(arrestationId: Int) = "pj_arrestation_detail/$arrestationId"
+    }
+    data object ArrestationForm : MainRoutes("pj_arrestation_form?arrestationId={arrestationId}") {
+        fun createRoute(arrestationId: Int = 0) =
+            "pj_arrestation_form?arrestationId=$arrestationId"
     }
 }
