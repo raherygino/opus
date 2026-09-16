@@ -131,10 +131,13 @@ class MandatController
             Response::unauthorized('Authentication required');
         }
 
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true) ?? [];
+        file_put_contents(__DIR__ . '/../../_debug_mandat.log', date('c') . " RAW: $raw\n DATA: " . json_encode($data) . "\n", FILE_APPEND);
 
         $errors = self::validate($data, true);
         if (!empty($errors)) {
+            file_put_contents(__DIR__ . '/../../_debug_mandat.log', " ERRORS: " . json_encode($errors) . "\n", FILE_APPEND);
             Response::error('Validation failed', 422, $errors);
         }
 

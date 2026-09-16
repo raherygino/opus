@@ -39,7 +39,8 @@ $pdo->exec("DROP DATABASE IF EXISTS `$scratch`");
 $pdo->exec("CREATE DATABASE `$scratch` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 $pdo->exec("USE `$scratch`");
 
-$pdo->exec('CREATE TABLE users (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(100) NULL, prenoms VARCHAR(100) NULL, nom VARCHAR(100) NULL, personnel_id INT UNSIGNED NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+$pdo->exec('CREATE TABLE personnel (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, im VARCHAR(50) NULL, firstname VARCHAR(100) NULL, lastname VARCHAR(100) NULL, grade VARCHAR(100) NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+$pdo->exec('CREATE TABLE users (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(100) NULL, personnel_id INT UNSIGNED NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 $pdo->exec('CREATE TABLE plainte_sequence (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, type_key VARCHAR(50) NOT NULL, year INT NOT NULL, last_number INT NOT NULL DEFAULT 0, UNIQUE KEY uq_seq (type_key, year)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 
 $sql = file_get_contents($root . '/database/054_create_mandat.sql');

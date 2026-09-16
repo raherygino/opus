@@ -40,9 +40,10 @@ class Mandat
             array_push($args, $s, $s, $s, $s);
         }
 
-        $sql = 'SELECT m.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+        $sql = 'SELECT m.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, p.firstname AS agent_prenoms, p.lastname AS agent_nom
                 FROM mandat m
-                LEFT JOIN users u ON m.created_by = u.id';
+                LEFT JOIN users u ON m.created_by = u.id
+                LEFT JOIN personnel p ON u.personnel_id = p.id';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
@@ -57,9 +58,10 @@ class Mandat
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'SELECT m.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+            'SELECT m.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, p.firstname AS agent_prenoms, p.lastname AS agent_nom
              FROM mandat m
              LEFT JOIN users u ON m.created_by = u.id
+             LEFT JOIN personnel p ON u.personnel_id = p.id
              WHERE m.id = ?'
         );
         $stmt->execute([$id]);

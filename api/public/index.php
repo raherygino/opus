@@ -52,6 +52,8 @@ use App\Controllers\RenseignementPjController;
 use App\Controllers\RenseignementPjAttachmentController;
 use App\Controllers\MandatController;
 use App\Controllers\MandatAttachmentController;
+use App\Controllers\ArrestationController;
+use App\Controllers\ArrestationAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -483,6 +485,22 @@ $router->post('/api/mandats/{id}/attachments',                               [Ma
 $router->put('/api/mandats/{id}/attachments/{attachId}',                     [MandatAttachmentController::class, 'update']);
 $router->delete('/api/mandats/{id}/attachments/{attachId}',                  [MandatAttachmentController::class, 'destroy']);
 $router->get('/api/mandats/{id}/attachments/{attachId}/download',            [MandatAttachmentController::class, 'download']);
+
+// ========================
+// Arrestation Routes (Police Judiciaire)
+// ========================
+$router->get('/api/arrestations',                                                 [ArrestationController::class, 'index']);
+$router->get('/api/arrestations/next-number',                                     [ArrestationController::class, 'nextNumber']);
+$router->get('/api/arrestations/{id}',                                            [ArrestationController::class, 'show']);
+$router->post('/api/arrestations',                                                [ArrestationController::class, 'store']);
+$router->put('/api/arrestations/{id}',                                            [ArrestationController::class, 'update']);
+$router->delete('/api/arrestations/{id}',                                         [ArrestationController::class, 'destroy']);
+
+$router->get('/api/arrestations/{id}/attachments',                                [ArrestationAttachmentController::class, 'index']);
+$router->post('/api/arrestations/{id}/attachments',                               [ArrestationAttachmentController::class, 'store']);
+$router->put('/api/arrestations/{id}/attachments/{attachId}',                     [ArrestationAttachmentController::class, 'update']);
+$router->delete('/api/arrestations/{id}/attachments/{attachId}',                  [ArrestationAttachmentController::class, 'destroy']);
+$router->get('/api/arrestations/{id}/attachments/{attachId}/download',            [ArrestationAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

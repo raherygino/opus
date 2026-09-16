@@ -241,15 +241,6 @@ object ContextMenuItemScreens {
     // ── Division Police Judiciaire ──
 
     @Composable
-    fun PjDashboard() {
-        PlaceholderScreen(
-            title = "Dashboard PJ",
-            description = "Division Police Judiciaire",
-            icon = Icons.Outlined.Dashboard
-        )
-    }
-
-    @Composable
     fun Plainte() {
         val navController = androidx.navigation.compose.rememberNavController()
         com.gsoft.opus.presentation.plainte.PlainteScreen(
@@ -299,15 +290,6 @@ object ContextMenuItemScreens {
             onCreate = {
                 navController.navigate(com.gsoft.opus.navigation.MainRoutes.ConvocationForm.createRoute(0))
             }
-        )
-    }
-
-    @Composable
-    fun Arrestation() {
-        PlaceholderScreen(
-            title = "Arrestation",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.LocalPolice
         )
     }
 

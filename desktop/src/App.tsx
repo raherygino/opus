@@ -146,6 +146,17 @@ const MandatDetail = lazy(() =>
   import("@/pages/mandat-detail").then((m) => ({ default: m.MandatDetail })),
 );
 
+// Arrestation (Police Judiciaire)
+const ArrestationList = lazy(() =>
+  import("@/pages/arrestation-list").then((m) => ({ default: m.ArrestationList })),
+);
+const ArrestationForm = lazy(() =>
+  import("@/pages/arrestation-form").then((m) => ({ default: m.ArrestationForm })),
+);
+const ArrestationDetail = lazy(() =>
+  import("@/pages/arrestation-detail").then((m) => ({ default: m.ArrestationDetail })),
+);
+
 // Personnel
 const PersonnelTabs = lazy(() =>
   import("@/pages/personnel-tabs").then((m) => ({ default: m.PersonnelTabs })),
@@ -1197,6 +1208,47 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<TableSkeleton />}>
                       <MandatForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Arrestation */}
+              <Route
+                path="arrestation"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ArrestationList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="arrestation/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ArrestationForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="arrestation/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ArrestationDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="arrestation/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ArrestationForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

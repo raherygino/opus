@@ -37,6 +37,7 @@ class PlainteSequence
         'REQ'    => 'N°{seq}/MSP/SG/DGPN/DRSP.1/REQ/CSP/A-TRIMO/{yy}',
         'PEQ'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/PEQ/CSP/TRIMO/{yy}',
         'MAN'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/MAN/CSP/TRIMO/{yy}',
+        'ARR'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/ARR/CSP/TRIMO/{yy}',
     ];
 
     /** ENTRÉE type → sequence type_key map. */
@@ -60,6 +61,9 @@ class PlainteSequence
 
     /** MANDAT sequence type_key. */
     public const MANDAT_KEY = 'MAN';
+
+    /** ARRESTATION sequence type_key. */
+    public const ARRESTATION_KEY = 'ARR';
 
     /**
      * Generate the next dossier/record number for the given type_key.

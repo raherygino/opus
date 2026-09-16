@@ -25,9 +25,10 @@ class Perquisition
             array_push($args, $s, $s, $s, $s);
         }
 
-        $sql = 'SELECT p.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+        $sql = 'SELECT p.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, pers.firstname AS agent_prenoms, pers.lastname AS agent_nom
                 FROM perquisition p
-                LEFT JOIN users u ON p.created_by = u.id';
+                LEFT JOIN users u ON p.created_by = u.id
+                LEFT JOIN personnel pers ON u.personnel_id = pers.id';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
@@ -42,9 +43,10 @@ class Perquisition
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'SELECT p.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+            'SELECT p.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, pers.firstname AS agent_prenoms, pers.lastname AS agent_nom
              FROM perquisition p
              LEFT JOIN users u ON p.created_by = u.id
+             LEFT JOIN personnel pers ON u.personnel_id = pers.id
              WHERE p.id = ?'
         );
         $stmt->execute([$id]);

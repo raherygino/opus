@@ -60,6 +60,10 @@ import com.gsoft.opus.data.api.dto.MandatAttachmentDto
 import com.gsoft.opus.data.api.dto.MandatDto
 import com.gsoft.opus.data.api.dto.MandatNextNumberDto
 import com.gsoft.opus.data.api.dto.MandatRequest
+import com.gsoft.opus.data.api.dto.ArrestationAttachmentDto
+import com.gsoft.opus.data.api.dto.ArrestationDto
+import com.gsoft.opus.data.api.dto.ArrestationNextNumberDto
+import com.gsoft.opus.data.api.dto.ArrestationRequest
 import com.gsoft.opus.data.api.dto.ObjetTrouveAttachmentDto
 import com.gsoft.opus.data.api.dto.ConsommationRequest
 import com.gsoft.opus.data.api.dto.TypeArmeDto
@@ -1245,6 +1249,54 @@ interface ApiService {
 
     @DELETE("api/mandats/{id}/attachments/{attachId}")
     suspend fun deleteMandatAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Unit>>
+
+    // ========================
+    // Arrestation (Police Judiciaire)
+    // ========================
+
+    @GET("api/arrestations")
+    suspend fun getArrestationList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<ArrestationDto>>>
+
+    @GET("api/arrestations/next-number")
+    suspend fun peekArrestationNumber(): Response<ApiResponse<ArrestationNextNumberDto>>
+
+    @GET("api/arrestations/{id}")
+    suspend fun getArrestation(@Path("id") id: Int): Response<ApiResponse<ArrestationDto>>
+
+    @POST("api/arrestations")
+    suspend fun createArrestation(@Body data: ArrestationRequest): Response<ApiResponse<ArrestationDto>>
+
+    @PUT("api/arrestations/{id}")
+    suspend fun updateArrestation(@Path("id") id: Int, @Body data: ArrestationRequest): Response<ApiResponse<ArrestationDto>>
+
+    @DELETE("api/arrestations/{id}")
+    suspend fun deleteArrestation(@Path("id") id: Int): Response<ApiResponse<Unit>>
+
+    @GET("api/arrestations/{id}/attachments")
+    suspend fun getArrestationAttachments(@Path("id") id: Int): Response<ApiResponse<List<ArrestationAttachmentDto>>>
+
+    @Multipart
+    @POST("api/arrestations/{id}/attachments")
+    suspend fun createArrestationAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ArrestationAttachmentDto>>
+
+    @PUT("api/arrestations/{id}/attachments/{attachId}")
+    suspend fun updateArrestationAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<ArrestationAttachmentDto>>
+
+    @DELETE("api/arrestations/{id}/attachments/{attachId}")
+    suspend fun deleteArrestationAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Unit>>

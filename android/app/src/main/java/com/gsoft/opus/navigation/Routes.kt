@@ -267,4 +267,13 @@ sealed class MainRoutes(val route: String) {
         fun createRoute(mandatId: Int = 0) =
             "pj_mandat_form?mandatId=$mandatId"
     }
+
+    // Arrestation (Police Judiciaire)
+    data object ArrestationDetail : MainRoutes("pj_arrestation_detail/{arrestationId}") {
+        fun createRoute(arrestationId: Int) = "pj_arrestation_detail/$arrestationId"
+    }
+    data object ArrestationForm : MainRoutes("pj_arrestation_form?arrestationId={arrestationId}") {
+        fun createRoute(arrestationId: Int = 0) =
+            "pj_arrestation_form?arrestationId=$arrestationId"
+    }
 }

@@ -137,6 +137,9 @@ import com.gsoft.opus.presentation.renseignementpj.RenseignementPjScreen
 import com.gsoft.opus.presentation.mandat.MandatDetailScreen
 import com.gsoft.opus.presentation.mandat.MandatFormScreen
 import com.gsoft.opus.presentation.mandat.MandatScreen
+import com.gsoft.opus.presentation.arrestation.ArrestationDetailScreen
+import com.gsoft.opus.presentation.arrestation.ArrestationFormScreen
+import com.gsoft.opus.presentation.arrestation.ArrestationScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
@@ -149,6 +152,7 @@ import com.gsoft.opus.presentation.personnel.PersonnelBrowseScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
 import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
 import com.gsoft.opus.presentation.sedentaire.SedentaireDashboardScreen
+import com.gsoft.opus.presentation.pjdashboard.PjDashboardScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
@@ -647,7 +651,43 @@ fun MainScreen(
                     composable(MainRoutes.RenseignementSg.route) { ContextMenuItemScreens.RenseignementSg() }
 
                     // Division Police Judiciaire
-                    composable(MainRoutes.PjDashboard.route) { ContextMenuItemScreens.PjDashboard() }
+                    composable(MainRoutes.PjDashboard.route) {
+                        PjDashboardScreen(
+                            onPlainteList = { navController.navigate(MainRoutes.Plainte.route) },
+                            onPlainteDetail = { id -> navController.navigate(MainRoutes.PlainteDetail.createRoute(id)) },
+                            onCreatePlainte = { navController.navigate(MainRoutes.PlainteForm.createRoute(0)) },
+                            onEnquete = { navController.navigate(MainRoutes.RegistreEnquete.route) },
+                            onMandatList = { navController.navigate(MainRoutes.Mandat.route) },
+                            onMandatDetail = { id -> navController.navigate(MainRoutes.MandatDetail.createRoute(id)) },
+                            onCreateMandat = { navController.navigate(MainRoutes.MandatForm.createRoute(0)) },
+                            onConvocationList = { navController.navigate(MainRoutes.Convocation.route) },
+                            onConvocationDetail = { id -> navController.navigate(MainRoutes.ConvocationDetail.createRoute(id)) },
+                            onCreateConvocation = { navController.navigate(MainRoutes.ConvocationForm.createRoute(0)) },
+                            onArrestationList = { navController.navigate(MainRoutes.Arrestation.route) },
+                            onArrestationDetail = { id -> navController.navigate(MainRoutes.ArrestationDetail.createRoute(id)) },
+                            onCreateArrestation = { navController.navigate(MainRoutes.ArrestationForm.createRoute(0)) },
+                            onGavList = { navController.navigate(MainRoutes.Gav.route) },
+                            onGavDetail = { id -> navController.navigate(MainRoutes.GardeAVueDetail.createRoute(id)) },
+                            onCreateGav = { navController.navigate(MainRoutes.GardeAVueForm.createRoute(0)) },
+                            onRequisitionList = { navController.navigate(MainRoutes.Requisition.route) },
+                            onRequisitionDetail = { id -> navController.navigate(MainRoutes.RequisitionDetail.createRoute(id)) },
+                            onCreateRequisition = { navController.navigate(MainRoutes.RequisitionForm.createRoute(0)) },
+                            onPersonneRechercheeList = { navController.navigate(MainRoutes.PersonneRecherchee.route) },
+                            onPersonneRechercheeDetail = { id -> navController.navigate(MainRoutes.PersonneRechercheeDetail.createRoute(id)) },
+                            onCreatePersonneRecherchee = { navController.navigate(MainRoutes.PersonneRechercheeForm.createRoute(0)) },
+                            onObjetsList = { navController.navigate(MainRoutes.Objets.route) },
+                            onObjetSaisiDetail = { id -> navController.navigate(MainRoutes.ObjetSaisiDetail.createRoute(id)) },
+                            onObjetTrouveDetail = { id -> navController.navigate(MainRoutes.ObjetTrouveDetail.createRoute(id)) },
+                            onCreateObjet = { navController.navigate(MainRoutes.ObjetSaisiForm.createRoute(0)) },
+                            onPerquisitionList = { navController.navigate(MainRoutes.Perquisition.route) },
+                            onPerquisitionDetail = { id -> navController.navigate(MainRoutes.PerquisitionDetail.createRoute(id)) },
+                            onCreatePerquisition = { navController.navigate(MainRoutes.PerquisitionForm.createRoute(0)) },
+                            onDeferrement = { navController.navigate(MainRoutes.RegistreDeferrement.route) },
+                            onRenseignementList = { navController.navigate(MainRoutes.RenseignementPj.route) },
+                            onRenseignementDetail = { id -> navController.navigate(MainRoutes.RenseignementPjDetail.createRoute(id)) },
+                            onCreateRenseignement = { navController.navigate(MainRoutes.RenseignementPjForm.createRoute(0)) }
+                        )
+                    }
                     composable(MainRoutes.Plainte.route) { ContextMenuItemScreens.Plainte() }
                     composable(MainRoutes.RegistreEnquete.route) { ContextMenuItemScreens.RegistreEnquete() }
                     composable(MainRoutes.Mandat.route) {
@@ -661,7 +701,16 @@ fun MainScreen(
                         )
                     }
                     composable(MainRoutes.Convocation.route) { ContextMenuItemScreens.Convocation() }
-                    composable(MainRoutes.Arrestation.route) { ContextMenuItemScreens.Arrestation() }
+                    composable(MainRoutes.Arrestation.route) {
+                        ArrestationScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.ArrestationDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.ArrestationForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Gav.route) {
                         com.gsoft.opus.presentation.gardeavue.GardeAVueScreen(
                             onItemClick = { id ->
@@ -1984,6 +2033,64 @@ fun MainScreen(
                         }
                     ) {
                         MandatFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        route = MainRoutes.ArrestationDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("arrestationId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArrestationDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ArrestationForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ArrestationForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("arrestationId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ArrestationFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )

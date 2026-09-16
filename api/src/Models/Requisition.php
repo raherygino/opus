@@ -49,9 +49,10 @@ class Requisition
             $args[] = $filters['date_to'];
         }
 
-        $sql = 'SELECT r.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+        $sql = 'SELECT r.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, p.firstname AS agent_prenoms, p.lastname AS agent_nom
                 FROM requisition r
-                LEFT JOIN users u ON r.created_by = u.id';
+                LEFT JOIN users u ON r.created_by = u.id
+                LEFT JOIN personnel p ON u.personnel_id = p.id';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
@@ -66,9 +67,10 @@ class Requisition
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'SELECT r.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+            'SELECT r.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, p.firstname AS agent_prenoms, p.lastname AS agent_nom
              FROM requisition r
              LEFT JOIN users u ON r.created_by = u.id
+             LEFT JOIN personnel p ON u.personnel_id = p.id
              WHERE r.id = ?'
         );
         $stmt->execute([$id]);

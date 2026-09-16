@@ -42,9 +42,10 @@ class ObjetTrouve
             $args[] = '%' . $filters['search'] . '%';
         }
 
-        $sql = 'SELECT o.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+        $sql = 'SELECT o.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, p.firstname AS agent_prenoms, p.lastname AS agent_nom
                 FROM objet_trouve o
-                LEFT JOIN users u ON o.created_by = u.id';
+                LEFT JOIN users u ON o.created_by = u.id
+                LEFT JOIN personnel p ON u.personnel_id = p.id';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
@@ -59,9 +60,10 @@ class ObjetTrouve
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'SELECT o.*, u.username AS agent_username, u.prenoms AS agent_prenoms, u.nom AS agent_nom
+            'SELECT o.*, u.username AS agent_username, u.personnel_id AS agent_personnel_id, p.firstname AS agent_prenoms, p.lastname AS agent_nom
              FROM objet_trouve o
              LEFT JOIN users u ON o.created_by = u.id
+             LEFT JOIN personnel p ON u.personnel_id = p.id
              WHERE o.id = ?'
         );
         $stmt->execute([$id]);

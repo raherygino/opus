@@ -27,6 +27,7 @@ import com.gsoft.opus.data.repository.ObjetTrouveRepositoryImpl
 import com.gsoft.opus.data.repository.PerquisitionRepositoryImpl
 import com.gsoft.opus.data.repository.RenseignementPjRepositoryImpl
 import com.gsoft.opus.data.repository.MandatRepositoryImpl
+import com.gsoft.opus.data.repository.ArrestationRepositoryImpl
 import com.gsoft.opus.domain.repository.ArmementRepository
 import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.AuthRepository
@@ -54,6 +55,7 @@ import com.gsoft.opus.domain.repository.ObjetTrouveRepository
 import com.gsoft.opus.domain.repository.PerquisitionRepository
 import com.gsoft.opus.domain.repository.RenseignementPjRepository
 import com.gsoft.opus.domain.repository.MandatRepository
+import com.gsoft.opus.domain.repository.ArrestationRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -171,4 +173,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMandatRepository(impl: MandatRepositoryImpl): MandatRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindArrestationRepository(impl: ArrestationRepositoryImpl): ArrestationRepository
 }
