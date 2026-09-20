@@ -28,9 +28,6 @@ const Dashboard = lazy(() =>
 const SedentaireDashboard = lazy(() =>
   import("@/pages/sedentaire-dashboard").then((m) => ({ default: m.SedentaireDashboard })),
 );
-const SgDashboard = lazy(() =>
-  import("@/pages/sg-dashboard").then((m) => ({ default: m.SgDashboard })),
-);
 const PjDashboard = lazy(() =>
   import("@/pages/pj-dashboard").then((m) => ({ default: m.PjDashboard })),
 );
@@ -155,6 +152,17 @@ const ArrestationForm = lazy(() =>
 );
 const ArrestationDetail = lazy(() =>
   import("@/pages/arrestation-detail").then((m) => ({ default: m.ArrestationDetail })),
+);
+
+// Rassemblement Journalier (Service Général)
+const RassemblementJournalierList = lazy(() =>
+  import("@/pages/rassemblement-journalier-list").then((m) => ({ default: m.RassemblementJournalierList })),
+);
+const RassemblementJournalierForm = lazy(() =>
+  import("@/pages/rassemblement-journalier-form").then((m) => ({ default: m.RassemblementJournalierForm })),
+);
+const RassemblementJournalierDetail = lazy(() =>
+  import("@/pages/rassemblement-journalier-detail").then((m) => ({ default: m.RassemblementJournalierDetail })),
 );
 
 // Personnel
@@ -752,14 +760,44 @@ export default function App() {
             <Route path="/sg">
               <Route
                 index
-                element={<Navigate to="/sg/dashboard" replace />}
+                element={<Navigate to="/sg/rassemblement-journalier" replace />}
               />
               <Route
-                path="dashboard"
+                path="rassemblement-journalier"
                 element={
                   <ErrorBoundary>
                     <Suspense fallback={<DashboardSkeleton />}>
-                      <SgDashboard />
+                      <RassemblementJournalierList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="rassemblement-journalier/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<DashboardSkeleton />}>
+                      <RassemblementJournalierForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="rassemblement-journalier/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<DashboardSkeleton />}>
+                      <RassemblementJournalierDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="rassemblement-journalier/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<DashboardSkeleton />}>
+                      <RassemblementJournalierForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

@@ -45,18 +45,12 @@ import {
   Repeat,
   SquareMenu,
   Hotel,
-  ReceiptText,
-  Info,
-  Grid2X2,
   FileQuestion,
-  ShieldHalf,
-  FileBox,
-  MessageSquareText,
-  MessageSquareMore,
   BellRing,
   Smartphone,
   Crosshair,
   Search as SearchIcon,
+  ClipboardList,
 } from "lucide-react";
 
 interface NavItem {
@@ -84,16 +78,7 @@ const DIVISION_MODULES: Record<string, string[]> = {
     "personnel",
   ],
   sg: [
-    "sg_spa",
-    "sg_info_rassemblement",
-    "sg_repartition",
-    "sg_patrouille",
-    "sg_intervention",
-    "sg_dispositif_exceptionnel",
-    "sg_instruction_autorite",
-    "sg_compte_rendu",
-    "sg_recherche",
-    "sg_renseignement",
+    "sg_rassemblement_journalier",
   ],
   pj: [
     "pj_plainte",
@@ -193,28 +178,16 @@ function buildNavItems(user: User): NavItem[] {
   // Service Général
   if (accessibleDivisions.includes("sg")) {
     const sgChildren: NavItem[] = [
-      { icon: ReceiptText, label: "SPA", path: "/sg/spa", module: "sg_spa" },
-      { icon: Info, label: "Info rassemblement", path: "/sg/information-rassemblement", module: "sg_info_rassemblement" },
-      { icon: Grid2X2, label: "Répartition", path: "/sg/repartition", module: "sg_repartition" },
-      { icon: ShieldEllipsis, label: "Patrouille", path: "/sg/patrouille", module: "sg_patrouille" },
-      { icon: ShieldHalf, label: "Intervention", path: "/sg/intervention", module: "sg_intervention" },
-      { icon: FileBox, label: "Dispositif exceptionnel", path: "/sg/dispositif-exceptionnel", module: "sg_dispositif_exceptionnel" },
-      { icon: MessageCircleMore, label: "Instruction autorité", path: "/sg/instruction-autorite", module: "sg_instruction_autorite" },
-      { icon: MessageSquareText, label: "Compte rendu", path: "/sg/compte-rendu", module: "sg_compte_rendu" },
-      { icon: MessageSquareMore, label: "Renseignement", path: "/sg/renseignement", module: "sg_renseignement" },
+      { icon: ClipboardList, label: "Rassemblement Journalier", path: "/sg/rassemblement-journalier", module: "sg_rassemblement_journalier" },
     ].filter((c) => hasVisibleNavItem(user, c));
 
     if (flattenDivisions) {
-      items.push({ icon: LayoutDashboard, label: "Dashboard SG", path: "/sg/dashboard" });
       items.push(...sgChildren);
     } else {
       items.push({
         icon: Car,
         label: "Division service général",
-        children: [
-          { icon: LayoutDashboard, label: "Dashboard", path: "/sg/dashboard" },
-          ...sgChildren,
-        ],
+        children: sgChildren,
       });
     }
   }
