@@ -11,7 +11,6 @@ import androidx.compose.material.icons.outlined.FilePresent
 import androidx.compose.material.icons.outlined.FindInPage
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Handshake
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.LocalPolice
 import androidx.compose.material.icons.outlined.Map
@@ -154,15 +153,6 @@ object ContextMenuItemScreens {
             title = "SPA",
             description = "Service Prise d'Armes",
             icon = Icons.Outlined.Receipt
-        )
-    }
-
-    @Composable
-    fun InfoRassemblement() {
-        PlaceholderScreen(
-            title = "Info rassemblement",
-            description = "Information communiquée durant le rassemblement",
-            icon = Icons.Outlined.Info
         )
     }
 

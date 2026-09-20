@@ -22,6 +22,8 @@ import com.gsoft.opus.data.api.dto.MainCouranteAttachmentDto
 import com.gsoft.opus.data.api.dto.MainCouranteCategorieDto
 import com.gsoft.opus.data.api.dto.MainCouranteCategorieRequest
 import com.gsoft.opus.data.api.dto.MainCouranteRequest
+import com.gsoft.opus.data.api.dto.RassemblementJournalierDto
+import com.gsoft.opus.data.api.dto.RassemblementJournalierRequest
 import com.gsoft.opus.data.api.dto.PlainteEntreeDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
@@ -698,6 +700,25 @@ interface ApiService {
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
+
+    // ─── Rassemblement journalier (Service Général) ──────────────────
+
+    @GET("api/rassemblements")
+    suspend fun getRassemblementList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<RassemblementJournalierDto>>>
+
+    @GET("api/rassemblements/{id}")
+    suspend fun getRassemblement(@Path("id") id: Int): Response<ApiResponse<RassemblementJournalierDto>>
+
+    @POST("api/rassemblements")
+    suspend fun createRassemblement(@Body request: RassemblementJournalierRequest): Response<ApiResponse<RassemblementJournalierDto>>
+
+    @PUT("api/rassemblements/{id}")
+    suspend fun updateRassemblement(@Path("id") id: Int, @Body request: RassemblementJournalierRequest): Response<ApiResponse<RassemblementJournalierDto>>
+
+    @DELETE("api/rassemblements/{id}")
+    suspend fun deleteRassemblement(@Path("id") id: Int): Response<ApiResponse<Nothing>>
 
     // ========================
     // Main courante Categories (user-managed label catalog)

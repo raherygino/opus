@@ -13,6 +13,8 @@ import com.gsoft.opus.domain.model.MaterielRoulant
 import com.gsoft.opus.domain.model.MaterielRoulantAttachment
 import com.gsoft.opus.domain.model.MainCourante
 import com.gsoft.opus.domain.model.MainCouranteAttachment
+import com.gsoft.opus.domain.model.RassemblementJournalier
+import com.gsoft.opus.domain.model.RepartitionSecteur
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -495,6 +497,43 @@ fun MainCouranteAttachmentDto.toDomain(): MainCouranteAttachment = MainCouranteA
     fileSize = fileSize,
     createdAt = createdAt
 )
+
+// ── Rassemblement journalier ───────────────────────────────────────
+
+fun RassemblementJournalierDto.toDomain(): RassemblementJournalier = RassemblementJournalier(
+    id = id,
+    dateRassemblement = dateRassemblement,
+    heureRassemblement = heureRassemblement,
+    brigadeService = brigadeService,
+    officierPermanence = officierPermanence,
+    inspecteurPermanence = inspecteurPermanence,
+    chefPoste = chefPoste,
+    instructionsAutorite = instructionsAutorite,
+    effectifTheorique = effectifTheorique,
+    present = present,
+    absent = absent,
+    motifAbsence = motifAbsence,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    repartitions = repartitions?.map { it.toDomain() } ?: emptyList()
+)
+
+fun RepartitionSecteurDto.toDomain(): RepartitionSecteur = RepartitionSecteur(
+    id = id,
+    type = type,
+    secteur = secteur,
+    effectifEngage = effectifEngage,
+    chefElementContact = chefElementContact,
+    controleContact = controleContact,
+    materielsArmements = materielsArmements,
+    missions = missions,
+    createdAt = createdAt
+)
+
 
 // ── Plainte ENTRÉE / SORTIE ────────────────────────────────────────
 

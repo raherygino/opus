@@ -36,7 +36,7 @@ sealed class MainRoutes(val route: String) {
     // Division Service Général
     data object SgDashboard : MainRoutes("sg_dashboard")
     data object Spa : MainRoutes("sg_spa")
-    data object InfoRassemblement : MainRoutes("sg_info_rassemblement")
+    data object RassemblementJournalier : MainRoutes("sg_rassemblement_journalier")
     data object Repartition : MainRoutes("sg_repartition")
     data object Patrouille : MainRoutes("sg_patrouille")
     data object Intervention : MainRoutes("sg_intervention")
@@ -171,6 +171,15 @@ sealed class MainRoutes(val route: String) {
     data object MainCouranteForm : MainRoutes("sed_main_courante_form?mainCouranteId={mainCouranteId}&origine={origine}") {
         fun createRoute(mainCouranteId: Int = 0, origine: String = "Secretariat") =
             "sed_main_courante_form?mainCouranteId=$mainCouranteId&origine=$origine"
+    }
+
+    // Rassemblement journalier (Service Général) — situation de prise d'arme
+    // integrated into the record; repartitions Diurne/Nocturne share one structure.
+    data object RassemblementJournalierDetail : MainRoutes("sg_rassemblement_journalier_detail/{rassemblementId}") {
+        fun createRoute(rassemblementId: Int) = "sg_rassemblement_journalier_detail/$rassemblementId"
+    }
+    data object RassemblementJournalierForm : MainRoutes("sg_rassemblement_journalier_form?rassemblementId={rassemblementId}") {
+        fun createRoute(rassemblementId: Int = 0) = "sg_rassemblement_journalier_form?rassemblementId=$rassemblementId"
     }
 
     // Plainte (Police Judiciaire) — ENTRÉE + SORTIE

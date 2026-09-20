@@ -8,7 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Pencil, Trash2, ArrowLeft } from "lucide-react";
-import type { RassemblementJournalier, RepartitionSecteur } from "@/types";
+import {
+  RepartitionSecteurTable,
+  type EditableRepartitionRow,
+} from "@/components/rassemblement-journalier/repartition-secteur-table";
+import type { RassemblementJournalier } from "@/types";
 
 const SG_RASSEMBLEMENT_MODULE = "sg_rassemblement_journalier";
 
@@ -61,6 +65,18 @@ export function RassemblementJournalierDetail() {
   }
   if (!item) return null;
 
+  // Répartition par secteur — Diurne / Nocturne share the same structure.
+  const repartitionRows: EditableRepartitionRow[] = (item.repartitions ?? []).map((r) => ({
+    _key: String(r.id),
+    type: r.type,
+    secteur: r.secteur,
+    effectif_engage: r.effectif_engage,
+    chef_element_contact: r.chef_element_contact,
+    controle_contact: r.controle_contact,
+    materiels_armements: r.materiels_armements,
+    missions: r.missions,
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -91,64 +107,48 @@ export function RassemblementJournalierDetail() {
         </div>
       </div>
 
-      {/* Main fields */}
+      {/* Main fields + situation de prise d'arme (part of the record) */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Informations générales</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <DetailField label="Date" value={new Date(item.date_rassemblement).toLocaleDateString("fr-FR")} />
-          <DetailField label="Heure" value={item.heure_rassemblement} />
-          <DetailField label="Brigade de service" value={item.brigade_service} />
-          <DetailField label="Officier de permanence" value={item.officier_permanence} />
-          <DetailField label="Inspecteur de permanence" value={item.inspecteur_permanence} />
-          <DetailField label="Chef de poste" value={item.chef_poste} />
-          <div className="sm:col-span-2 lg:col-span-3">
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <DetailField label="Date" value={new Date(item.date_rassemblement).toLocaleDateString("fr-FR")} />
+            <DetailField label="Heure" value={item.heure_rassemblement} />
+            <DetailField label="Brigade de service" value={item.brigade_service} />
+            <DetailField label="Officier de permanence" value={item.officier_permanence} />
+            <DetailField label="Inspecteur de permanence" value={item.inspecteur_permanence} />
+            <DetailField label="Chef de poste" value={item.chef_poste} />
+          </div>
+
+          <div className="space-y-3 border-t pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Situation de prise d'arme
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <DetailField label="Effectif théorique" value={String(item.effectif_theorique)} />
+              <DetailField label="Présent" value={String(item.present)} />
+              <DetailField label="Absent" value={String(item.absent)} />
+              <DetailField label="Motif d'absence" value={item.motif_absence} multiline />
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
             <DetailField label="Instructions de l'autorité" value={item.instructions_autorite} multiline />
           </div>
         </CardContent>
       </Card>
 
-      {/* Situation de prise d'arme */}
+      {/* Répartition par secteur — one unified table (Diurne / Nocturne) */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Situation de prise d'arme</CardTitle>
+          <CardTitle className="text-lg">Répartition par secteur</CardTitle>
         </CardHeader>
         <CardContent>
-          {(item.situations_prise_arme ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune situation enregistrée</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-3 font-medium">EFFECTIF THÉORIQUE</th>
-                    <th className="text-left py-2 px-3 font-medium">PRÉSENT</th>
-                    <th className="text-left py-2 px-3 font-medium">ABSENT</th>
-                    <th className="text-left py-2 px-3 font-medium">MOTIF D'ABSENCE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(item.situations_prise_arme ?? []).map((s) => (
-                    <tr key={s.id} className="border-b last:border-0">
-                      <td className="py-2 px-3">{s.effectif_theorique}</td>
-                      <td className="py-2 px-3">{s.present}</td>
-                      <td className="py-2 px-3">{s.absent}</td>
-                      <td className="py-2 px-3">{s.motif_absence || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <RepartitionSecteurTable rows={repartitionRows} readOnly />
         </CardContent>
       </Card>
-
-      {/* Répartition par secteur – Diurne */}
-      <RepartitionTable title="Répartition par secteur – Diurne" rows={item.repartitions_diurne ?? []} />
-
-      {/* Répartition par secteur – Nocturne */}
-      <RepartitionTable title="Répartition par secteur – Nocturne" rows={item.repartitions_nocturne ?? []} />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -171,53 +171,5 @@ function DetailField({ label, value, multiline }: { label: string; value: string
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
       <p className={`text-sm ${multiline ? "whitespace-pre-wrap" : ""}`}>{value || "—"}</p>
     </div>
-  );
-}
-
-function RepartitionTable({
-  title,
-  rows,
-}: {
-  title: string;
-  rows: RepartitionSecteur[];
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucune répartition enregistrée</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium">SECTEUR</th>
-                  <th className="text-left py-2 px-3 font-medium">EFFECTIF ENGAGÉ</th>
-                  <th className="text-left py-2 px-3 font-medium">CHEF D'ÉLÉMENT AVEC CONTACT</th>
-                  <th className="text-left py-2 px-3 font-medium">CONTRÔLE AVEC CONTACT</th>
-                  <th className="text-left py-2 px-3 font-medium">MATÉRIELS ET ARMEMENTS</th>
-                  <th className="text-left py-2 px-3 font-medium">MISSIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-b last:border-0 align-top">
-                    <td className="py-2 px-3">{r.secteur}</td>
-                    <td className="py-2 px-3">{r.effectif_engage || "—"}</td>
-                    <td className="py-2 px-3">{r.chef_element_contact || "—"}</td>
-                    <td className="py-2 px-3">{r.controle_contact || "—"}</td>
-                    <td className="py-2 px-3 whitespace-pre-wrap">{r.materiels_armements || "—"}</td>
-                    <td className="py-2 px-3 whitespace-pre-wrap">{r.missions || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }

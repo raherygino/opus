@@ -54,6 +54,7 @@ use App\Controllers\MandatController;
 use App\Controllers\MandatAttachmentController;
 use App\Controllers\ArrestationController;
 use App\Controllers\ArrestationAttachmentController;
+use App\Controllers\RassemblementJournalierController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -501,6 +502,15 @@ $router->post('/api/arrestations/{id}/attachments',                             
 $router->put('/api/arrestations/{id}/attachments/{attachId}',                     [ArrestationAttachmentController::class, 'update']);
 $router->delete('/api/arrestations/{id}/attachments/{attachId}',                  [ArrestationAttachmentController::class, 'destroy']);
 $router->get('/api/arrestations/{id}/attachments/{attachId}/download',            [ArrestationAttachmentController::class, 'download']);
+
+// ========================
+// Rassemblement Journalier Routes (Service Général)
+// ========================
+$router->get('/api/rassemblements',                                                [RassemblementJournalierController::class, 'index']);
+$router->get('/api/rassemblements/{id}',                                           [RassemblementJournalierController::class, 'show']);
+$router->post('/api/rassemblements',                                               [RassemblementJournalierController::class, 'store']);
+$router->put('/api/rassemblements/{id}',                                            [RassemblementJournalierController::class, 'update']);
+$router->delete('/api/rassemblements/{id}',                                         [RassemblementJournalierController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

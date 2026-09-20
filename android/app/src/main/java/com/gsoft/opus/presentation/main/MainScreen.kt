@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.ViewColumn
 import androidx.compose.material.icons.outlined.Dashboard
@@ -110,6 +111,9 @@ import com.gsoft.opus.presentation.materielroulant.MaterielRoulantReintegrationS
 import com.gsoft.opus.presentation.maincourante.MainCouranteScreen
 import com.gsoft.opus.presentation.maincourante.MainCouranteDetailScreen
 import com.gsoft.opus.presentation.maincourante.MainCouranteFormScreen
+import com.gsoft.opus.presentation.rassemblement.RassemblementScreen
+import com.gsoft.opus.presentation.rassemblement.RassemblementDetailScreen
+import com.gsoft.opus.presentation.rassemblement.RassemblementFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteDetailScreen
 import com.gsoft.opus.presentation.plainte.PlainteFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteScreen
@@ -258,7 +262,7 @@ fun MainScreen(
             "sed_renseignement" to MainRoutes.RenseignementSed.route,
             "sg_dashboard" to MainRoutes.SgDashboard.route,
             "sg_spa" to MainRoutes.Spa.route,
-            "sg_info_rassemblement" to MainRoutes.InfoRassemblement.route,
+            "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
             "sg_repartition" to MainRoutes.Repartition.route,
             "sg_patrouille" to MainRoutes.Patrouille.route,
             "sg_intervention" to MainRoutes.Intervention.route,
@@ -640,7 +644,16 @@ fun MainScreen(
                     // Division Service Général
                     composable(MainRoutes.SgDashboard.route) { ContextMenuItemScreens.SgDashboard() }
                     composable(MainRoutes.Spa.route) { ContextMenuItemScreens.Spa() }
-                    composable(MainRoutes.InfoRassemblement.route) { ContextMenuItemScreens.InfoRassemblement() }
+                    composable(MainRoutes.RassemblementJournalier.route) {
+                        RassemblementScreen(
+                            onEntryClick = { id ->
+                                navController.navigate(MainRoutes.RassemblementJournalierDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.RassemblementJournalierForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Repartition.route) { ContextMenuItemScreens.Repartition() }
                     composable(MainRoutes.Patrouille.route) { ContextMenuItemScreens.Patrouille() }
                     composable(MainRoutes.Intervention.route) { ContextMenuItemScreens.Intervention() }
@@ -1385,6 +1398,65 @@ fun MainScreen(
                         }
                     ) {
                         MainCouranteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Rassemblement journalier management (Service Général)
+                    composable(
+                        route = MainRoutes.RassemblementJournalierDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("rassemblementId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RassemblementDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.RassemblementJournalierForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RassemblementJournalierForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("rassemblementId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RassemblementFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )
@@ -2387,7 +2459,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
     ),
     "sg" to listOf(
         "sg_spa",
-        "sg_info_rassemblement",
+        "sg_rassemblement_journalier",
         "sg_repartition",
         "sg_patrouille",
         "sg_intervention",
@@ -2479,7 +2551,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
         items.add(ContextMenuItem(id = "sg_dashboard", title = "Dashboard SG", icon = Icons.Outlined.Dashboard))
         val sgChildren = listOf(
             ContextMenuItem(id = "sg_spa", title = "SPA", subtitle = "Service Prise d'Armes", icon = Icons.Outlined.Receipt, module = "sg_spa"),
-            ContextMenuItem(id = "sg_info_rassemblement", title = "Info rassemblement", icon = Icons.Outlined.Info, module = "sg_info_rassemblement"),
+            ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"),
             ContextMenuItem(id = "sg_repartition", title = "Répartition", icon = Icons.Outlined.ViewColumn, module = "sg_repartition"),
             ContextMenuItem(id = "sg_patrouille", title = "Patrouille", icon = Icons.Outlined.Security, module = "sg_patrouille"),
             ContextMenuItem(id = "sg_intervention", title = "Intervention", icon = Icons.Outlined.Shield, module = "sg_intervention"),

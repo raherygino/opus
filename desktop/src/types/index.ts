@@ -1401,31 +1401,26 @@ export interface RassemblementJournalier {
   inspecteur_permanence: string | null;
   chef_poste: string | null;
   instructions_autorite: string | null;
-  created_by: number | null;
-  agent_username?: string | null;
-  agent_prenoms?: string | null;
-  agent_nom?: string | null;
-  situations_prise_arme?: SituationPriseArme[];
-  repartitions_diurne?: RepartitionSecteur[];
-  repartitions_nocturne?: RepartitionSecteur[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SituationPriseArme {
-  id: number;
-  rassemblement_id: number;
   effectif_theorique: number;
   present: number;
   absent: number;
   motif_absence: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  repartitions?: RepartitionSecteur[];
   created_at: string;
   updated_at: string;
 }
 
+/** Répartition par secteur — type Diurne ou Nocturne (même structure). */
+export type RepartitionSecteurType = "diurne" | "nocturne";
+
 export interface RepartitionSecteur {
   id: number;
   rassemblement_id: number;
+  type: RepartitionSecteurType;
   secteur: string;
   effectif_engage: string | null;
   chef_element_contact: string | null;
@@ -1436,14 +1431,8 @@ export interface RepartitionSecteur {
   updated_at: string;
 }
 
-export interface SituationPriseArmeInput {
-  effectif_theorique: number;
-  present: number;
-  absent: number;
-  motif_absence?: string | null;
-}
-
 export interface RepartitionSecteurInput {
+  type: RepartitionSecteurType;
   secteur: string;
   effectif_engage?: string | null;
   chef_element_contact?: string | null;
@@ -1460,7 +1449,9 @@ export interface RassemblementJournalierInput {
   inspecteur_permanence?: string | null;
   chef_poste?: string | null;
   instructions_autorite?: string | null;
-  situations_prise_arme?: SituationPriseArmeInput[];
-  repartitions_diurne?: RepartitionSecteurInput[];
-  repartitions_nocturne?: RepartitionSecteurInput[];
+  effectif_theorique: number;
+  present: number;
+  absent: number;
+  motif_absence?: string | null;
+  repartitions?: RepartitionSecteurInput[];
 }
