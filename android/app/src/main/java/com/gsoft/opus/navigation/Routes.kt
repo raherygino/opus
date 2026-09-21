@@ -34,17 +34,7 @@ sealed class MainRoutes(val route: String) {
     data object RenseignementSed : MainRoutes("sed_renseignement")
 
     // Division Service Général
-    data object SgDashboard : MainRoutes("sg_dashboard")
-    data object Spa : MainRoutes("sg_spa")
     data object RassemblementJournalier : MainRoutes("sg_rassemblement_journalier")
-    data object Repartition : MainRoutes("sg_repartition")
-    data object Patrouille : MainRoutes("sg_patrouille")
-    data object Intervention : MainRoutes("sg_intervention")
-    data object DispositifExceptionnel : MainRoutes("sg_dispositif_exceptionnel")
-    data object InstructionAutorite : MainRoutes("sg_instruction_autorite")
-    data object CompteRendu : MainRoutes("sg_compte_rendu")
-    data object RechercheSg : MainRoutes("sg_recherche")
-    data object RenseignementSg : MainRoutes("sg_renseignement")
 
     // Division Police Judiciaire
     data object PjDashboard : MainRoutes("pj_dashboard")

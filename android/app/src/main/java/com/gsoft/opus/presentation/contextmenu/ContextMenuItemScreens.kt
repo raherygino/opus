@@ -5,7 +5,6 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.ViewColumn
 import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.FilePresent
 import androidx.compose.material.icons.outlined.FindInPage
@@ -18,10 +17,8 @@ import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonSearch
-import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
@@ -136,103 +133,10 @@ object ContextMenuItemScreens {
         )
     }
 
-    // ── Division Service Général ──
-
-    @Composable
-    fun SgDashboard() {
-        PlaceholderScreen(
-            title = "Dashboard SG",
-            description = "Division Service Général",
-            icon = Icons.Outlined.Dashboard
-        )
-    }
-
-    @Composable
-    fun Spa() {
-        PlaceholderScreen(
-            title = "SPA",
-            description = "Service Prise d'Armes",
-            icon = Icons.Outlined.Receipt
-        )
-    }
-
-    @Composable
-    fun Repartition() {
-        PlaceholderScreen(
-            title = "Répartition",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.ViewColumn
-        )
-    }
-
-    @Composable
-    fun Patrouille() {
-        PlaceholderScreen(
-            title = "Patrouille",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.Security
-        )
-    }
-
-    @Composable
-    fun Intervention() {
-        PlaceholderScreen(
-            title = "Intervention",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.Shield
-        )
-    }
-
-    @Composable
-    fun DispositifExceptionnel() {
-        PlaceholderScreen(
-            title = "Dispositif exceptionnel",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.FilePresent
-        )
-    }
-
-    @Composable
-    fun InstructionAutorite() {
-        PlaceholderScreen(
-            title = "Instruction autorité",
-            description = "Instruction donnée par autorité",
-            icon = Icons.Outlined.Message
-        )
-    }
-
-    @Composable
-    fun CompteRendu() {
-        PlaceholderScreen(
-            title = "Compte rendu",
-            description = "Avec géolocalisation",
-            icon = Icons.Outlined.Description
-        )
-    }
-
-    @Composable
-    fun RechercheSg() {
-        PlaceholderScreen(
-            title = "Recherche",
-            description = "Division Service Général",
-            icon = Icons.Outlined.FindInPage
-        )
-    }
-
-    @Composable
-    fun RenseignementSg() {
-        PlaceholderScreen(
-            title = "Renseignement",
-            description = "Division Service Général",
-            icon = Icons.Outlined.Message
-        )
-    }
-
     // ── Division Police Judiciaire ──
 
     @Composable
-    fun Plainte() {
-        val navController = androidx.navigation.compose.rememberNavController()
+    fun Plainte(navController: androidx.navigation.NavHostController) {
         com.gsoft.opus.presentation.plainte.PlainteScreen(
             onEntryClick = { id ->
                 navController.navigate(com.gsoft.opus.navigation.MainRoutes.PlainteDetail.createRoute(id))
@@ -271,8 +175,7 @@ object ContextMenuItemScreens {
     }
 
     @Composable
-    fun Convocation() {
-        val navController = androidx.navigation.compose.rememberNavController()
+    fun Convocation(navController: androidx.navigation.NavHostController) {
         com.gsoft.opus.presentation.convocation.ConvocationScreen(
             onItemClick = { id ->
                 navController.navigate(com.gsoft.opus.navigation.MainRoutes.ConvocationDetail.createRoute(id))

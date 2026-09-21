@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, type Dispatch, type SetStateAction } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -53,7 +53,7 @@ const CELL_TEXTAREA_CLASS =
 interface RepartitionSecteurTableProps {
   rows: EditableRepartitionRow[];
   /** When omitted the table is read-only (detail view). */
-  onChange?: (rows: EditableRepartitionRow[]) => void;
+  onChange?: Dispatch<SetStateAction<EditableRepartitionRow[]>>;
   readOnly?: boolean;
 }
 
@@ -64,13 +64,16 @@ export function RepartitionSecteurTable({
 }: RepartitionSecteurTableProps) {
   const editable = !readOnly && !!onChange;
 
+  // Functional updates keep these callbacks independent of the current `rows`
+  // snapshot, so `columns` can stay memoized on `editable` alone — a new cell
+  // renderer identity per keystroke would remount inputs and drop focus.
   function updateField(key: string, field: keyof EditableRepartitionRow, value: string) {
-    onChange?.(rows.map((r) => (r._key === key ? { ...r, [field]: value } : r)));
+    onChange?.((prev) => prev.map((r) => (r._key === key ? { ...r, [field]: value } : r)));
   }
 
   function addRow(type: RepartitionSecteurType) {
-    onChange?.([
-      ...rows,
+    onChange?.((prev) => [
+      ...prev,
       {
         _key: newRepartitionKey(),
         type,
@@ -85,7 +88,7 @@ export function RepartitionSecteurTable({
   }
 
   function removeRow(key: string) {
-    onChange?.(rows.filter((r) => r._key !== key));
+    onChange?.((prev) => prev.filter((r) => r._key !== key));
   }
 
   const columns = useMemo<ColumnDef<EditableRepartitionRow>[]>(
@@ -142,7 +145,7 @@ export function RepartitionSecteurTable({
         : []),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editable, rows],
+    [editable, onChange],
   );
 
   const table = useReactTable({

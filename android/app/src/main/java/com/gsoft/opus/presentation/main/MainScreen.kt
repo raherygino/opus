@@ -35,11 +35,9 @@ import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonSearch
-import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.GpsFixed
-import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Draw
@@ -260,17 +258,7 @@ fun MainScreen(
             "sed_situation_gav" to MainRoutes.SituationGav.route,
             "sed_main_courante_poste" to MainRoutes.MainCourantePoste.route,
             "sed_renseignement" to MainRoutes.RenseignementSed.route,
-            "sg_dashboard" to MainRoutes.SgDashboard.route,
-            "sg_spa" to MainRoutes.Spa.route,
             "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
-            "sg_repartition" to MainRoutes.Repartition.route,
-            "sg_patrouille" to MainRoutes.Patrouille.route,
-            "sg_intervention" to MainRoutes.Intervention.route,
-            "sg_dispositif_exceptionnel" to MainRoutes.DispositifExceptionnel.route,
-            "sg_instruction_autorite" to MainRoutes.InstructionAutorite.route,
-            "sg_compte_rendu" to MainRoutes.CompteRendu.route,
-            "sg_recherche" to MainRoutes.RechercheSg.route,
-            "sg_renseignement" to MainRoutes.RenseignementSg.route,
             "pj_dashboard" to MainRoutes.PjDashboard.route,
             "pj_plainte" to MainRoutes.Plainte.route,
             "pj_registre_enquete" to MainRoutes.RegistreEnquete.route,
@@ -642,8 +630,6 @@ fun MainScreen(
                     composable(MainRoutes.RenseignementSed.route) { ContextMenuItemScreens.RenseignementSed() }
 
                     // Division Service Général
-                    composable(MainRoutes.SgDashboard.route) { ContextMenuItemScreens.SgDashboard() }
-                    composable(MainRoutes.Spa.route) { ContextMenuItemScreens.Spa() }
                     composable(MainRoutes.RassemblementJournalier.route) {
                         RassemblementScreen(
                             onEntryClick = { id ->
@@ -654,14 +640,6 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.Repartition.route) { ContextMenuItemScreens.Repartition() }
-                    composable(MainRoutes.Patrouille.route) { ContextMenuItemScreens.Patrouille() }
-                    composable(MainRoutes.Intervention.route) { ContextMenuItemScreens.Intervention() }
-                    composable(MainRoutes.DispositifExceptionnel.route) { ContextMenuItemScreens.DispositifExceptionnel() }
-                    composable(MainRoutes.InstructionAutorite.route) { ContextMenuItemScreens.InstructionAutorite() }
-                    composable(MainRoutes.CompteRendu.route) { ContextMenuItemScreens.CompteRendu() }
-                    composable(MainRoutes.RechercheSg.route) { ContextMenuItemScreens.RechercheSg() }
-                    composable(MainRoutes.RenseignementSg.route) { ContextMenuItemScreens.RenseignementSg() }
 
                     // Division Police Judiciaire
                     composable(MainRoutes.PjDashboard.route) {
@@ -701,7 +679,7 @@ fun MainScreen(
                             onCreateRenseignement = { navController.navigate(MainRoutes.RenseignementPjForm.createRoute(0)) }
                         )
                     }
-                    composable(MainRoutes.Plainte.route) { ContextMenuItemScreens.Plainte() }
+                    composable(MainRoutes.Plainte.route) { ContextMenuItemScreens.Plainte(navController) }
                     composable(MainRoutes.RegistreEnquete.route) { ContextMenuItemScreens.RegistreEnquete() }
                     composable(MainRoutes.Mandat.route) {
                         MandatScreen(
@@ -713,7 +691,7 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.Convocation.route) { ContextMenuItemScreens.Convocation() }
+                    composable(MainRoutes.Convocation.route) { ContextMenuItemScreens.Convocation(navController) }
                     composable(MainRoutes.Arrestation.route) {
                         ArrestationScreen(
                             onItemClick = { id ->
@@ -2458,16 +2436,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
         "sedentaire_poste_renseignement",
     ),
     "sg" to listOf(
-        "sg_spa",
         "sg_rassemblement_journalier",
-        "sg_repartition",
-        "sg_patrouille",
-        "sg_intervention",
-        "sg_dispositif_exceptionnel",
-        "sg_instruction_autorite",
-        "sg_compte_rendu",
-        "sg_recherche",
-        "sg_renseignement",
     ),
     "pj" to listOf(
         "pj_plainte",
@@ -2548,20 +2517,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
     // ── Division Service Général ──
     if (userCanAccessDivision(user, "sg")) {
         items.add(ContextMenuItem(id = "section_sg", title = "Division Service Général", isSectionHeader = true))
-        items.add(ContextMenuItem(id = "sg_dashboard", title = "Dashboard SG", icon = Icons.Outlined.Dashboard))
-        val sgChildren = listOf(
-            ContextMenuItem(id = "sg_spa", title = "SPA", subtitle = "Service Prise d'Armes", icon = Icons.Outlined.Receipt, module = "sg_spa"),
-            ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"),
-            ContextMenuItem(id = "sg_repartition", title = "Répartition", icon = Icons.Outlined.ViewColumn, module = "sg_repartition"),
-            ContextMenuItem(id = "sg_patrouille", title = "Patrouille", icon = Icons.Outlined.Security, module = "sg_patrouille"),
-            ContextMenuItem(id = "sg_intervention", title = "Intervention", icon = Icons.Outlined.Shield, module = "sg_intervention"),
-            ContextMenuItem(id = "sg_dispositif_exceptionnel", title = "Dispositif exceptionnel", icon = Icons.Outlined.FilePresent, module = "sg_dispositif_exceptionnel"),
-            ContextMenuItem(id = "sg_instruction_autorite", title = "Instruction autorité", icon = Icons.Outlined.Message, module = "sg_instruction_autorite"),
-            ContextMenuItem(id = "sg_compte_rendu", title = "Compte rendu", subtitle = "Avec géolocalisation", icon = Icons.Outlined.Description, module = "sg_compte_rendu"),
-            ContextMenuItem(id = "sg_recherche", title = "Recherche", icon = Icons.Outlined.FindInPage, module = "sg_recherche"),
-            ContextMenuItem(id = "sg_renseignement", title = "Renseignement", icon = Icons.Outlined.Message, module = "sg_renseignement"),
-        ).filter { hasVisibleItem(user, it) }
-        items.addAll(sgChildren)
+        items.add(ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"))
     }
 
     // ── Division Police Judiciaire ──
