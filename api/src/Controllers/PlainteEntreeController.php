@@ -207,7 +207,11 @@ class PlainteEntreeController
         }
 
         $typeKey = PlainteEntree::TYPE_PREFIXES[$type];
-        $numero = PlainteSequence::peekNumber($typeKey);
+        $numero = PlainteSequence::peekNumber(
+            $typeKey,
+            null,
+            fn($n) => PlainteEntree::getByNumeroDossier($n) !== null
+        );
         Response::success(['numero_dossier' => $numero]);
     }
 
@@ -252,14 +256,16 @@ class PlainteEntreeController
             Response::error('Validation failed', 422, $errors);
         }
 
-        // Use the user-provided numero if non-empty; otherwise auto-generate.
+        // Resolve the dossier number. When the client submits the current
+        // suggestion (or nothing), the sequence is consumed — skipping any
+        // number already in use — so consecutive creates never collide on
+        // the suggested value. A custom (non-suggested) number is kept.
         $typeKey = PlainteEntree::TYPE_PREFIXES[$data['type']];
+        $exists = fn(string $n): bool => PlainteEntree::getByNumeroDossier($n) !== null;
         $userNumero = trim((string) ($data['numero_dossier'] ?? ''));
-        if ($userNumero !== '') {
-            $data['numero_dossier'] = $userNumero;
-        } else {
-            $data['numero_dossier'] = PlainteSequence::nextNumber($typeKey);
-        }
+        $data['numero_dossier'] = ($userNumero !== '' && $userNumero !== PlainteSequence::peekNumber($typeKey, null, $exists))
+            ? $userNumero
+            : PlainteSequence::nextAvailable($typeKey, $exists);
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

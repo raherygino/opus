@@ -100,6 +100,7 @@ $router->post('/api/qr-auth/{code}/cancel',      [QrAuthController::class, 'canc
 // ========================
 $router->get('/api/personnel',              [PersonnelController::class, 'index']);
 $router->get('/api/personnel/available',    [PersonnelController::class, 'available']);
+$router->get('/api/personnel/count',        [PersonnelController::class, 'count']);
 $router->get('/api/personnel/{id}',         [PersonnelController::class, 'show']);
 $router->post('/api/personnel',             [PersonnelController::class, 'store']);
 $router->put('/api/personnel/{id}',         [PersonnelController::class, 'update']);

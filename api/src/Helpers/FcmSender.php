@@ -71,9 +71,16 @@ class FcmSender
      * @param array{title: string, body: string, data?: array<string,string>} $payload
      * @return array{success: int, failure: int}
      */
-    public static function sendToAdmins(array $payload): array
+    public static function sendToAdmins(array $payload, array $excludeUserIds = []): array
     {
         $tokens = DeviceToken::getActiveForAdmins();
+        if (!empty($excludeUserIds)) {
+            $exclude = array_map('intval', $excludeUserIds);
+            $tokens = array_filter(
+                $tokens,
+                fn($t) => !in_array((int) $t['user_id'], $exclude, true)
+            );
+        }
         return self::sendToTokens(
             array_column($tokens, 'token'),
             $payload

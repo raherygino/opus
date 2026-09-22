@@ -99,7 +99,11 @@ class RequisitionController
         if (!$authUser) {
             Response::unauthorized('Authentication required');
         }
-        $numero = PlainteSequence::peekNumber(PlainteSequence::REQUISITION_KEY);
+        $numero = PlainteSequence::peekNumber(
+            PlainteSequence::REQUISITION_KEY,
+            null,
+            fn($n) => Requisition::numeroExists($n)
+        );
         Response::success(['numero' => $numero]);
     }
 
@@ -145,13 +149,14 @@ class RequisitionController
             Response::error('Validation failed', 422, $errors);
         }
 
-        // Use the user-provided numero if non-empty; otherwise auto-generate.
+        // When the client submits the current suggestion (or nothing), the
+        // sequence is consumed — skipping numbers already in use — so the
+        // counter advances and consecutive creates never collide.
+        $exists = fn(string $n): bool => Requisition::numeroExists($n);
         $userNumero = trim((string) ($data['numero'] ?? ''));
-        if ($userNumero !== '') {
-            $data['numero'] = $userNumero;
-        } else {
-            $data['numero'] = PlainteSequence::nextNumber(PlainteSequence::REQUISITION_KEY);
-        }
+        $data['numero'] = ($userNumero !== '' && $userNumero !== PlainteSequence::peekNumber(PlainteSequence::REQUISITION_KEY, null, $exists))
+            ? $userNumero
+            : PlainteSequence::nextAvailable(PlainteSequence::REQUISITION_KEY, $exists);
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

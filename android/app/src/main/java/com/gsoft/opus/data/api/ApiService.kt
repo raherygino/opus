@@ -100,6 +100,7 @@ import com.gsoft.opus.data.api.dto.PassationAttachmentDto
 import com.gsoft.opus.data.api.dto.PassationDto
 import com.gsoft.opus.data.api.dto.PassationRequest
 import com.gsoft.opus.data.api.dto.PersonnelAttachmentDto
+import com.gsoft.opus.data.api.dto.PersonnelCountDto
 import com.gsoft.opus.data.api.dto.PersonnelDto
 import com.gsoft.opus.data.api.dto.PersonnelRequest
 import com.gsoft.opus.data.api.dto.QrAuthApproveResponseDto
@@ -197,6 +198,9 @@ interface ApiService {
 
     @GET("api/personnel")
     suspend fun getPersonnelList(@Query("search") search: String? = null): Response<ApiResponse<List<PersonnelDto>>>
+
+    @GET("api/personnel/count")
+    suspend fun getPersonnelCount(): Response<ApiResponse<PersonnelCountDto>>
 
     @GET("api/personnel/{id}")
     suspend fun getPersonnel(@Path("id") id: Int): Response<ApiResponse<PersonnelDto>>

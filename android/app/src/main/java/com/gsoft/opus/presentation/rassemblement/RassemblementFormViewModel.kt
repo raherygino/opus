@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.Resource
+import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.RassemblementJournalierFormData
 import com.gsoft.opus.domain.repository.RassemblementJournalierRepository
 import com.gsoft.opus.domain.repository.RepartitionSecteurInput
@@ -43,7 +44,8 @@ data class RassemblementFormUiState(
 @HiltViewModel
 class RassemblementFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: RassemblementJournalierRepository
+    private val repository: RassemblementJournalierRepository,
+    private val personnelRepository: PersonnelRepository
 ) : ViewModel() {
 
     private val rassemblementId: Int = savedStateHandle.get<Int>("rassemblementId") ?: 0
@@ -68,6 +70,28 @@ class RassemblementFormViewModel @Inject constructor(
             // Start with one blank line per section.
             _state.update {
                 it.copy(repartitions = REPARTITION_SECTIONS.map { (type) -> blankRow(type) })
+            }
+            loadDefaultEffectif()
+        }
+    }
+
+    /**
+     * Prefill "Effectif théorique" with the current personnel count from the
+     * backend. On failure the field stays editable at 0 and a message is
+     * shown so the user can type the value manually.
+     */
+    private fun loadDefaultEffectif() {
+        viewModelScope.launch {
+            when (val result = personnelRepository.getPersonnelCount()) {
+                is Resource.Success -> _state.update {
+                    it.copy(effectifTheorique = result.data.toString())
+                }
+                is Resource.Error -> _state.update {
+                    it.copy(
+                        errorMessage = "Effectif théorique non chargé (${result.message}) — saisissez-le manuellement"
+                    )
+                }
+                is Resource.Loading -> {}
             }
         }
     }

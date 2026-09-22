@@ -70,6 +70,16 @@ class PersonnelRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getPersonnelCount(): Resource<Int> {
+        return try {
+            apiService.getPersonnelCount()
+                .extract("Impossible de charger l'effectif du personnel")
+                .map { it.count }
+        } catch (e: Exception) {
+            Resource.error(failureMessage(e, TAG, "getPersonnelCount"))
+        }
+    }
+
     override suspend fun getPersonnel(id: Int): Resource<Personnel> {
         return try {
             apiService.getPersonnel(id).extract("Personnel introuvable").map { it.toDomain() }

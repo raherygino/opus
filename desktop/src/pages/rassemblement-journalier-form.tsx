@@ -6,6 +6,7 @@ import {
   createRassemblement,
   updateRassemblement,
 } from "@/lib/api/rassemblement-journalier";
+import { getPersonnelCount } from "@/lib/api/personnel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,16 @@ export function RassemblementJournalierForm() {
           missions: "",
         })),
       );
+      // Prefill "Effectif théorique" with the current personnel count.
+      getPersonnelCount()
+        .then(setEffectifTheorique)
+        .catch(() =>
+          addNotification(
+            "error",
+            "Effectif théorique",
+            "Impossible de charger l'effectif théorique — saisissez-le manuellement",
+          ),
+        );
       return;
     }
     load();

@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * When the user taps a system notification, open the Notifications tab.
+     * When the user taps a system notification, navigate to its content.
      *
      * Two intent shapes can arrive here:
      *  - Foreground pushes are displayed by [NotificationHelper], whose
@@ -83,20 +83,11 @@ class MainActivity : ComponentActivity() {
         val link = intent?.getStringExtra(NotificationHelper.EXTRA_LINK)
             ?: intent?.getStringExtra("link")
 
-        // If the notification carries a deep link, request the corresponding
-        // tab/screen instead of just opening the notifications list.
+        // If the notification carries a deep link, navigate directly to the
+        // referenced content via the main shell's link handler.
         if (!link.isNullOrBlank()) {
-            val tab = android.net.Uri.parse(link).getQueryParameter("tab")
-            val path = android.net.Uri.parse(link).path
-            if (path != null && path.startsWith("/personnel")) {
-                val tabIndex = when (tab) {
-                    "mouvement" -> 1
-                    "comportement" -> 2
-                    else -> 0
-                }
-                notificationNavigationBus.requestOpenPersonnelTab(tabIndex)
-                return
-            }
+            notificationNavigationBus.requestOpenLink(link)
+            return
         }
 
         if (action == NotificationHelper.ACTION_OPEN_NOTIFICATIONS) {

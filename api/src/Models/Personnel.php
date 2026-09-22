@@ -22,6 +22,15 @@ class Personnel
         return array_map([self::class, 'stripSecret'], $rows);
     }
 
+    /**
+     * Total number of personnel records (e.g. for "Effectif théorique").
+     */
+    public static function count(): int
+    {
+        $db = Database::getInstance()->getConnection();
+        return (int) $db->query('SELECT COUNT(*) FROM personnel')->fetchColumn();
+    }
+
     public static function getAll(array $filters = []): array
     {
         $db = Database::getInstance()->getConnection();

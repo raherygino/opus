@@ -92,7 +92,11 @@ class MandatController
         if (!$authUser) {
             Response::unauthorized('Authentication required');
         }
-        $numero = PlainteSequence::peekNumber(PlainteSequence::MANDAT_KEY);
+        $numero = PlainteSequence::peekNumber(
+            PlainteSequence::MANDAT_KEY,
+            null,
+            fn($n) => Mandat::numeroExists($n)
+        );
         Response::success(['numero' => $numero]);
     }
 
@@ -131,23 +135,21 @@ class MandatController
             Response::unauthorized('Authentication required');
         }
 
-        $raw = file_get_contents('php://input');
-        $data = json_decode($raw, true) ?? [];
-        file_put_contents(__DIR__ . '/../../_debug_mandat.log', date('c') . " RAW: $raw\n DATA: " . json_encode($data) . "\n", FILE_APPEND);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = self::validate($data, true);
         if (!empty($errors)) {
-            file_put_contents(__DIR__ . '/../../_debug_mandat.log', " ERRORS: " . json_encode($errors) . "\n", FILE_APPEND);
             Response::error('Validation failed', 422, $errors);
         }
 
-        // Use the user-provided numero if non-empty; otherwise auto-generate.
+        // When the client submits the current suggestion (or nothing), the
+        // sequence is consumed — skipping numbers already in use — so the
+        // counter advances and consecutive creates never collide.
+        $exists = fn(string $n): bool => Mandat::numeroExists($n);
         $userNumero = trim((string) ($data['numero'] ?? ''));
-        if ($userNumero !== '') {
-            $data['numero'] = $userNumero;
-        } else {
-            $data['numero'] = PlainteSequence::nextNumber(PlainteSequence::MANDAT_KEY);
-        }
+        $data['numero'] = ($userNumero !== '' && $userNumero !== PlainteSequence::peekNumber(PlainteSequence::MANDAT_KEY, null, $exists))
+            ? $userNumero
+            : PlainteSequence::nextAvailable(PlainteSequence::MANDAT_KEY, $exists);
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

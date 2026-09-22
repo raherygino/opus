@@ -285,22 +285,24 @@ export function PlainteSortieForm() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/pj/plainte")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {isEdit ? "Modifier la sortie" : "Nouvelle sortie"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — SORTIE</p>
+      <div className="sticky top-0 z-10 -mx-6 px-6 py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/pj/plainte")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {isEdit ? "Modifier la sortie" : "Nouvelle sortie"}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — SORTIE</p>
+            </div>
           </div>
+          <Button onClick={handleSave} disabled={saving || loading} className="gap-2">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isEdit ? "Mettre à jour" : "Enregistrer"}
+          </Button>
         </div>
-        <Button onClick={handleSave} disabled={saving || loading} className="gap-2">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isEdit ? "Mettre à jour" : "Enregistrer"}
-        </Button>
       </div>
 
       {loading && (

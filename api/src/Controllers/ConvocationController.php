@@ -120,7 +120,11 @@ class ConvocationController
         }
 
         $typeKey = Convocation::TYPE_PREFIXES[$type];
-        $numero = PlainteSequence::peekNumber($typeKey);
+        $numero = PlainteSequence::peekNumber(
+            $typeKey,
+            null,
+            fn($n) => Convocation::getByNumero($n) !== null
+        );
         Response::success(['numero' => $numero]);
     }
 
@@ -164,14 +168,15 @@ class ConvocationController
             Response::error('Validation failed', 422, $errors);
         }
 
-        // Use the user-provided numero if non-empty; otherwise auto-generate.
+        // When the client submits the current suggestion (or nothing), the
+        // sequence is consumed — skipping numbers already in use — so the
+        // counter advances and consecutive creates never collide.
         $typeKey = Convocation::TYPE_PREFIXES[$data['type']];
+        $exists = fn(string $n): bool => Convocation::getByNumero($n) !== null;
         $userNumero = trim((string) ($data['numero'] ?? ''));
-        if ($userNumero !== '') {
-            $data['numero'] = $userNumero;
-        } else {
-            $data['numero'] = PlainteSequence::nextNumber($typeKey);
-        }
+        $data['numero'] = ($userNumero !== '' && $userNumero !== PlainteSequence::peekNumber($typeKey, null, $exists))
+            ? $userNumero
+            : PlainteSequence::nextAvailable($typeKey, $exists);
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

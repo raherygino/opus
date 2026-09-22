@@ -137,7 +137,11 @@ class PlainteSortieController
             Response::unauthorized('Authentication required');
         }
 
-        $numero = PlainteSequence::peekNumber('SORTIE');
+        $numero = PlainteSequence::peekNumber(
+            'SORTIE',
+            null,
+            fn($n) => PlainteSortie::getByNumero($n) !== null
+        );
         Response::success(['numero' => $numero]);
     }
 
@@ -190,13 +194,14 @@ class PlainteSortieController
             ]);
         }
 
-        // Use the user-provided numero if non-empty; otherwise auto-generate.
+        // When the client submits the current suggestion (or nothing), the
+        // sequence is consumed — skipping numbers already in use — so the
+        // counter advances and consecutive creates never collide.
+        $exists = fn(string $n): bool => PlainteSortie::getByNumero($n) !== null;
         $userNumero = trim((string) ($data['numero'] ?? ''));
-        if ($userNumero !== '') {
-            $data['numero'] = $userNumero;
-        } else {
-            $data['numero'] = PlainteSequence::nextNumber('SORTIE');
-        }
+        $data['numero'] = ($userNumero !== '' && $userNumero !== PlainteSequence::peekNumber('SORTIE', null, $exists))
+            ? $userNumero
+            : PlainteSequence::nextAvailable('SORTIE', $exists);
         $data['created_by'] = $authUser['sub'] ?? null;
 
         // Trim text fields.

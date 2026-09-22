@@ -19,6 +19,13 @@ export async function getAvailablePersonnel(): Promise<Personnel[]> {
   return data.data;
 }
 
+export async function getPersonnelCount(): Promise<number> {
+  const { data } = await apiClient.get<ApiResponse<{ count: number }>>(
+    "/personnel/count",
+  );
+  return data.data.count;
+}
+
 export async function getPersonnelById(id: number): Promise<Personnel> {
   const { data } = await apiClient.get<ApiResponse<Personnel>>(
     `/personnel/${id}`,

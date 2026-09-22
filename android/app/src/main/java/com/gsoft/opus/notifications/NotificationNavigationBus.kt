@@ -33,6 +33,13 @@ class NotificationNavigationBus @Inject constructor() {
     private val _pendingPersonnelTab = MutableStateFlow<Int?>(null)
     val pendingPersonnelTab: StateFlow<Int?> = _pendingPersonnelTab.asStateFlow()
 
+    /**
+     * Request to navigate to the content referenced by a notification link
+     * (e.g. "/pj/plainte/sortie/5"). Sticky so it survives a cold start.
+     */
+    private val _pendingLink = MutableStateFlow<String?>(null)
+    val pendingLink: StateFlow<String?> = _pendingLink.asStateFlow()
+
     fun requestOpenNotifications() {
         _openRequests.value = true
     }
@@ -55,5 +62,14 @@ class NotificationNavigationBus @Inject constructor() {
 
     fun consumePendingPersonnelTab() {
         _pendingPersonnelTab.value = null
+    }
+
+    /** Request navigation to the content referenced by a notification link. */
+    fun requestOpenLink(link: String) {
+        _pendingLink.value = link
+    }
+
+    fun consumePendingLink() {
+        _pendingLink.value = null
     }
 }

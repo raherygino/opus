@@ -221,6 +221,16 @@ fun MainScreen(
         }
     }
 
+    // Navigate to the content referenced by a push-notification deep link
+    // (system-tray tap) — same handler as the in-app notification list.
+    val pendingLink by unreadBadgeViewModel.navigationBus.pendingLink.collectAsState()
+    LaunchedEffect(pendingLink) {
+        pendingLink?.let {
+            handleNotificationLink(it, navController, unreadBadgeViewModel.navigationBus)
+            unreadBadgeViewModel.navigationBus.consumePendingLink()
+        }
+    }
+
     // Refresh the unread count from the server whenever the app comes back to
     // the foreground, so the badge is always current when the user returns.
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -2393,52 +2403,62 @@ private fun handleNotificationLink(
     val uri = android.net.Uri.parse(link)
     val path = uri.path ?: return
     val tab = uri.getQueryParameter("tab")
+    val id = path.trim('/').split('/').lastOrNull()?.toIntOrNull()
+
+    // Map the API-generated link prefixes to detail destinations.
+    // When the referenced record no longer exists, the detail screen shows
+    // its own "introuvable" error state — navigation never crashes.
+    val detailRoute: String? = when {
+        id == null -> null
+        path.startsWith("/sedentaire/secretariat/correspondance/") ->
+            MainRoutes.CorrespondanceDetail.createRoute(id)
+        path.startsWith("/sedentaire/secretariat/declaration-perte/") ->
+            MainRoutes.DeclarationPerteDetail.createRoute(id)
+        path.startsWith("/sedentaire/secretariat/main-courante/") ->
+            MainRoutes.MainCouranteDetail.createRoute(id, "Secretariat")
+        path.startsWith("/sedentaire/poste/main-courante/") ->
+            MainRoutes.MainCouranteDetail.createRoute(id, "Poste")
+        path.startsWith("/sedentaire/poste/passation/") ->
+            MainRoutes.PassationDetail.createRoute(id)
+        path.startsWith("/sedentaire/poste/armement/") ->
+            MainRoutes.ArmementDetail.createRoute(id)
+        path.startsWith("/sedentaire/poste/materiel-roulant/") ->
+            MainRoutes.MaterielRoulantDetail.createRoute(id)
+        path.startsWith("/sedentaire/poste/materiels/") ->
+            MainRoutes.MaterielDetail.createRoute(id)
+        path.startsWith("/pj/plainte/entree/") ->
+            MainRoutes.PlainteDetail.createRoute(id)
+        path.startsWith("/pj/plainte/sortie/") ->
+            MainRoutes.PlainteSortieDetail.createRoute(id)
+        path.startsWith("/pj/convocation/") ->
+            MainRoutes.ConvocationDetail.createRoute(id)
+        path.startsWith("/pj/gav/") ->
+            MainRoutes.GardeAVueDetail.createRoute(id)
+        path.startsWith("/pj/mandat/") ->
+            MainRoutes.MandatDetail.createRoute(id)
+        path.startsWith("/pj/arrestation/") ->
+            MainRoutes.ArrestationDetail.createRoute(id)
+        path.startsWith("/pj/requisition/") ->
+            MainRoutes.RequisitionDetail.createRoute(id)
+        path.startsWith("/pj/personne-recherchee/") ->
+            MainRoutes.PersonneRechercheeDetail.createRoute(id)
+        path.startsWith("/pj/objets/saisi/") ->
+            MainRoutes.ObjetSaisiDetail.createRoute(id)
+        path.startsWith("/pj/objets/trouve/") ->
+            MainRoutes.ObjetTrouveDetail.createRoute(id)
+        path.startsWith("/pj/perquisition/") ->
+            MainRoutes.PerquisitionDetail.createRoute(id)
+        path.startsWith("/pj/renseignement/") ->
+            MainRoutes.RenseignementPjDetail.createRoute(id)
+        path.startsWith("/sg/rassemblement-journalier/") ->
+            MainRoutes.RassemblementJournalierDetail.createRoute(id)
+        path.startsWith("/sg/evenements-survenus/") ->
+            MainRoutes.EvenementSurvenuDetail.createRoute(id)
+        else -> null
+    }
 
     when {
-        path.startsWith("/sedentaire/secretariat/correspondance/") -> {
-            // e.g. "/sedentaire/secretariat/correspondance/12" → detail screen
-            val id = path.removePrefix("/sedentaire/secretariat/correspondance/")
-                .trim('/')
-                .toIntOrNull()
-            if (id != null) {
-                navController.navigate(MainRoutes.CorrespondanceDetail.createRoute(id))
-            } else {
-                navController.navigateToTab(MainRoutes.Correspondance.route)
-            }
-        }
-        path.startsWith("/sedentaire/secretariat/declaration-perte/") -> {
-            // e.g. "/sedentaire/secretariat/declaration-perte/12" → detail screen
-            val id = path.removePrefix("/sedentaire/secretariat/declaration-perte/")
-                .trim('/')
-                .toIntOrNull()
-            if (id != null) {
-                navController.navigate(MainRoutes.DeclarationPerteDetail.createRoute(id))
-            } else {
-                navController.navigateToTab(MainRoutes.DeclarationPerte.route)
-            }
-        }
-        path.startsWith("/sedentaire/poste/passation/") -> {
-            // e.g. "/sedentaire/poste/passation/12" → detail screen
-            val id = path.removePrefix("/sedentaire/poste/passation/")
-                .trim('/')
-                .toIntOrNull()
-            if (id != null) {
-                navController.navigate(MainRoutes.PassationDetail.createRoute(id))
-            } else {
-                navController.navigateToTab(MainRoutes.Passation.route)
-            }
-        }
-        path.startsWith("/sedentaire/poste/armement/") -> {
-            // e.g. "/sedentaire/poste/armement/12" → detail screen
-            val id = path.removePrefix("/sedentaire/poste/armement/")
-                .trim('/')
-                .toIntOrNull()
-            if (id != null) {
-                navController.navigate(MainRoutes.ArmementDetail.createRoute(id))
-            } else {
-                navController.navigateToTab(MainRoutes.Armement.route)
-            }
-        }
+        detailRoute != null -> navController.navigate(detailRoute)
         path.startsWith("/personnel") -> {
             // Request the tab before navigating so PersonnelScreen can pick
             // it up when it composes.

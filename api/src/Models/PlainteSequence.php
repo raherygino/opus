@@ -109,15 +109,37 @@ class PlainteSequence
             throw $e;
         }
 
-        $padded = str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
-        return str_replace(['{seq}', '{yy}'], [$padded, (string) $yy], self::FORMATS[$typeKey]);
+        return self::format($typeKey, $seq, $yy);
+    }
+
+    /**
+     * Consume the next number for $typeKey, skipping over values that
+     * already exist in the target table.
+     *
+     * $exists receives the formatted candidate number and must return true
+     * when it is already taken. This keeps the counter monotonic while
+     * guaranteeing a free number even when the sequence table lags behind
+     * real data (e.g. numbers entered manually, or rows created before the
+     * counter was consumed).
+     */
+    public static function nextAvailable(string $typeKey, callable $exists, ?int $year = null): string
+    {
+        do {
+            $numero = self::nextNumber($typeKey, $year);
+        } while ($exists($numero));
+        return $numero;
     }
 
     /**
      * Peek at what the next number WOULD be without consuming it.
      * Useful for preview; the actual number is only assigned on save.
+     *
+     * When $exists is provided, the preview skips numbers already present
+     * in the target table so the suggestion never collides with existing
+     * records (the counter can lag behind when numbers are entered
+     * manually).
      */
-    public static function peekNumber(string $typeKey, ?int $year = null): string
+    public static function peekNumber(string $typeKey, ?int $year = null, ?callable $exists = null): string
     {
         if (!isset(self::FORMATS[$typeKey])) {
             throw new \InvalidArgumentException("Unknown plainte sequence type_key: $typeKey");
@@ -130,7 +152,20 @@ class PlainteSequence
         $stmt->execute([$typeKey, $yy]);
         $current = (int) $stmt->fetchColumn();
         $next = $current + 1;
-        $padded = str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        if ($exists !== null) {
+            while ($exists(self::format($typeKey, $next, $yy))) {
+                $next++;
+            }
+        }
+        return self::format($typeKey, $next, $yy);
+    }
+
+    /**
+     * Render a formatted number for a given sequence value and year.
+     */
+    private static function format(string $typeKey, int $seq, int $yy): string
+    {
+        $padded = str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
         return str_replace(['{seq}', '{yy}'], [$padded, (string) $yy], self::FORMATS[$typeKey]);
     }
 }

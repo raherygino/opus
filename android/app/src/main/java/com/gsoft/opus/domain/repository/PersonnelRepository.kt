@@ -55,6 +55,7 @@ data class UploadFile(
 
 interface PersonnelRepository {
     suspend fun getPersonnelList(search: String? = null): Resource<List<Personnel>>
+    suspend fun getPersonnelCount(): Resource<Int>
     suspend fun getPersonnel(id: Int): Resource<Personnel>
     suspend fun createPersonnel(data: PersonnelFormData): Resource<Personnel>
     suspend fun updatePersonnel(id: Int, data: PersonnelFormData): Resource<Personnel>

@@ -24,6 +24,11 @@ data class PersonnelDto(
     @SerializedName("has_code_secret") val hasCodeSecret: Boolean? = null
 )
 
+/** Response from /api/personnel/count. */
+data class PersonnelCountDto(
+    @SerializedName("count") val count: Int
+)
+
 data class PersonnelRequest(
     @SerializedName("im") val im: String,
     @SerializedName("grade") val grade: String,

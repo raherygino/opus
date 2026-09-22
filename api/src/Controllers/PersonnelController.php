@@ -37,6 +37,16 @@ class PersonnelController
     }
 
     /**
+     * GET /api/personnel/count
+     * Total number of personnel records (e.g. to prefill the "Effectif
+     * théorique" field of a rassemblement journalier).
+     */
+    public function count(array $params): void
+    {
+        Response::success(['count' => Personnel::count()]);
+    }
+
+    /**
      * GET /api/personnel/available
      * Personnel without user accounts (for user creation dropdown)
      */
