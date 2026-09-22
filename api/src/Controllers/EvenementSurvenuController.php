@@ -59,7 +59,7 @@ class EvenementSurvenuController
             $value = trim((string) ($data['type_evenement'] ?? ''));
             if ($value === '') {
                 $errors['type_evenement'] = "Le type d'événement est requis";
-            } elseif (!in_array($value, EvenementSurvenu::TYPES, true)) {
+            } elseif (!\App\Models\EvenementSurvenuType::exists($value)) {
                 $errors['type_evenement'] = "Le type d'événement est invalide";
             }
         }

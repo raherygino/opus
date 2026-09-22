@@ -1461,7 +1461,16 @@ export interface RassemblementJournalierInput {
 // ========================
 
 /** type_evenement codes stored in DB — labels rendered in French by clients. */
-export type EvenementSurvenuType = "infraction" | "incident" | "accident" | "autre";
+/** Event type — stored as the label string directly (user-managed catalog). */
+export type EvenementSurvenuType = string;
+
+/** A row from the evenement_survenu_type catalog table. */
+export interface EvenementSurvenuTypeItem {
+  id: number;
+  label: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export interface EvenementSurvenu {
   id: number;

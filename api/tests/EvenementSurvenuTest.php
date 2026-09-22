@@ -42,7 +42,7 @@ $pdo->exec("USE `$scratch`");
 $pdo->exec('CREATE TABLE personnel (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, firstname VARCHAR(100) NULL, lastname VARCHAR(100) NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 $pdo->exec('CREATE TABLE users (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, username VARCHAR(100) NULL, personnel_id INT UNSIGNED NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 
-foreach (['058_create_evenement_survenu.sql', '059_create_attach_evenement_survenu.sql', '060_add_evenement_survenu_location.sql'] as $migration) {
+foreach (['058_create_evenement_survenu.sql', '059_create_attach_evenement_survenu.sql', '060_add_evenement_survenu_location.sql', '061_create_evenement_survenu_type.sql'] as $migration) {
     $sql = file_get_contents($root . '/database/' . $migration);
     foreach (array_filter(array_map('trim', explode(';', $sql))) as $stmt) {
         if (preg_match('/^\s*(CREATE|ALTER|UPDATE|INSERT|DROP)/i', preg_replace('/^--.*$/m', '', $stmt))) {
@@ -63,7 +63,7 @@ function sampleRow(array $overrides = []): array
     return array_merge([
         'date_evenement' => '2026-09-20',
         'heure_evenement' => '14:30',
-        'type_evenement' => 'accident',
+        'type_evenement' => 'Accident',
         'lieu_exact' => 'Avenue Bourguiba x Rue 10',
         'auteurs_presumes' => 'Conducteur véhicule immatriculé DK-1234-AB',
         'victimes' => 'M. Fall (piéton)',
@@ -88,7 +88,7 @@ echo "Model CRUD\n";
 $id = EvenementSurvenu::create(sampleRow(['latitude' => 14.7166770, 'longitude' => -17.4676860]));
 $row = EvenementSurvenu::find($id);
 check($row !== null && $row['lieu_exact'] === 'Avenue Bourguiba x Rue 10', 'create + find');
-check($row['type_evenement'] === 'accident', 'type_evenement persisted');
+check($row['type_evenement'] === 'Accident', 'type_evenement persisted');
 check($row['auteurs_presumes'] !== '' && $row['victimes'] !== '' && $row['temoins'] !== '', 'parties impliquées persisted');
 check($row['mesures_prises'] === 'Victime évacuée, constat dressé', 'mesures_prises persisted');
 check(abs((float) $row['latitude'] - 14.716677) < 0.000001, 'latitude persisted');
@@ -104,7 +104,7 @@ check($row['lieu_exact'] === 'Place de l\'Indépendance' && $row['mesures_prises
 
 check(count(EvenementSurvenu::all(['search' => 'Bourguiba'])) === 1, 'search filter on lieu');
 check(count(EvenementSurvenu::all(['search' => 'Ndiaye'])) === 1, 'search filter on témoins');
-check(count(EvenementSurvenu::all(['type' => 'accident'])) === 2, 'type filter');
+check(count(EvenementSurvenu::all(['type' => 'Accident'])) === 2, 'type filter');
 check(count(EvenementSurvenu::all(['type' => 'infraction'])) === 0, 'type filter no match');
 
 EvenementSurvenu::delete($id);
@@ -141,6 +141,29 @@ $attachId2 = EvenementSurvenuAttachment::create([
 EvenementSurvenu::delete($idDefaults);
 check(EvenementSurvenuAttachment::getById($attachId2) === null, 'attachments cascade-deleted with parent');
 
+// --- Type catalog (evenement_survenu_type) ------------------------------------
+echo "Type catalog\n";
+$seedLabels = \App\Models\EvenementSurvenuType::labels();
+check(in_array('Infraction', $seedLabels, true) && in_array('Accident', $seedLabels, true)
+    && in_array('Incident', $seedLabels, true) && in_array('Autre', $seedLabels, true), 'seeded default types');
+
+$typeId = \App\Models\EvenementSurvenuType::create('Embouteillage');
+check(\App\Models\EvenementSurvenuType::exists('Embouteillage'), 'type create + exists');
+check(\App\Models\EvenementSurvenuType::getById($typeId)['label'] === 'Embouteillage', 'type getById');
+check(\App\Models\EvenementSurvenuType::update($typeId, 'Embouteillage majeur'), 'type update');
+check(\App\Models\EvenementSurvenuType::getById($typeId)['label'] === 'Embouteillage majeur', 'type label updated');
+
+// An event can be created with a custom catalog type (label stored verbatim).
+$idCustom = EvenementSurvenu::create(sampleRow(['type_evenement' => 'Embouteillage majeur']));
+check(EvenementSurvenu::find($idCustom)['type_evenement'] === 'Embouteillage majeur', 'event stores custom type label');
+
+// Renaming/deleting a type must not break existing events (no FK).
+check(\App\Models\EvenementSurvenuType::update($typeId, 'Embouteillage'), 'type rename back');
+check(EvenementSurvenu::find($idCustom)['type_evenement'] === 'Embouteillage majeur', 'existing event keeps label after rename');
+check(\App\Models\EvenementSurvenuType::delete($typeId), 'type delete');
+check(!\App\Models\EvenementSurvenuType::exists('Embouteillage'), 'type gone after delete');
+check(EvenementSurvenu::find($idCustom)['type_evenement'] === 'Embouteillage majeur', 'existing event keeps label after delete');
+
 // --- Controller validation rules (private static, via reflection) --------------
 echo "Validation\n";
 $method = new ReflectionMethod(\App\Controllers\EvenementSurvenuController::class, 'validate');
@@ -152,6 +175,7 @@ check(isset($validate(sampleRow(['date_evenement' => '']))['date_evenement']), '
 check(isset($validate(sampleRow(['heure_evenement' => '']))['heure_evenement']), 'missing heure rejected');
 check(isset($validate(sampleRow(['type_evenement' => '']))['type_evenement']), 'missing type rejected');
 check(isset($validate(sampleRow(['type_evenement' => 'vol']))['type_evenement']), 'unknown type rejected');
+check(isset($validate(sampleRow(['type_evenement' => 'Embouteillage majeur']))['type_evenement']), 'deleted catalog type rejected');
 check(isset($validate(sampleRow(['lieu_exact' => ' ']))['lieu_exact']), 'blank lieu rejected');
 check($validate(['mesures_prises' => 'Patrouille renforcée'], false) === [], 'partial update payload passes');
 check($validate([], false) === [], 'empty update payload passes');

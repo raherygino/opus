@@ -40,6 +40,21 @@ data class EvenementSurvenuRequest(
     @SerializedName("longitude") val longitude: Double? = null
 )
 
+// ========================
+// EvenementSurvenu Type DTO (user-managed label catalog)
+// ========================
+
+data class EvenementSurvenuTypeDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("label") val label: String,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null
+)
+
+data class EvenementSurvenuTypeRequest(
+    @SerializedName("label") val label: String
+)
+
 data class EvenementSurvenuAttachmentDto(
     @SerializedName("id") val id: Int,
     @SerializedName("evenement_id") val evenementId: Int,

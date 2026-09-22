@@ -4,21 +4,18 @@ import type {
   EvenementSurvenu,
   EvenementSurvenuAttachment,
   EvenementSurvenuInput,
-  EvenementSurvenuType,
+  EvenementSurvenuTypeItem,
 } from "@/types";
 
 // ========================
 // Évènements survenus API (Service Général)
 // ========================
 
-export const EVENEMENT_TYPES: EvenementSurvenuType[] = [
-  "infraction",
-  "incident",
-  "accident",
-  "autre",
-];
-
-export const EVENEMENT_TYPE_LABELS: Record<EvenementSurvenuType, string> = {
+/**
+ * Legacy code → label mapping kept as a display fallback for rows created
+ * before the type catalog existed. New rows store the label directly.
+ */
+export const EVENEMENT_TYPE_LABELS: Record<string, string> = {
   infraction: "Infraction",
   incident: "Incident",
   accident: "Accident",
@@ -126,4 +123,40 @@ export function getEvenementSurvenuAttachmentDownloadUrl(
 ): string {
   const baseUrl = import.meta.env.VITE_API_URL || "/api";
   return `${baseUrl}/evenements-survenus/${evenementId}/attachments/${attachId}/download`;
+}
+
+// ========================
+// Event types API (user-managed label catalog)
+// ========================
+
+export async function getEvenementSurvenuTypes(): Promise<EvenementSurvenuTypeItem[]> {
+  const { data } = await apiClient.get<ApiResponse<EvenementSurvenuTypeItem[]>>(
+    "/evenement-survenu-types",
+  );
+  return data.data;
+}
+
+export async function createEvenementSurvenuType(
+  label: string,
+): Promise<EvenementSurvenuTypeItem> {
+  const { data } = await apiClient.post<ApiResponse<EvenementSurvenuTypeItem>>(
+    "/evenement-survenu-types",
+    { label },
+  );
+  return data.data;
+}
+
+export async function updateEvenementSurvenuType(
+  id: number,
+  label: string,
+): Promise<EvenementSurvenuTypeItem> {
+  const { data } = await apiClient.put<ApiResponse<EvenementSurvenuTypeItem>>(
+    `/evenement-survenu-types/${id}`,
+    { label },
+  );
+  return data.data;
+}
+
+export async function deleteEvenementSurvenuType(id: number): Promise<void> {
+  await apiClient.delete(`/evenement-survenu-types/${id}`);
 }

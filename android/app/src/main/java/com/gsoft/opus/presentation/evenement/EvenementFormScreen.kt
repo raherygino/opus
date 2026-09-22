@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,7 +60,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.gsoft.opus.domain.model.EvenementSurvenu
 import com.gsoft.opus.presentation.personnel.OpusDatePickerDialog
 import com.gsoft.opus.presentation.personnel.formatDateDisplay
 import com.gsoft.opus.presentation.personnel.millisToIsoDate
@@ -80,6 +80,7 @@ fun EvenementFormScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var showDatePicker by remember { mutableStateOf(false) }
+    var showTypeDialog by remember { mutableStateOf(false) }
 
     var attachmentFilePickerIndex by remember { mutableStateOf(-1) }
     val attachmentFilePickerLauncher = rememberLauncherForActivityResult(
@@ -198,18 +199,26 @@ fun EvenementFormScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OpusDropdown(
-                    label = "Type d'événement *",
-                    options = EvenementSurvenu.TYPES.map { EvenementSurvenu.TYPE_LABELS[it] ?: it },
-                    selected = EvenementSurvenu.TYPE_LABELS[state.typeEvenement] ?: "",
-                    onSelect = { label ->
-                        val code = EvenementSurvenu.TYPE_LABELS.entries
-                            .firstOrNull { it.value == label }?.key ?: ""
-                        viewModel.updateTypeEvenement(code)
-                    },
-                    isError = state.typeEvenement.isBlank() && state.errorMessage != null,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OpusDropdown(
+                        label = "Type d'événement *",
+                        options = state.types.map { it.label },
+                        selected = state.typeEvenement,
+                        onSelect = viewModel::updateTypeEvenement,
+                        isError = state.typeEvenement.isBlank() && state.errorMessage != null,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = { showTypeDialog = true }) {
+                        Icon(
+                            Icons.Outlined.Settings,
+                            contentDescription = "Gérer les types d'événement"
+                        )
+                    }
+                }
 
                 OutlinedTextField(
                     value = state.lieuExact,
@@ -418,6 +427,12 @@ fun EvenementFormScreen(
             }
         )
     }
+
+    EvenementTypeDialog(
+        visible = showTypeDialog,
+        onDismiss = { showTypeDialog = false },
+        onTypesChanged = viewModel::onTypesChanged
+    )
 }
 
 @Composable

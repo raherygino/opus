@@ -31,7 +31,10 @@ data class EvenementSurvenu(
     /** "HH:MM:SS" from the API is displayed as "HH:MM". */
     val heureDisplay: String get() = heureEvenement.take(5)
 
-    /** French label for the stored type code. */
+    /**
+     * The type is stored as the catalog label verbatim. TYPE_LABELS only
+     * maps legacy machine codes for rows created before the catalog.
+     */
     val typeLabel: String get() = TYPE_LABELS[typeEvenement] ?: typeEvenement
 
     /** Display name of the agent who recorded the entry. */

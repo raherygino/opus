@@ -1,7 +1,5 @@
 package com.gsoft.opus.presentation.evenement
 
-import com.gsoft.opus.domain.model.EvenementSurvenu
-
 /** Regex for a date in YYYY-MM-DD format. */
 private val DATE_REGEX = Regex("^\\d{4}-\\d{2}-\\d{2}$")
 
@@ -33,10 +31,10 @@ fun validateEvenementForm(
         errors["heureEvenement"] = "L'heure est invalide (format attendu : HH:MM)"
     }
 
+    // The type comes from the user-managed catalog — only non-blank is
+    // checked client-side; the server validates it exists in the catalog.
     if (typeEvenement.isBlank()) {
         errors["typeEvenement"] = "Le type d'événement est requis"
-    } else if (typeEvenement !in EvenementSurvenu.TYPES) {
-        errors["typeEvenement"] = "Le type d'événement est invalide"
     }
 
     if (lieuExact.isBlank()) {

@@ -57,6 +57,7 @@ use App\Controllers\ArrestationAttachmentController;
 use App\Controllers\RassemblementJournalierController;
 use App\Controllers\EvenementSurvenuController;
 use App\Controllers\EvenementSurvenuAttachmentController;
+use App\Controllers\EvenementSurvenuTypeController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -529,6 +530,12 @@ $router->post('/api/evenements-survenus/{id}/attachments',                      
 $router->put('/api/evenements-survenus/{id}/attachments/{attachId}',                 [EvenementSurvenuAttachmentController::class, 'update']);
 $router->delete('/api/evenements-survenus/{id}/attachments/{attachId}',              [EvenementSurvenuAttachmentController::class, 'destroy']);
 $router->get('/api/evenements-survenus/{id}/attachments/{attachId}/download',        [EvenementSurvenuAttachmentController::class, 'download']);
+
+// Évènements survenus — type catalog (user-managed labels, no FK)
+$router->get('/api/evenement-survenu-types',          [EvenementSurvenuTypeController::class, 'index']);
+$router->post('/api/evenement-survenu-types',         [EvenementSurvenuTypeController::class, 'store']);
+$router->put('/api/evenement-survenu-types/{id}',     [EvenementSurvenuTypeController::class, 'update']);
+$router->delete('/api/evenement-survenu-types/{id}',  [EvenementSurvenuTypeController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

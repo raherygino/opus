@@ -27,6 +27,8 @@ import com.gsoft.opus.data.api.dto.RassemblementJournalierRequest
 import com.gsoft.opus.data.api.dto.EvenementSurvenuAttachmentDto
 import com.gsoft.opus.data.api.dto.EvenementSurvenuDto
 import com.gsoft.opus.data.api.dto.EvenementSurvenuRequest
+import com.gsoft.opus.data.api.dto.EvenementSurvenuTypeDto
+import com.gsoft.opus.data.api.dto.EvenementSurvenuTypeRequest
 import com.gsoft.opus.data.api.dto.PlainteEntreeDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
@@ -767,6 +769,25 @@ interface ApiService {
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
+
+    // ─── Évènements survenus — type catalog (user-managed labels) ────
+
+    @GET("api/evenement-survenu-types")
+    suspend fun getEvenementSurvenuTypes(): Response<ApiResponse<List<EvenementSurvenuTypeDto>>>
+
+    @POST("api/evenement-survenu-types")
+    suspend fun createEvenementSurvenuType(
+        @Body request: EvenementSurvenuTypeRequest
+    ): Response<ApiResponse<EvenementSurvenuTypeDto>>
+
+    @PUT("api/evenement-survenu-types/{id}")
+    suspend fun updateEvenementSurvenuType(
+        @Path("id") id: Int,
+        @Body request: EvenementSurvenuTypeRequest
+    ): Response<ApiResponse<EvenementSurvenuTypeDto>>
+
+    @DELETE("api/evenement-survenu-types/{id}")
+    suspend fun deleteEvenementSurvenuType(@Path("id") id: Int): Response<ApiResponse<Nothing>>
 
     // ========================
     // Main courante Categories (user-managed label catalog)

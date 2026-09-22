@@ -9,6 +9,8 @@ import com.gsoft.opus.core.LocationResult
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.EvenementSurvenuFormData
 import com.gsoft.opus.domain.repository.EvenementSurvenuRepository
+import com.gsoft.opus.domain.repository.EvenementSurvenuType
+import com.gsoft.opus.domain.repository.EvenementSurvenuTypeRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +37,8 @@ data class EvenementFormUiState(
     val victimes: String = "",
     val temoins: String = "",
     val mesuresPrises: String = "",
+    /** Event types from the user-managed catalog (labels). */
+    val types: List<EvenementSurvenuType> = emptyList(),
     // GPS location — required on Android to create an évènement survenu.
     val latitude: Double? = null,
     val longitude: Double? = null,
@@ -49,6 +53,7 @@ data class EvenementFormUiState(
 class EvenementFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: EvenementSurvenuRepository,
+    private val typeRepository: EvenementSurvenuTypeRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -64,6 +69,7 @@ class EvenementFormViewModel @Inject constructor(
     val state: StateFlow<EvenementFormUiState> = _state.asStateFlow()
 
     init {
+        loadTypes()
         if (evenementId > 0) {
             loadEntry()
         }
@@ -105,6 +111,32 @@ class EvenementFormViewModel @Inject constructor(
 
     fun updateDateEvenement(value: String) { _state.update { it.copy(dateEvenement = value) } }
     fun updateHeureEvenement(value: String) { _state.update { it.copy(heureEvenement = value) } }
+    private fun loadTypes() {
+        viewModelScope.launch {
+            when (val result = typeRepository.getTypes()) {
+                is Resource.Success -> _state.update { s ->
+                    val types = result.data
+                    // Default the type to the first available if it's still empty.
+                    val defaultType = if (s.typeEvenement.isBlank() && types.isNotEmpty()) types.first().label else s.typeEvenement
+                    s.copy(types = types, typeEvenement = defaultType)
+                }
+                is Resource.Error -> {}
+                is Resource.Loading -> {}
+            }
+        }
+    }
+
+    /** Called when the type dialog reports that the catalog changed. */
+    fun onTypesChanged(types: List<EvenementSurvenuType>) {
+        _state.update { s ->
+            val stillExists = types.any { it.label == s.typeEvenement }
+            val newType = if (stillExists) s.typeEvenement
+            else if (types.isNotEmpty()) types.first().label
+            else ""
+            s.copy(types = types, typeEvenement = newType)
+        }
+    }
+
     fun updateTypeEvenement(value: String) { _state.update { it.copy(typeEvenement = value) } }
     fun updateLieuExact(value: String) { _state.update { it.copy(lieuExact = value) } }
     fun updateAuteursPresumes(value: String) { _state.update { it.copy(auteursPresumes = value) } }

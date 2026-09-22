@@ -19,6 +19,7 @@ import com.gsoft.opus.data.repository.MainCouranteRepositoryImpl
 import com.gsoft.opus.data.repository.MainCouranteCategorieRepositoryImpl
 import com.gsoft.opus.data.repository.RassemblementJournalierRepositoryImpl
 import com.gsoft.opus.data.repository.EvenementSurvenuRepositoryImpl
+import com.gsoft.opus.data.repository.EvenementSurvenuTypeRepositoryImpl
 import com.gsoft.opus.data.repository.PlainteRepositoryImpl
 import com.gsoft.opus.data.repository.ConvocationRepositoryImpl
 import com.gsoft.opus.data.repository.GardeAVueRepositoryImpl
@@ -49,6 +50,7 @@ import com.gsoft.opus.domain.repository.MainCouranteRepository
 import com.gsoft.opus.domain.repository.MainCouranteCategorieRepository
 import com.gsoft.opus.domain.repository.RassemblementJournalierRepository
 import com.gsoft.opus.domain.repository.EvenementSurvenuRepository
+import com.gsoft.opus.domain.repository.EvenementSurvenuTypeRepository
 import com.gsoft.opus.domain.repository.PlainteRepository
 import com.gsoft.opus.domain.repository.ConvocationRepository
 import com.gsoft.opus.domain.repository.GardeAVueRepository
@@ -145,6 +147,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindEvenementSurvenuRepository(impl: EvenementSurvenuRepositoryImpl): EvenementSurvenuRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEvenementSurvenuTypeRepository(impl: EvenementSurvenuTypeRepositoryImpl): EvenementSurvenuTypeRepository
 
     @Binds
     @Singleton

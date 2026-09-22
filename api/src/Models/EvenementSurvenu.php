@@ -14,9 +14,6 @@ use App\Database;
  */
 class EvenementSurvenu
 {
-    /** Allowed values for the type_evenement column. */
-    public const TYPES = ['infraction', 'incident', 'accident', 'autre'];
-
     public static function all(array $filters = []): array
     {
         $db = Database::getInstance()->getConnection();

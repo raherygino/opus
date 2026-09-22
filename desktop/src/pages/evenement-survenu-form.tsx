@@ -10,12 +10,12 @@ import {
   updateEvenementSurvenuAttachmentTitle,
   deleteEvenementSurvenuAttachment,
   getEvenementSurvenuAttachmentDownloadUrl,
-  EVENEMENT_TYPES,
-  EVENEMENT_TYPE_LABELS,
+  getEvenementSurvenuTypes,
 } from "@/lib/api/evenement-survenu";
 import { isImageFile } from "@/lib/utils/attachment";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
+import { EvenementTypeDialog } from "@/components/evenement-survenu/evenement-type-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,11 +31,12 @@ import {
   Plus,
   Smartphone,
   Eye,
+  Settings2,
 } from "lucide-react";
 import type {
   EvenementSurvenuAttachment,
   EvenementSurvenuInput,
-  EvenementSurvenuType,
+  EvenementSurvenuTypeItem,
 } from "@/types";
 
 interface AttachmentItem {
@@ -57,7 +58,9 @@ export function EvenementSurvenuForm() {
 
   const [dateEvenement, setDateEvenement] = useState("");
   const [heureEvenement, setHeureEvenement] = useState("");
-  const [typeEvenement, setTypeEvenement] = useState<EvenementSurvenuType | "">("");
+  const [typeEvenement, setTypeEvenement] = useState("");
+  const [types, setTypes] = useState<EvenementSurvenuTypeItem[]>([]);
+  const [showTypeDialog, setShowTypeDialog] = useState(false);
   const [lieuExact, setLieuExact] = useState("");
   const [auteursPresumes, setAuteursPresumes] = useState("");
   const [victimes, setVictimes] = useState("");
@@ -68,10 +71,24 @@ export function EvenementSurvenuForm() {
   const [viewerTarget, setViewerTarget] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
+    loadTypes();
     if (!isEdit) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function loadTypes() {
+    try {
+      const data = await getEvenementSurvenuTypes();
+      setTypes(data);
+      // Default the form's type to the first available if it's still empty.
+      setTypeEvenement((prev) =>
+        prev === "" && data.length > 0 ? data[0].label : prev,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Impossible de charger les types d'événement");
+    }
+  }
 
   async function load() {
     try {
@@ -267,15 +284,22 @@ export function EvenementSurvenuForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Type d'événement *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="type">Type d'événement *</Label>
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                    onClick={() => setShowTypeDialog(true)}
+                  >
+                    <Settings2 className="h-3 w-3" />
+                    Gérer
+                  </button>
+                </div>
                 <Select
                   id="type"
                   value={typeEvenement}
-                  onChange={(e) => setTypeEvenement(e.target.value as EvenementSurvenuType)}
-                  options={EVENEMENT_TYPES.map((t) => ({
-                    value: t,
-                    label: EVENEMENT_TYPE_LABELS[t],
-                  }))}
+                  onChange={(e) => setTypeEvenement(e.target.value)}
+                  options={types.map((t) => ({ value: t.label, label: t.label }))}
                   placeholder="Sélectionner un type"
                   required
                 />
@@ -469,6 +493,21 @@ export function EvenementSurvenuForm() {
         }
         title={viewerTarget?.title}
         onClose={() => setViewerTarget(null)}
+      />
+
+      <EvenementTypeDialog
+        open={showTypeDialog}
+        onClose={() => setShowTypeDialog(false)}
+        onTypesChanged={(updated) => {
+          setTypes(updated);
+          // If the currently selected type was renamed, keep it selected.
+          // If it was deleted, reset to the first available.
+          setTypeEvenement((prev) => {
+            const stillExists = updated.some((t) => t.label === prev);
+            if (stillExists) return prev;
+            return updated.length > 0 ? updated[0].label : "";
+          });
+        }}
       />
     </div>
   );
