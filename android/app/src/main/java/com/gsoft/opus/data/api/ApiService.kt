@@ -24,6 +24,9 @@ import com.gsoft.opus.data.api.dto.MainCouranteCategorieRequest
 import com.gsoft.opus.data.api.dto.MainCouranteRequest
 import com.gsoft.opus.data.api.dto.RassemblementJournalierDto
 import com.gsoft.opus.data.api.dto.RassemblementJournalierRequest
+import com.gsoft.opus.data.api.dto.EvenementSurvenuAttachmentDto
+import com.gsoft.opus.data.api.dto.EvenementSurvenuDto
+import com.gsoft.opus.data.api.dto.EvenementSurvenuRequest
 import com.gsoft.opus.data.api.dto.PlainteEntreeDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
@@ -719,6 +722,51 @@ interface ApiService {
 
     @DELETE("api/rassemblements/{id}")
     suspend fun deleteRassemblement(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Évènements survenus (Service Général) ────────────────────
+
+    @GET("api/evenements-survenus")
+    suspend fun getEvenementSurvenuList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<EvenementSurvenuDto>>>
+
+    @GET("api/evenements-survenus/{id}")
+    suspend fun getEvenementSurvenu(@Path("id") id: Int): Response<ApiResponse<EvenementSurvenuDto>>
+
+    @POST("api/evenements-survenus")
+    suspend fun createEvenementSurvenu(@Body request: EvenementSurvenuRequest): Response<ApiResponse<EvenementSurvenuDto>>
+
+    @PUT("api/evenements-survenus/{id}")
+    suspend fun updateEvenementSurvenu(@Path("id") id: Int, @Body request: EvenementSurvenuRequest): Response<ApiResponse<EvenementSurvenuDto>>
+
+    @DELETE("api/evenements-survenus/{id}")
+    suspend fun deleteEvenementSurvenu(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Évènements survenus Attachments ──────────────────────────
+
+    @GET("api/evenements-survenus/{id}/attachments")
+    suspend fun getEvenementSurvenuAttachments(@Path("id") id: Int): Response<ApiResponse<List<EvenementSurvenuAttachmentDto>>>
+
+    @Multipart
+    @POST("api/evenements-survenus/{id}/attachments")
+    suspend fun createEvenementSurvenuAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<EvenementSurvenuAttachmentDto>>
+
+    @PUT("api/evenements-survenus/{id}/attachments/{attachId}")
+    suspend fun updateEvenementSurvenuAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<EvenementSurvenuAttachmentDto>>
+
+    @DELETE("api/evenements-survenus/{id}/attachments/{attachId}")
+    suspend fun deleteEvenementSurvenuAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
 
     // ========================
     // Main courante Categories (user-managed label catalog)

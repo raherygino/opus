@@ -51,6 +51,7 @@ import {
   Crosshair,
   Search as SearchIcon,
   ClipboardList,
+  Siren,
 } from "lucide-react";
 
 interface NavItem {
@@ -79,6 +80,7 @@ const DIVISION_MODULES: Record<string, string[]> = {
   ],
   sg: [
     "sg_rassemblement_journalier",
+    "sg_evenement_survenu",
   ],
   pj: [
     "pj_plainte",
@@ -179,6 +181,7 @@ function buildNavItems(user: User): NavItem[] {
   if (accessibleDivisions.includes("sg")) {
     const sgChildren: NavItem[] = [
       { icon: ClipboardList, label: "Rassemblement Journalier", path: "/sg/rassemblement-journalier", module: "sg_rassemblement_journalier" },
+      { icon: Siren, label: "Évènements survenus", path: "/sg/evenements-survenus", module: "sg_evenement_survenu" },
     ].filter((c) => hasVisibleNavItem(user, c));
 
     if (flattenDivisions) {

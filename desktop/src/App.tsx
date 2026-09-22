@@ -164,6 +164,16 @@ const RassemblementJournalierForm = lazy(() =>
 const RassemblementJournalierDetail = lazy(() =>
   import("@/pages/rassemblement-journalier-detail").then((m) => ({ default: m.RassemblementJournalierDetail })),
 );
+// Évènements survenus (Service Général)
+const EvenementSurvenuList = lazy(() =>
+  import("@/pages/evenement-survenu-list").then((m) => ({ default: m.EvenementSurvenuList })),
+);
+const EvenementSurvenuForm = lazy(() =>
+  import("@/pages/evenement-survenu-form").then((m) => ({ default: m.EvenementSurvenuForm })),
+);
+const EvenementSurvenuDetail = lazy(() =>
+  import("@/pages/evenement-survenu-detail").then((m) => ({ default: m.EvenementSurvenuDetail })),
+);
 
 // Personnel
 const PersonnelTabs = lazy(() =>
@@ -798,6 +808,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<DashboardSkeleton />}>
                       <RassemblementJournalierForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="evenements-survenus"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <EvenementSurvenuList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="evenements-survenus/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <EvenementSurvenuForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="evenements-survenus/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <EvenementSurvenuDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="evenements-survenus/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <EvenementSurvenuForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.CrisisAlert
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.ViewColumn
@@ -112,6 +113,9 @@ import com.gsoft.opus.presentation.maincourante.MainCouranteFormScreen
 import com.gsoft.opus.presentation.rassemblement.RassemblementScreen
 import com.gsoft.opus.presentation.rassemblement.RassemblementDetailScreen
 import com.gsoft.opus.presentation.rassemblement.RassemblementFormScreen
+import com.gsoft.opus.presentation.evenement.EvenementScreen
+import com.gsoft.opus.presentation.evenement.EvenementDetailScreen
+import com.gsoft.opus.presentation.evenement.EvenementFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteDetailScreen
 import com.gsoft.opus.presentation.plainte.PlainteFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteScreen
@@ -259,6 +263,7 @@ fun MainScreen(
             "sed_main_courante_poste" to MainRoutes.MainCourantePoste.route,
             "sed_renseignement" to MainRoutes.RenseignementSed.route,
             "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
+            "sg_evenement_survenu" to MainRoutes.EvenementSurvenu.route,
             "pj_dashboard" to MainRoutes.PjDashboard.route,
             "pj_plainte" to MainRoutes.Plainte.route,
             "pj_registre_enquete" to MainRoutes.RegistreEnquete.route,
@@ -327,6 +332,8 @@ fun MainScreen(
         map[MainRoutes.Profile.route] = context.getString(R.string.nav_profile)
         map[MainRoutes.Settings.route] = context.getString(R.string.settings_title)
         map[MainRoutes.QrAuthScanner.route] = context.getString(R.string.qr_connect_computer)
+        // The drawer label is the short menu name; the page title is the full one.
+        map[MainRoutes.EvenementSurvenu.route] = "Évènements survenus sur la voie publique"
         map
     }
     val appBarSubtitle = currentRoute?.let { routeTitleMap[it] }
@@ -350,7 +357,6 @@ fun MainScreen(
                     personnelId = homeState.personnelId,
                     photo = homeState.photo,
                     role = homeState.roleName ?: homeState.grade,
-                    drawerState = drawerState,
                     progress = { 1f },
                     onItemClick = { item ->
                         val route = drawerRouteMap[item.id]
@@ -637,6 +643,16 @@ fun MainScreen(
                             },
                             onCreate = {
                                 navController.navigate(MainRoutes.RassemblementJournalierForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.EvenementSurvenu.route) {
+                        EvenementScreen(
+                            onEntryClick = { id ->
+                                navController.navigate(MainRoutes.EvenementSurvenuDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.EvenementSurvenuForm.createRoute(0))
                             }
                         )
                     }
@@ -1435,6 +1451,65 @@ fun MainScreen(
                         }
                     ) {
                         RassemblementFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Évènements survenus management (Service Général)
+                    composable(
+                        route = MainRoutes.EvenementSurvenuDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("evenementId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        EvenementDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.EvenementSurvenuForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.EvenementSurvenuForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("evenementId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        EvenementFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )
@@ -2437,6 +2512,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
     ),
     "sg" to listOf(
         "sg_rassemblement_journalier",
+        "sg_evenement_survenu",
     ),
     "pj" to listOf(
         "pj_plainte",
@@ -2518,6 +2594,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
     if (userCanAccessDivision(user, "sg")) {
         items.add(ContextMenuItem(id = "section_sg", title = "Division Service Général", isSectionHeader = true))
         items.add(ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"))
+        items.add(ContextMenuItem(id = "sg_evenement_survenu", title = "Évènements survenus", subtitle = "sur la voie publique", icon = Icons.Outlined.CrisisAlert, module = "sg_evenement_survenu"))
     }
 
     // ── Division Police Judiciaire ──

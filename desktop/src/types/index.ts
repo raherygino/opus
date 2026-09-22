@@ -1455,3 +1455,59 @@ export interface RassemblementJournalierInput {
   motif_absence?: string | null;
   repartitions?: RepartitionSecteurInput[];
 }
+
+// ========================
+// Évènements survenus (Service Général)
+// ========================
+
+/** type_evenement codes stored in DB — labels rendered in French by clients. */
+export type EvenementSurvenuType = "infraction" | "incident" | "accident" | "autre";
+
+export interface EvenementSurvenu {
+  id: number;
+  date_evenement: string;
+  heure_evenement: string;
+  type_evenement: EvenementSurvenuType;
+  lieu_exact: string;
+  auteurs_presumes: string | null;
+  victimes: string | null;
+  temoins: string | null;
+  mesures_prises: string | null;
+  /** GPS position captured at record time (mobile only, null on desktop). */
+  latitude: number | null;
+  longitude: number | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  created_at: string;
+  updated_at: string;
+  /** Included by the detail endpoint (GET /evenements-survenus/{id}). */
+  attachments?: EvenementSurvenuAttachment[];
+}
+
+export interface EvenementSurvenuAttachment {
+  id: number;
+  evenement_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvenementSurvenuInput {
+  date_evenement: string;
+  heure_evenement: string;
+  type_evenement: EvenementSurvenuType | "";
+  lieu_exact: string;
+  auteurs_presumes?: string | null;
+  victimes?: string | null;
+  temoins?: string | null;
+  mesures_prises?: string | null;
+  /** GPS position (mobile only — desktop sends none). */
+  latitude?: number | null;
+  longitude?: number | null;
+}

@@ -41,8 +41,6 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -125,7 +123,6 @@ fun OpusDrawerContent(
     personnelId: Int?,
     photo: String?,
     role: String?,
-    drawerState: DrawerState,
     progress: () -> Float,
     onItemClick: (ContextMenuItem) -> Unit,
     onProfileClick: () -> Unit,
@@ -141,20 +138,28 @@ fun OpusDrawerContent(
     // graphicsLayer lambda (one toPx() per item per frame otherwise).
     val staggerSlidePx = with(LocalDensity.current) { StaggerSlideDp.toPx() }
 
-    // Ensure the drawer list always starts at the top when opened. Without
-    // this the LazyColumn can settle at the bottom on first open.
+    // The drawer content stays composed while the drawer is closed, so the
+    // list state preserves the user's last scroll position across open and
+    // close. It is only moved to keep a newly selected entry visible.
     val listState = rememberLazyListState()
-    LaunchedEffect(drawerState.currentValue) {
-        if (drawerState.currentValue == DrawerValue.Open) {
-            listState.scrollToItem(0)
-        }
-    }
 
     // Filter items by the search query. Supports division keywords
     // (sedentaire, service général / sg, police judiciaire / pj) which
     // expand to show every entry under the matching section.
     val filteredItems = remember(items, searchQuery) {
         if (searchQuery.isBlank()) items else filterDrawerItems(items, searchQuery.trim())
+    }
+
+    // When navigation selects a different entry, scroll just enough to keep
+    // it visible. An entry nested in a group scrolls to the group's row.
+    LaunchedEffect(selectedId, items) {
+        val index = filteredItems.indexOfFirst { item ->
+            item.id == selectedId ||
+                item.children?.any { child -> child.id == selectedId } == true
+        }
+        if (index >= 0 && listState.layoutInfo.visibleItemsInfo.none { it.index == index }) {
+            listState.scrollToItem(index)
+        }
     }
 
     Column(
@@ -785,6 +790,12 @@ private fun DrawerExpandableItem(
         children.any { it.id == selectedId }
     }
     var expanded by rememberSaveable(item.id) { mutableStateOf(hasSelectedChild) }
+
+    // Reveal the group when navigation selects one of its children so the
+    // selected entry is actually visible in the list.
+    LaunchedEffect(hasSelectedChild) {
+        if (hasSelectedChild) expanded = true
+    }
 
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,

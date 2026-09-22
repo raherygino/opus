@@ -15,6 +15,8 @@ import com.gsoft.opus.domain.model.MainCourante
 import com.gsoft.opus.domain.model.MainCouranteAttachment
 import com.gsoft.opus.domain.model.RassemblementJournalier
 import com.gsoft.opus.domain.model.RepartitionSecteur
+import com.gsoft.opus.domain.model.EvenementSurvenu
+import com.gsoft.opus.domain.model.EvenementSurvenuAttachment
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -531,6 +533,39 @@ fun RepartitionSecteurDto.toDomain(): RepartitionSecteur = RepartitionSecteur(
     controleContact = controleContact,
     materielsArmements = materielsArmements,
     missions = missions,
+    createdAt = createdAt
+)
+
+// ── Évènements survenus ─────────────────────────────────────────
+
+fun EvenementSurvenuDto.toDomain(): EvenementSurvenu = EvenementSurvenu(
+    id = id,
+    dateEvenement = dateEvenement,
+    heureEvenement = heureEvenement,
+    typeEvenement = typeEvenement,
+    lieuExact = lieuExact,
+    auteursPresumes = auteursPresumes,
+    victimes = victimes,
+    temoins = temoins,
+    mesuresPrises = mesuresPrises,
+    latitude = latitude,
+    longitude = longitude,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom
+)
+
+fun EvenementSurvenuAttachmentDto.toDomain(): EvenementSurvenuAttachment = EvenementSurvenuAttachment(
+    id = id,
+    evenementId = evenementId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
     createdAt = createdAt
 )
 

@@ -55,6 +55,8 @@ use App\Controllers\MandatAttachmentController;
 use App\Controllers\ArrestationController;
 use App\Controllers\ArrestationAttachmentController;
 use App\Controllers\RassemblementJournalierController;
+use App\Controllers\EvenementSurvenuController;
+use App\Controllers\EvenementSurvenuAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -511,6 +513,22 @@ $router->get('/api/rassemblements/{id}',                                        
 $router->post('/api/rassemblements',                                               [RassemblementJournalierController::class, 'store']);
 $router->put('/api/rassemblements/{id}',                                            [RassemblementJournalierController::class, 'update']);
 $router->delete('/api/rassemblements/{id}',                                         [RassemblementJournalierController::class, 'destroy']);
+
+// ========================
+// Évènements survenus Routes (Service Général)
+// ========================
+$router->get('/api/evenements-survenus',                                             [EvenementSurvenuController::class, 'index']);
+$router->get('/api/evenements-survenus/{id}',                                        [EvenementSurvenuController::class, 'show']);
+$router->post('/api/evenements-survenus',                                            [EvenementSurvenuController::class, 'store']);
+$router->put('/api/evenements-survenus/{id}',                                        [EvenementSurvenuController::class, 'update']);
+$router->delete('/api/evenements-survenus/{id}',                                     [EvenementSurvenuController::class, 'destroy']);
+
+// Évènements survenus attachments
+$router->get('/api/evenements-survenus/{id}/attachments',                            [EvenementSurvenuAttachmentController::class, 'index']);
+$router->post('/api/evenements-survenus/{id}/attachments',                           [EvenementSurvenuAttachmentController::class, 'store']);
+$router->put('/api/evenements-survenus/{id}/attachments/{attachId}',                 [EvenementSurvenuAttachmentController::class, 'update']);
+$router->delete('/api/evenements-survenus/{id}/attachments/{attachId}',              [EvenementSurvenuAttachmentController::class, 'destroy']);
+$router->get('/api/evenements-survenus/{id}/attachments/{attachId}/download',        [EvenementSurvenuAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)
