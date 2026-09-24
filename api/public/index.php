@@ -58,6 +58,8 @@ use App\Controllers\RassemblementJournalierController;
 use App\Controllers\EvenementSurvenuController;
 use App\Controllers\EvenementSurvenuAttachmentController;
 use App\Controllers\EvenementSurvenuTypeController;
+use App\Controllers\ActiviteController;
+use App\Controllers\ActiviteAttachmentController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -537,6 +539,22 @@ $router->get('/api/evenement-survenu-types',          [EvenementSurvenuTypeContr
 $router->post('/api/evenement-survenu-types',         [EvenementSurvenuTypeController::class, 'store']);
 $router->put('/api/evenement-survenu-types/{id}',     [EvenementSurvenuTypeController::class, 'update']);
 $router->delete('/api/evenement-survenu-types/{id}',  [EvenementSurvenuTypeController::class, 'destroy']);
+
+// ========================
+// Activités Routes (Service Général) — patrouilles et interventions
+// ========================
+$router->get('/api/activites',                                                     [ActiviteController::class, 'index']);
+$router->get('/api/activites/{id}',                                                [ActiviteController::class, 'show']);
+$router->post('/api/activites',                                                    [ActiviteController::class, 'store']);
+$router->put('/api/activites/{id}',                                                [ActiviteController::class, 'update']);
+$router->delete('/api/activites/{id}',                                             [ActiviteController::class, 'destroy']);
+
+// Activités attachments
+$router->get('/api/activites/{id}/attachments',                                    [ActiviteAttachmentController::class, 'index']);
+$router->post('/api/activites/{id}/attachments',                                   [ActiviteAttachmentController::class, 'store']);
+$router->put('/api/activites/{id}/attachments/{attachId}',                         [ActiviteAttachmentController::class, 'update']);
+$router->delete('/api/activites/{id}/attachments/{attachId}',                      [ActiviteAttachmentController::class, 'destroy']);
+$router->get('/api/activites/{id}/attachments/{attachId}/download',                [ActiviteAttachmentController::class, 'download']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

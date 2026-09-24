@@ -26,6 +26,7 @@ const MODULES = [
   { key: "sedentaire_poste_renseignement", label: "Sédentaire > Poste > Renseignement" },
   { key: "sg_rassemblement_journalier", label: "Service Général > Rassemblement Journalier" },
   { key: "sg_evenement_survenu", label: "Service Général > Évènements survenus" },
+  { key: "sg_activite", label: "Service Général > Activité" },
   { key: "pj_plainte", label: "Police Judiciaire > Plainte reçue" },
   { key: "pj_enquete", label: "Police Judiciaire > Registre d'enquête" },
   { key: "pj_mandat", label: "Police Judiciaire > Mandat" },

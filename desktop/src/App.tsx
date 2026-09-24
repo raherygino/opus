@@ -174,6 +174,16 @@ const EvenementSurvenuForm = lazy(() =>
 const EvenementSurvenuDetail = lazy(() =>
   import("@/pages/evenement-survenu-detail").then((m) => ({ default: m.EvenementSurvenuDetail })),
 );
+// Activités (Service Général) — patrouilles et interventions
+const ActiviteList = lazy(() =>
+  import("@/pages/activite-list").then((m) => ({ default: m.ActiviteList })),
+);
+const ActiviteForm = lazy(() =>
+  import("@/pages/activite-form").then((m) => ({ default: m.ActiviteForm })),
+);
+const ActiviteDetail = lazy(() =>
+  import("@/pages/activite-detail").then((m) => ({ default: m.ActiviteDetail })),
+);
 
 // Personnel
 const PersonnelTabs = lazy(() =>
@@ -848,6 +858,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <EvenementSurvenuForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="activites"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <ActiviteList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="activites/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <ActiviteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="activites/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <ActiviteDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="activites/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <ActiviteForm />
                     </Suspense>
                   </ErrorBoundary>
                 }

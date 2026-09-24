@@ -36,6 +36,7 @@ sealed class MainRoutes(val route: String) {
     // Division Service Général
     data object RassemblementJournalier : MainRoutes("sg_rassemblement_journalier")
     data object EvenementSurvenu : MainRoutes("sg_evenement_survenu")
+    data object Activite : MainRoutes("sg_activite")
 
     // Division Police Judiciaire
     data object PjDashboard : MainRoutes("pj_dashboard")
@@ -179,6 +180,14 @@ sealed class MainRoutes(val route: String) {
     }
     data object EvenementSurvenuForm : MainRoutes("sg_evenement_survenu_form?evenementId={evenementId}") {
         fun createRoute(evenementId: Int = 0) = "sg_evenement_survenu_form?evenementId=$evenementId"
+    }
+
+    // Activités (Service Général) — patrouilles et interventions.
+    data object ActiviteDetail : MainRoutes("sg_activite_detail/{activiteId}") {
+        fun createRoute(activiteId: Int) = "sg_activite_detail/$activiteId"
+    }
+    data object ActiviteForm : MainRoutes("sg_activite_form?activiteId={activiteId}") {
+        fun createRoute(activiteId: Int = 0) = "sg_activite_form?activiteId=$activiteId"
     }
 
     // Plainte (Police Judiciaire) — ENTRÉE + SORTIE

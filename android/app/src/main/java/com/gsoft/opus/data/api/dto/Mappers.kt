@@ -17,6 +17,8 @@ import com.gsoft.opus.domain.model.RassemblementJournalier
 import com.gsoft.opus.domain.model.RepartitionSecteur
 import com.gsoft.opus.domain.model.EvenementSurvenu
 import com.gsoft.opus.domain.model.EvenementSurvenuAttachment
+import com.gsoft.opus.domain.model.Activite
+import com.gsoft.opus.domain.model.ActiviteAttachment
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -561,6 +563,45 @@ fun EvenementSurvenuDto.toDomain(): EvenementSurvenu = EvenementSurvenu(
 fun EvenementSurvenuAttachmentDto.toDomain(): EvenementSurvenuAttachment = EvenementSurvenuAttachment(
     id = id,
     evenementId = evenementId,
+    title = title,
+    filename = filename,
+    originalFilename = originalFilename,
+    mimeType = mimeType,
+    fileSize = fileSize,
+    createdAt = createdAt
+)
+
+// ── Activités (Service Général) ────────────────────────────────────
+
+fun ActiviteDto.toDomain(): Activite = Activite(
+    id = id,
+    dateActivite = dateActivite,
+    heureActivite = heureActivite,
+    patrouilleDiurneMotoriseeItineraire = patrouilleDiurneMotoriseeItineraire,
+    patrouilleDiurnePedestreItineraire = patrouilleDiurnePedestreItineraire,
+    patrouilleDiurnePorteeItineraire = patrouilleDiurnePorteeItineraire,
+    patrouilleNocturneMotoriseeItineraire = patrouilleNocturneMotoriseeItineraire,
+    patrouilleNocturnePedestreItineraire = patrouilleNocturnePedestreItineraire,
+    patrouilleNocturnePorteeItineraire = patrouilleNocturnePorteeItineraire,
+    operationCiblee = operationCiblee,
+    faitsConstates = faitsConstates,
+    compteRenduHierarchie = compteRenduHierarchie,
+    conduiteATenir = conduiteATenir,
+    natureIntervention = natureIntervention,
+    suitesDonnees = suitesDonnees,
+    latitude = latitude,
+    longitude = longitude,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom
+)
+
+fun ActiviteAttachmentDto.toDomain(): ActiviteAttachment = ActiviteAttachment(
+    id = id,
+    activiteId = activiteId,
     title = title,
     filename = filename,
     originalFilename = originalFilename,

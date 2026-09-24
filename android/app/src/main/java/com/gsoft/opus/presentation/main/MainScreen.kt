@@ -44,6 +44,7 @@ import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Route
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -116,6 +117,9 @@ import com.gsoft.opus.presentation.rassemblement.RassemblementFormScreen
 import com.gsoft.opus.presentation.evenement.EvenementScreen
 import com.gsoft.opus.presentation.evenement.EvenementDetailScreen
 import com.gsoft.opus.presentation.evenement.EvenementFormScreen
+import com.gsoft.opus.presentation.activite.ActiviteScreen
+import com.gsoft.opus.presentation.activite.ActiviteDetailScreen
+import com.gsoft.opus.presentation.activite.ActiviteFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteDetailScreen
 import com.gsoft.opus.presentation.plainte.PlainteFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteScreen
@@ -274,6 +278,7 @@ fun MainScreen(
             "sed_renseignement" to MainRoutes.RenseignementSed.route,
             "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
             "sg_evenement_survenu" to MainRoutes.EvenementSurvenu.route,
+            "sg_activite" to MainRoutes.Activite.route,
             "pj_dashboard" to MainRoutes.PjDashboard.route,
             "pj_plainte" to MainRoutes.Plainte.route,
             "pj_registre_enquete" to MainRoutes.RegistreEnquete.route,
@@ -663,6 +668,16 @@ fun MainScreen(
                             },
                             onCreate = {
                                 navController.navigate(MainRoutes.EvenementSurvenuForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.Activite.route) {
+                        ActiviteScreen(
+                            onEntryClick = { id ->
+                                navController.navigate(MainRoutes.ActiviteDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.ActiviteForm.createRoute(0))
                             }
                         )
                     }
@@ -1520,6 +1535,65 @@ fun MainScreen(
                         }
                     ) {
                         EvenementFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Activités management (Service Général) — patrouilles et interventions
+                    composable(
+                        route = MainRoutes.ActiviteDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("activiteId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ActiviteDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.ActiviteForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.ActiviteForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("activiteId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ActiviteFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )
@@ -2533,6 +2607,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
     "sg" to listOf(
         "sg_rassemblement_journalier",
         "sg_evenement_survenu",
+        "sg_activite",
     ),
     "pj" to listOf(
         "pj_plainte",
@@ -2615,6 +2690,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
         items.add(ContextMenuItem(id = "section_sg", title = "Division Service Général", isSectionHeader = true))
         items.add(ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"))
         items.add(ContextMenuItem(id = "sg_evenement_survenu", title = "Évènements survenus", subtitle = "sur la voie publique", icon = Icons.Outlined.CrisisAlert, module = "sg_evenement_survenu"))
+        items.add(ContextMenuItem(id = "sg_activite", title = "Activité", subtitle = "Patrouilles et interventions", icon = Icons.Outlined.Route, module = "sg_activite"))
     }
 
     // ── Division Police Judiciaire ──

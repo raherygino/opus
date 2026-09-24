@@ -1520,3 +1520,81 @@ export interface EvenementSurvenuInput {
   latitude?: number | null;
   longitude?: number | null;
 }
+
+// ========================
+// Activités (Service Général) — patrouilles et interventions
+// ========================
+
+/**
+ * Patrol itinerary columns — one per type×mode pair. A null itinerary
+ * means the patrol mode was not selected; an empty string means it was
+ * selected without a detailed itinerary.
+ */
+export type PatrouilleItineraireField =
+  | "patrouille_diurne_motorisee_itineraire"
+  | "patrouille_diurne_pedestre_itineraire"
+  | "patrouille_diurne_portee_itineraire"
+  | "patrouille_nocturne_motorisee_itineraire"
+  | "patrouille_nocturne_pedestre_itineraire"
+  | "patrouille_nocturne_portee_itineraire";
+
+export interface Activite {
+  id: number;
+  date_activite: string;
+  heure_activite: string;
+  patrouille_diurne_motorisee_itineraire: string | null;
+  patrouille_diurne_pedestre_itineraire: string | null;
+  patrouille_diurne_portee_itineraire: string | null;
+  patrouille_nocturne_motorisee_itineraire: string | null;
+  patrouille_nocturne_pedestre_itineraire: string | null;
+  patrouille_nocturne_portee_itineraire: string | null;
+  operation_ciblee: string | null;
+  faits_constates: string | null;
+  compte_rendu_hierarchie: string | null;
+  conduite_a_tenir: string | null;
+  nature_intervention: string | null;
+  suites_donnees: string | null;
+  /** GPS position captured at record time (mobile only, null on desktop). */
+  latitude: number | null;
+  longitude: number | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  created_at: string;
+  updated_at: string;
+  /** Included by the detail endpoint (GET /activites/{id}). */
+  attachments?: ActiviteAttachment[];
+}
+
+export interface ActiviteAttachment {
+  id: number;
+  activite_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActiviteInput {
+  date_activite: string;
+  heure_activite: string;
+  patrouille_diurne_motorisee_itineraire?: string | null;
+  patrouille_diurne_pedestre_itineraire?: string | null;
+  patrouille_diurne_portee_itineraire?: string | null;
+  patrouille_nocturne_motorisee_itineraire?: string | null;
+  patrouille_nocturne_pedestre_itineraire?: string | null;
+  patrouille_nocturne_portee_itineraire?: string | null;
+  operation_ciblee?: string | null;
+  faits_constates?: string | null;
+  compte_rendu_hierarchie?: string | null;
+  conduite_a_tenir?: string | null;
+  nature_intervention?: string | null;
+  suites_donnees?: string | null;
+  /** GPS position (mobile only — desktop sends none). */
+  latitude?: number | null;
+  longitude?: number | null;
+}

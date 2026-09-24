@@ -29,6 +29,9 @@ import com.gsoft.opus.data.api.dto.EvenementSurvenuDto
 import com.gsoft.opus.data.api.dto.EvenementSurvenuRequest
 import com.gsoft.opus.data.api.dto.EvenementSurvenuTypeDto
 import com.gsoft.opus.data.api.dto.EvenementSurvenuTypeRequest
+import com.gsoft.opus.data.api.dto.ActiviteAttachmentDto
+import com.gsoft.opus.data.api.dto.ActiviteDto
+import com.gsoft.opus.data.api.dto.ActiviteRequest
 import com.gsoft.opus.data.api.dto.PlainteEntreeDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
@@ -792,6 +795,51 @@ interface ApiService {
 
     @DELETE("api/evenement-survenu-types/{id}")
     suspend fun deleteEvenementSurvenuType(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Activités (Service Général) — patrouilles et interventions ──
+
+    @GET("api/activites")
+    suspend fun getActiviteList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<ActiviteDto>>>
+
+    @GET("api/activites/{id}")
+    suspend fun getActivite(@Path("id") id: Int): Response<ApiResponse<ActiviteDto>>
+
+    @POST("api/activites")
+    suspend fun createActivite(@Body request: ActiviteRequest): Response<ApiResponse<ActiviteDto>>
+
+    @PUT("api/activites/{id}")
+    suspend fun updateActivite(@Path("id") id: Int, @Body request: ActiviteRequest): Response<ApiResponse<ActiviteDto>>
+
+    @DELETE("api/activites/{id}")
+    suspend fun deleteActivite(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    // ─── Activités Attachments ──────────────────────────────────────
+
+    @GET("api/activites/{id}/attachments")
+    suspend fun getActiviteAttachments(@Path("id") id: Int): Response<ApiResponse<List<ActiviteAttachmentDto>>>
+
+    @Multipart
+    @POST("api/activites/{id}/attachments")
+    suspend fun createActiviteAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ActiviteAttachmentDto>>
+
+    @PUT("api/activites/{id}/attachments/{attachId}")
+    suspend fun updateActiviteAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body request: AttachmentTitleRequest
+    ): Response<ApiResponse<ActiviteAttachmentDto>>
+
+    @DELETE("api/activites/{id}/attachments/{attachId}")
+    suspend fun deleteActiviteAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
 
     // ========================
     // Main courante Categories (user-managed label catalog)
