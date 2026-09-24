@@ -32,6 +32,8 @@ import com.gsoft.opus.data.api.dto.EvenementSurvenuTypeRequest
 import com.gsoft.opus.data.api.dto.ActiviteAttachmentDto
 import com.gsoft.opus.data.api.dto.ActiviteDto
 import com.gsoft.opus.data.api.dto.ActiviteRequest
+import com.gsoft.opus.data.api.dto.DispositifExceptionnelDto
+import com.gsoft.opus.data.api.dto.DispositifExceptionnelRequest
 import com.gsoft.opus.data.api.dto.PlainteEntreeDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeAttachmentDto
 import com.gsoft.opus.data.api.dto.PlainteEntreeSummaryDto
@@ -840,6 +842,25 @@ interface ApiService {
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>
+
+    // ─── Dispositif exceptionnel (Service Général) ──────────────────
+
+    @GET("api/dispositifs-exceptionnels")
+    suspend fun getDispositifExceptionnelList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<DispositifExceptionnelDto>>>
+
+    @GET("api/dispositifs-exceptionnels/{id}")
+    suspend fun getDispositifExceptionnel(@Path("id") id: Int): Response<ApiResponse<DispositifExceptionnelDto>>
+
+    @POST("api/dispositifs-exceptionnels")
+    suspend fun createDispositifExceptionnel(@Body request: DispositifExceptionnelRequest): Response<ApiResponse<DispositifExceptionnelDto>>
+
+    @PUT("api/dispositifs-exceptionnels/{id}")
+    suspend fun updateDispositifExceptionnel(@Path("id") id: Int, @Body request: DispositifExceptionnelRequest): Response<ApiResponse<DispositifExceptionnelDto>>
+
+    @DELETE("api/dispositifs-exceptionnels/{id}")
+    suspend fun deleteDispositifExceptionnel(@Path("id") id: Int): Response<ApiResponse<Nothing>>
 
     // ========================
     // Main courante Categories (user-managed label catalog)

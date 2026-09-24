@@ -19,6 +19,8 @@ import com.gsoft.opus.domain.model.EvenementSurvenu
 import com.gsoft.opus.domain.model.EvenementSurvenuAttachment
 import com.gsoft.opus.domain.model.Activite
 import com.gsoft.opus.domain.model.ActiviteAttachment
+import com.gsoft.opus.domain.model.DispositifEffectif
+import com.gsoft.opus.domain.model.DispositifExceptionnel
 import com.gsoft.opus.domain.model.Comportement
 import com.gsoft.opus.domain.model.Correspondance
 import com.gsoft.opus.domain.model.CorrespondanceAttachment
@@ -607,6 +609,32 @@ fun ActiviteAttachmentDto.toDomain(): ActiviteAttachment = ActiviteAttachment(
     originalFilename = originalFilename,
     mimeType = mimeType,
     fileSize = fileSize,
+    createdAt = createdAt
+)
+
+// ── Dispositif exceptionnel (Service Général) ────────────────────────
+
+fun DispositifExceptionnelDto.toDomain(): DispositifExceptionnel = DispositifExceptionnel(
+    id = id,
+    natureEvenement = natureEvenement,
+    dateDebut = dateDebut,
+    dateFin = dateFin,
+    createdBy = createdBy,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    agentUsername = agentUsername,
+    agentPrenoms = agentPrenoms,
+    agentNom = agentNom,
+    effectifs = effectifs?.map { it.toDomain() } ?: emptyList()
+)
+
+fun DispositifEffectifDto.toDomain(): DispositifEffectif = DispositifEffectif(
+    id = id,
+    secteur = secteur,
+    chefElementContact = chefElementContact,
+    controleContact = controleContact,
+    materielsArmements = materielsArmements,
+    missions = missions,
     createdAt = createdAt
 )
 

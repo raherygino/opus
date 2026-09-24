@@ -78,6 +78,16 @@ fun millisToIsoDate(millis: Long): String {
     return format.format(Date(millis))
 }
 
+/** Parses an ISO date (yyyy-MM-dd) to picker millis (UTC); null when blank/invalid. */
+fun isoDateToMillis(isoDate: String?): Long? {
+    if (isoDate.isNullOrBlank()) return null
+    return runCatching {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        format.timeZone = TimeZone.getTimeZone("UTC")
+        format.parse(isoDate.take(10))?.time
+    }.getOrNull()
+}
+
 /** Formats an ISO date (yyyy-MM-dd) as dd/MM/yyyy for display. */
 fun formatDateDisplay(isoDate: String?): String {
     if (isoDate.isNullOrBlank()) return "—"

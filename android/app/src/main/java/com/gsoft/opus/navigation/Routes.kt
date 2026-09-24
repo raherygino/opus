@@ -37,6 +37,7 @@ sealed class MainRoutes(val route: String) {
     data object RassemblementJournalier : MainRoutes("sg_rassemblement_journalier")
     data object EvenementSurvenu : MainRoutes("sg_evenement_survenu")
     data object Activite : MainRoutes("sg_activite")
+    data object DispositifExceptionnel : MainRoutes("sg_dispositif_exceptionnel")
 
     // Division Police Judiciaire
     data object PjDashboard : MainRoutes("pj_dashboard")
@@ -188,6 +189,14 @@ sealed class MainRoutes(val route: String) {
     }
     data object ActiviteForm : MainRoutes("sg_activite_form?activiteId={activiteId}") {
         fun createRoute(activiteId: Int = 0) = "sg_activite_form?activiteId=$activiteId"
+    }
+
+    // Dispositif exceptionnel (Service Général) — période + effectif engagé par secteur.
+    data object DispositifExceptionnelDetail : MainRoutes("sg_dispositif_exceptionnel_detail/{dispositifId}") {
+        fun createRoute(dispositifId: Int) = "sg_dispositif_exceptionnel_detail/$dispositifId"
+    }
+    data object DispositifExceptionnelForm : MainRoutes("sg_dispositif_exceptionnel_form?dispositifId={dispositifId}") {
+        fun createRoute(dispositifId: Int = 0) = "sg_dispositif_exceptionnel_form?dispositifId=$dispositifId"
     }
 
     // Plainte (Police Judiciaire) — ENTRÉE + SORTIE

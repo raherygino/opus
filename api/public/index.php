@@ -60,6 +60,7 @@ use App\Controllers\EvenementSurvenuAttachmentController;
 use App\Controllers\EvenementSurvenuTypeController;
 use App\Controllers\ActiviteController;
 use App\Controllers\ActiviteAttachmentController;
+use App\Controllers\DispositifExceptionnelController;
 use App\Controllers\MouvementAttachmentController;
 use App\Controllers\PersonnelController;
 use App\Controllers\PersonnelAttachmentController;
@@ -555,6 +556,15 @@ $router->post('/api/activites/{id}/attachments',                                
 $router->put('/api/activites/{id}/attachments/{attachId}',                         [ActiviteAttachmentController::class, 'update']);
 $router->delete('/api/activites/{id}/attachments/{attachId}',                      [ActiviteAttachmentController::class, 'destroy']);
 $router->get('/api/activites/{id}/attachments/{attachId}/download',                [ActiviteAttachmentController::class, 'download']);
+
+// ========================
+// Dispositif exceptionnel Routes (Service Général)
+// ========================
+$router->get('/api/dispositifs-exceptionnels',                                       [DispositifExceptionnelController::class, 'index']);
+$router->get('/api/dispositifs-exceptionnels/{id}',                                  [DispositifExceptionnelController::class, 'show']);
+$router->post('/api/dispositifs-exceptionnels',                                      [DispositifExceptionnelController::class, 'store']);
+$router->put('/api/dispositifs-exceptionnels/{id}',                                  [DispositifExceptionnelController::class, 'update']);
+$router->delete('/api/dispositifs-exceptionnels/{id}',                               [DispositifExceptionnelController::class, 'destroy']);
 
 // ========================
 // Role Routes (RBAC - SUPER_ADMIN only)

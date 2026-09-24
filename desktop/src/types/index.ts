@@ -1598,3 +1598,50 @@ export interface ActiviteInput {
   latitude?: number | null;
   longitude?: number | null;
 }
+
+// ========================
+// Dispositif exceptionnel (Service Général)
+// ========================
+
+export interface DispositifExceptionnel {
+  id: number;
+  nature_evenement: string;
+  date_debut: string;
+  date_fin: string;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  /** Included by the detail endpoint (GET /dispositifs-exceptionnels/{id}). */
+  effectifs?: DispositifExceptionnelEffectif[];
+  created_at: string;
+  updated_at: string;
+}
+
+/** One "Effectif engagé" sector row of a dispositif exceptionnel. */
+export interface DispositifExceptionnelEffectif {
+  id: number;
+  dispositif_id: number;
+  secteur: string;
+  chef_element_contact: string | null;
+  controle_contact: string | null;
+  materiels_armements: string | null;
+  missions: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DispositifExceptionnelEffectifInput {
+  secteur: string;
+  chef_element_contact?: string | null;
+  controle_contact?: string | null;
+  materiels_armements?: string | null;
+  missions?: string | null;
+}
+
+export interface DispositifExceptionnelInput {
+  nature_evenement: string;
+  date_debut: string;
+  date_fin: string;
+  effectifs?: DispositifExceptionnelEffectifInput[];
+}

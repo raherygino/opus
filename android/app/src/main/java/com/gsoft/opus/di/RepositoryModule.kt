@@ -21,6 +21,7 @@ import com.gsoft.opus.data.repository.RassemblementJournalierRepositoryImpl
 import com.gsoft.opus.data.repository.EvenementSurvenuRepositoryImpl
 import com.gsoft.opus.data.repository.EvenementSurvenuTypeRepositoryImpl
 import com.gsoft.opus.data.repository.ActiviteRepositoryImpl
+import com.gsoft.opus.data.repository.DispositifExceptionnelRepositoryImpl
 import com.gsoft.opus.data.repository.PlainteRepositoryImpl
 import com.gsoft.opus.data.repository.ConvocationRepositoryImpl
 import com.gsoft.opus.data.repository.GardeAVueRepositoryImpl
@@ -53,6 +54,7 @@ import com.gsoft.opus.domain.repository.RassemblementJournalierRepository
 import com.gsoft.opus.domain.repository.EvenementSurvenuRepository
 import com.gsoft.opus.domain.repository.EvenementSurvenuTypeRepository
 import com.gsoft.opus.domain.repository.ActiviteRepository
+import com.gsoft.opus.domain.repository.DispositifExceptionnelRepository
 import com.gsoft.opus.domain.repository.PlainteRepository
 import com.gsoft.opus.domain.repository.ConvocationRepository
 import com.gsoft.opus.domain.repository.GardeAVueRepository
@@ -157,6 +159,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindActiviteRepository(impl: ActiviteRepositoryImpl): ActiviteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDispositifExceptionnelRepository(impl: DispositifExceptionnelRepositoryImpl): DispositifExceptionnelRepository
 
     @Binds
     @Singleton

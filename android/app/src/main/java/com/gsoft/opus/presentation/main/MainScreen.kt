@@ -45,6 +45,7 @@ import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Route
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -120,6 +121,9 @@ import com.gsoft.opus.presentation.evenement.EvenementFormScreen
 import com.gsoft.opus.presentation.activite.ActiviteScreen
 import com.gsoft.opus.presentation.activite.ActiviteDetailScreen
 import com.gsoft.opus.presentation.activite.ActiviteFormScreen
+import com.gsoft.opus.presentation.dispositif.DispositifScreen
+import com.gsoft.opus.presentation.dispositif.DispositifDetailScreen
+import com.gsoft.opus.presentation.dispositif.DispositifFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteDetailScreen
 import com.gsoft.opus.presentation.plainte.PlainteFormScreen
 import com.gsoft.opus.presentation.plainte.PlainteScreen
@@ -279,6 +283,7 @@ fun MainScreen(
             "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
             "sg_evenement_survenu" to MainRoutes.EvenementSurvenu.route,
             "sg_activite" to MainRoutes.Activite.route,
+            "sg_dispositif_exceptionnel" to MainRoutes.DispositifExceptionnel.route,
             "pj_dashboard" to MainRoutes.PjDashboard.route,
             "pj_plainte" to MainRoutes.Plainte.route,
             "pj_registre_enquete" to MainRoutes.RegistreEnquete.route,
@@ -678,6 +683,16 @@ fun MainScreen(
                             },
                             onCreate = {
                                 navController.navigate(MainRoutes.ActiviteForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.DispositifExceptionnel.route) {
+                        DispositifScreen(
+                            onEntryClick = { id ->
+                                navController.navigate(MainRoutes.DispositifExceptionnelDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.DispositifExceptionnelForm.createRoute(0))
                             }
                         )
                     }
@@ -1594,6 +1609,65 @@ fun MainScreen(
                         }
                     ) {
                         ActiviteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Dispositif exceptionnel management (Service Général)
+                    composable(
+                        route = MainRoutes.DispositifExceptionnelDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("dispositifId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        DispositifDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.DispositifExceptionnelForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.DispositifExceptionnelForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("dispositifId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        DispositifFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )
@@ -2528,6 +2602,10 @@ private fun handleNotificationLink(
             MainRoutes.RassemblementJournalierDetail.createRoute(id)
         path.startsWith("/sg/evenements-survenus/") ->
             MainRoutes.EvenementSurvenuDetail.createRoute(id)
+        path.startsWith("/sg/activites/") ->
+            MainRoutes.ActiviteDetail.createRoute(id)
+        path.startsWith("/sg/dispositifs-exceptionnels/") ->
+            MainRoutes.DispositifExceptionnelDetail.createRoute(id)
         else -> null
     }
 
@@ -2608,6 +2686,7 @@ private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
         "sg_rassemblement_journalier",
         "sg_evenement_survenu",
         "sg_activite",
+        "sg_dispositif_exceptionnel",
     ),
     "pj" to listOf(
         "pj_plainte",
@@ -2691,6 +2770,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
         items.add(ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"))
         items.add(ContextMenuItem(id = "sg_evenement_survenu", title = "Évènements survenus", subtitle = "sur la voie publique", icon = Icons.Outlined.CrisisAlert, module = "sg_evenement_survenu"))
         items.add(ContextMenuItem(id = "sg_activite", title = "Activité", subtitle = "Patrouilles et interventions", icon = Icons.Outlined.Route, module = "sg_activite"))
+        items.add(ContextMenuItem(id = "sg_dispositif_exceptionnel", title = "Dispositif exceptionnel", subtitle = "Opérations de sécurité exceptionnelles", icon = Icons.Outlined.Shield, module = "sg_dispositif_exceptionnel"))
     }
 
     // ── Division Police Judiciaire ──

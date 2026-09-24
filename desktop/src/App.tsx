@@ -184,6 +184,16 @@ const ActiviteForm = lazy(() =>
 const ActiviteDetail = lazy(() =>
   import("@/pages/activite-detail").then((m) => ({ default: m.ActiviteDetail })),
 );
+// Dispositif exceptionnel (Service Général)
+const DispositifExceptionnelList = lazy(() =>
+  import("@/pages/dispositif-exceptionnel-list").then((m) => ({ default: m.DispositifExceptionnelList })),
+);
+const DispositifExceptionnelForm = lazy(() =>
+  import("@/pages/dispositif-exceptionnel-form").then((m) => ({ default: m.DispositifExceptionnelForm })),
+);
+const DispositifExceptionnelDetail = lazy(() =>
+  import("@/pages/dispositif-exceptionnel-detail").then((m) => ({ default: m.DispositifExceptionnelDetail })),
+);
 
 // Personnel
 const PersonnelTabs = lazy(() =>
@@ -898,6 +908,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <ActiviteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="dispositifs-exceptionnels"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <DispositifExceptionnelList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="dispositifs-exceptionnels/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <DispositifExceptionnelForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="dispositifs-exceptionnels/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <DispositifExceptionnelDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="dispositifs-exceptionnels/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <DispositifExceptionnelForm />
                     </Suspense>
                   </ErrorBoundary>
                 }
