@@ -238,7 +238,7 @@ export function NotificationsPage() {
                             )}
                           </div>
                           {n.message && (
-                            <p className="text-sm text-muted-foreground mt-1">{n.message}</p>
+                            <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{n.message}</p>
                           )}
                           <div className="flex items-center gap-3 mt-2 flex-wrap">
                             <span className={`inline-flex items-center gap-1 text-xs ${serviceInfo.color}`}>

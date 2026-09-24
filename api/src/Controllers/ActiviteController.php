@@ -267,21 +267,68 @@ class ActiviteController
         }
     }
 
+    /**
+     * Short patrol summary, e.g. "Diurne motorisée (PK3 → Marché) •
+     * Nocturne portée (Quartier administratif)". Empty when no patrol
+     * mode was selected (itinerary column NULL).
+     */
+    private static function patrouilleSummary(array $entry): string
+    {
+        $types = ['diurne' => 'Diurne', 'nocturne' => 'Nocturne'];
+        $modes = ['motorisee' => 'motorisée', 'pedestre' => 'pédestre', 'portee' => 'portée'];
+        $parts = [];
+        foreach ($types as $type => $typeLabel) {
+            foreach ($modes as $mode => $modeLabel) {
+                $itineraire = $entry["patrouille_{$type}_{$mode}_itineraire"] ?? null;
+                if ($itineraire !== null) {
+                    $parts[] = "$typeLabel $modeLabel" . ($itineraire !== '' ? " ($itineraire)" : '');
+                }
+            }
+        }
+        return implode(' • ', $parts);
+    }
+
+    /**
+     * Full body for the "new/updated activité" notification — carries the
+     * main activity content so the record is visible from the desktop
+     * notifications feed without opening the detail page.
+     */
+    private static function notificationBody(string $verb, array $entry): string
+    {
+        $lines = ["Une activité a été {$verb}.", "Date : {$entry['date_activite']} à {$entry['heure_activite']}"];
+
+        $patrouilles = self::patrouilleSummary($entry);
+        if ($patrouilles !== '') {
+            $lines[] = "Patrouille : $patrouilles";
+        }
+        if (!empty($entry['operation_ciblee'])) {
+            $lines[] = "Opération ciblée : {$entry['operation_ciblee']}";
+        }
+        if (!empty($entry['nature_intervention'])) {
+            $lines[] = "Intervention : {$entry['nature_intervention']}";
+        }
+        if (!empty($entry['suites_donnees'])) {
+            $lines[] = "Suites données : {$entry['suites_donnees']}";
+        }
+        return implode("\n", $lines);
+    }
+
     private static function notifyChange(string $action, array $entry, ?int $actorId): void
     {
         $link = self::LINK_PREFIX . $entry['id'];
         $verb = $action === 'create' ? 'enregistrée' : 'modifiée';
         $title = $action === 'create' ? 'Nouvelle activité' : 'Activité modifiée';
+        $body = self::notificationBody($verb, $entry);
 
         Notification::notifyFeatureChange(self::MODULE, [
             'title'   => $title,
-            'message' => "Une activité a été {$verb}. {$entry['date_activite']} à {$entry['heure_activite']}.",
+            'message' => $body,
             'type'    => 'info',
             'service' => 'SG',
             'link'    => $link,
         ], [
             'title'   => $title,
-            'message' => "Une activité a été {$verb}. {$entry['date_activite']} à {$entry['heure_activite']}. Veuillez en prendre connaissance.",
+            'message' => $body . "\nVeuillez en prendre connaissance.",
             'type'    => 'info',
             'service' => 'SG',
             'link'    => $link,
