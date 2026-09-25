@@ -1,5 +1,28 @@
 <?php
 
+// Load .env file (api/.env) into the environment before any config is read.
+// Existing real environment variables always win — the file only fills gaps.
+$envFile = __DIR__ . '/../.env';
+if (is_file($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        // Strip optional surrounding quotes
+        if (strlen($value) > 1 && $value[0] === $value[strlen($value) - 1] && in_array($value[0], ['"', "'"], true)) {
+            $value = substr($value, 1, -1);
+        }
+        if ($key !== '' && getenv($key) === false) {
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+        }
+    }
+}
+
 // Simple PSR-4-like autoloader
 spl_autoload_register(function (string $class) {
     $prefix = 'App\\';
