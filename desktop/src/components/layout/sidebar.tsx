@@ -191,12 +191,16 @@ function buildNavItems(user: User): NavItem[] {
     ].filter((c) => hasVisibleNavItem(user, c));
 
     if (flattenDivisions) {
+      items.push({ icon: LayoutDashboard, label: "Dashboard SG", path: "/sg/dashboard" });
       items.push(...sgChildren);
     } else {
       items.push({
         icon: Car,
         label: "Division service général",
-        children: sgChildren,
+        children: [
+          { icon: LayoutDashboard, label: "Dashboard", path: "/sg/dashboard" },
+          ...sgChildren,
+        ],
       });
     }
   }

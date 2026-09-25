@@ -167,6 +167,7 @@ import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
 import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
 import com.gsoft.opus.presentation.sedentaire.SedentaireDashboardScreen
 import com.gsoft.opus.presentation.pjdashboard.PjDashboardScreen
+import com.gsoft.opus.presentation.sgdashboard.SgDashboardScreen
 import com.gsoft.opus.data.signature.QrPayload
 import com.gsoft.opus.ui.components.AppBottomNavigation
 import com.gsoft.opus.ui.components.ContextMenuItem
@@ -280,6 +281,7 @@ fun MainScreen(
             "sed_situation_gav" to MainRoutes.SituationGav.route,
             "sed_main_courante_poste" to MainRoutes.MainCourantePoste.route,
             "sed_renseignement" to MainRoutes.RenseignementSed.route,
+            "sg_dashboard" to MainRoutes.SgDashboard.route,
             "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
             "sg_evenement_survenu" to MainRoutes.EvenementSurvenu.route,
             "sg_activite" to MainRoutes.Activite.route,
@@ -679,6 +681,22 @@ fun MainScreen(
                     composable(MainRoutes.RenseignementSed.route) { ContextMenuItemScreens.RenseignementSed() }
 
                     // Division Service Général
+                    composable(MainRoutes.SgDashboard.route) {
+                        SgDashboardScreen(
+                            onRassemblementList = { navController.navigate(MainRoutes.RassemblementJournalier.route) },
+                            onRassemblementDetail = { id -> navController.navigate(MainRoutes.RassemblementJournalierDetail.createRoute(id)) },
+                            onCreateRassemblement = { navController.navigate(MainRoutes.RassemblementJournalierForm.createRoute(0)) },
+                            onEvenementList = { navController.navigate(MainRoutes.EvenementSurvenu.route) },
+                            onEvenementDetail = { id -> navController.navigate(MainRoutes.EvenementSurvenuDetail.createRoute(id)) },
+                            onCreateEvenement = { navController.navigate(MainRoutes.EvenementSurvenuForm.createRoute(0)) },
+                            onActiviteList = { navController.navigate(MainRoutes.Activite.route) },
+                            onActiviteDetail = { id -> navController.navigate(MainRoutes.ActiviteDetail.createRoute(id)) },
+                            onCreateActivite = { navController.navigate(MainRoutes.ActiviteForm.createRoute(0)) },
+                            onDispositifList = { navController.navigate(MainRoutes.DispositifExceptionnel.route) },
+                            onDispositifDetail = { id -> navController.navigate(MainRoutes.DispositifExceptionnelDetail.createRoute(id)) },
+                            onCreateDispositif = { navController.navigate(MainRoutes.DispositifExceptionnelForm.createRoute(0)) }
+                        )
+                    }
                     composable(MainRoutes.RassemblementJournalier.route) {
                         RassemblementScreen(
                             onEntryClick = { id ->
@@ -2790,6 +2808,7 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
     // ── Division Service Général ──
     if (userCanAccessDivision(user, "sg")) {
         items.add(ContextMenuItem(id = "section_sg", title = "Division Service Général", isSectionHeader = true))
+        items.add(ContextMenuItem(id = "sg_dashboard", title = "Dashboard SG", icon = Icons.Outlined.Dashboard))
         items.add(ContextMenuItem(id = "sg_rassemblement_journalier", title = "Rassemblement Journalier", icon = Icons.Outlined.Groups, module = "sg_rassemblement_journalier"))
         items.add(ContextMenuItem(id = "sg_evenement_survenu", title = "Évènements survenus", subtitle = "sur la voie publique", icon = Icons.Outlined.CrisisAlert, module = "sg_evenement_survenu"))
         items.add(ContextMenuItem(id = "sg_activite", title = "Activité", subtitle = "Patrouilles et interventions", icon = Icons.Outlined.Route, module = "sg_activite"))

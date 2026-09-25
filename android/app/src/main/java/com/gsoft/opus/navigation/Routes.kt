@@ -34,6 +34,7 @@ sealed class MainRoutes(val route: String) {
     data object RenseignementSed : MainRoutes("sed_renseignement")
 
     // Division Service Général
+    data object SgDashboard : MainRoutes("sg_dashboard")
     data object RassemblementJournalier : MainRoutes("sg_rassemblement_journalier")
     data object EvenementSurvenu : MainRoutes("sg_evenement_survenu")
     data object Activite : MainRoutes("sg_activite")

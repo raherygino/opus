@@ -31,6 +31,9 @@ const SedentaireDashboard = lazy(() =>
 const PjDashboard = lazy(() =>
   import("@/pages/pj-dashboard").then((m) => ({ default: m.PjDashboard })),
 );
+const SgDashboard = lazy(() =>
+  import("@/pages/sg-dashboard").then((m) => ({ default: m.SgDashboard })),
+);
 
 // Plainte (Police Judiciaire)
 const PlainteList = lazy(() =>
@@ -790,7 +793,17 @@ export default function App() {
             <Route path="/sg">
               <Route
                 index
-                element={<Navigate to="/sg/rassemblement-journalier" replace />}
+                element={<Navigate to="/sg/dashboard" replace />}
+              />
+              <Route
+                path="dashboard"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<DashboardSkeleton />}>
+                      <SgDashboard />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
               />
               <Route
                 path="rassemblement-journalier"
