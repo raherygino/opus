@@ -460,7 +460,30 @@ fun MainScreen(
                     }
                 ) {
                     composable(MainRoutes.Dashboard.route) {
-                        DashboardScreen(onLogout = onLogout)
+                        DashboardScreen(
+                            onLogout = onLogout,
+                            onPersonnelList = {
+                                navController.navigateToTab(MainRoutes.PersonnelList.route)
+                            },
+                            onNotifications = {
+                                navController.navigateToTab(MainRoutes.Notifications.route)
+                            },
+                            onGavList = {
+                                navController.navigateToDrawerItem(MainRoutes.Gav.route)
+                            },
+                            onArmementList = {
+                                navController.navigateToDrawerItem(MainRoutes.Armement.route)
+                            },
+                            onMaterielRoulantList = {
+                                navController.navigateToDrawerItem(MainRoutes.MaterielRoulant.route)
+                            },
+                            onActivitesList = {
+                                navController.navigateToDrawerItem(MainRoutes.Activite.route)
+                            },
+                            onUtilisateurs = {
+                                navController.navigateToDrawerItem(MainRoutes.Utilisateurs.route)
+                            }
+                        )
                     }
                     composable(MainRoutes.Notifications.route) {
                         NotificationsScreen(

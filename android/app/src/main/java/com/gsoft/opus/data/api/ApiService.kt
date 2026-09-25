@@ -91,6 +91,7 @@ import com.gsoft.opus.data.api.dto.CorrespondanceRequest
 import com.gsoft.opus.data.api.dto.DeclarationPerteAttachmentDto
 import com.gsoft.opus.data.api.dto.DeclarationPerteDto
 import com.gsoft.opus.data.api.dto.DeclarationPerteRequest
+import com.gsoft.opus.data.api.dto.DashboardStatsDto
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
 import com.gsoft.opus.data.api.dto.LoginRequestDto
@@ -181,6 +182,11 @@ interface ApiService {
 
     @DELETE("api/devices")
     suspend fun unregisterAllDevices(): Response<ApiResponse<Nothing>>
+
+    // ─── Dashboard ──────────────────────────────────────────────────
+
+    @GET("api/dashboard/stats")
+    suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>>
 
     // ─── Notifications ──────────────────────────────────────────────
 

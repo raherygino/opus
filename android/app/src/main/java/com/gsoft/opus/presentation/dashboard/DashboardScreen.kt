@@ -25,33 +25,85 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.automirrored.outlined.EventNote
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.LocalPolice
+import androidx.compose.material.icons.outlined.MilitaryTech
+import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.gsoft.opus.core.PermissionAction
+import com.gsoft.opus.core.hasPermission
+import com.gsoft.opus.domain.model.DashboardStats
+import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.presentation.home.HomeViewModel
+import com.gsoft.opus.ui.components.ErrorMessage
+import kotlinx.coroutines.delay
+
+private const val STATS_REFRESH_INTERVAL_MS = 60_000L
 
 @Composable
-fun DashboardScreen(onLogout: () -> Unit) {
-    val viewModel: HomeViewModel = hiltViewModel()
-    val state by viewModel.state.collectAsState()
+fun DashboardScreen(
+    onLogout: () -> Unit,
+    onPersonnelList: () -> Unit = {},
+    onNotifications: () -> Unit = {},
+    onGavList: () -> Unit = {},
+    onArmementList: () -> Unit = {},
+    onMaterielRoulantList: () -> Unit = {},
+    onActivitesList: () -> Unit = {},
+    onUtilisateurs: () -> Unit = {},
+    viewModel: DashboardViewModel = hiltViewModel()
+) {
+    val homeViewModel: HomeViewModel = hiltViewModel()
+    val state by homeViewModel.state.collectAsState()
+    val statsState by viewModel.state.collectAsState()
 
     val isCommand = state.roleCode in listOf("SUPER_ADMIN", "CHIEF", "STATION_ADMIN")
+
+    // Refresh when the app comes back to the foreground.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Periodic refresh while the dashboard tab is displayed.
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(STATS_REFRESH_INTERVAL_MS)
+            viewModel.refresh()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -66,7 +118,18 @@ fun DashboardScreen(onLogout: () -> Unit) {
             exit = fadeOut(tween(200))
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                QuickStats()
+                QuickStats(
+                    statsState = statsState,
+                    user = state.user,
+                    onRefresh = viewModel::refresh,
+                    onPersonnelList = onPersonnelList,
+                    onNotifications = onNotifications,
+                    onGavList = onGavList,
+                    onArmementList = onArmementList,
+                    onMaterielRoulantList = onMaterielRoulantList,
+                    onActivitesList = onActivitesList,
+                    onUtilisateurs = onUtilisateurs
+                )
 
                 if (isCommand) {
                     QuickLinks()
@@ -79,38 +142,230 @@ fun DashboardScreen(onLogout: () -> Unit) {
 }
 
 @Composable
-private fun QuickStats() {
+private fun QuickStats(
+    statsState: DashboardUiState,
+    user: User?,
+    onRefresh: () -> Unit,
+    onPersonnelList: () -> Unit,
+    onNotifications: () -> Unit,
+    onGavList: () -> Unit,
+    onArmementList: () -> Unit,
+    onMaterielRoulantList: () -> Unit,
+    onActivitesList: () -> Unit,
+    onUtilisateurs: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Vue d'ensemble",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            IconButton(onClick = onRefresh, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = "Actualiser",
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        statsState.errorMessage?.let { message ->
+            ErrorMessage(message = message)
+        }
+
+        val stats = statsState.stats
+        if (stats == null) {
+            if (statsState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        } else {
+            StatGrid(stats = stats, user = user,
+                onPersonnelList = onPersonnelList,
+                onNotifications = onNotifications,
+                onGavList = onGavList,
+                onArmementList = onArmementList,
+                onMaterielRoulantList = onMaterielRoulantList,
+                onActivitesList = onActivitesList,
+                onUtilisateurs = onUtilisateurs
+            )
+
+            TodayStrip(
+                stats = stats,
+                onNotifications = onNotifications
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatGrid(
+    stats: DashboardStats,
+    user: User?,
+    onPersonnelList: () -> Unit,
+    onNotifications: () -> Unit,
+    onGavList: () -> Unit,
+    onArmementList: () -> Unit,
+    onMaterielRoulantList: () -> Unit,
+    onActivitesList: () -> Unit,
+    onUtilisateurs: () -> Unit
+) {
+    val canViewPersonnel = hasPermission(user, "personnel", PermissionAction.VIEW)
+    val canViewUsers = hasPermission(user, "users", PermissionAction.VIEW)
+    val canViewActivites = hasPermission(user, "sg_activite", PermissionAction.VIEW)
+    val canViewGav = hasPermission(user, "pj_gav", PermissionAction.VIEW)
+    val canViewArmement = hasPermission(user, "sedentaire_poste_armement", PermissionAction.VIEW)
+    val canViewMaterielRoulant = hasPermission(user, "sedentaire_poste_materiel_roulant", PermissionAction.VIEW)
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard(
                 modifier = Modifier.weight(1f),
                 label = "Personnel actif",
-                value = "—",
+                value = stats.personnelEnService.toString(),
                 icon = Icons.Outlined.Badge,
-                description = "Total effectif"
+                description = "${stats.personnelEnMouvement} en mouvement · ${stats.personnelTotal} total",
+                onClick = onPersonnelList.takeIf { canViewPersonnel }
             )
             StatCard(
                 modifier = Modifier.weight(1f),
-                label = "Divisions",
-                value = "3",
-                icon = Icons.Outlined.Business,
-                description = "Sédentaire, SG, PJ"
+                label = "Utilisateurs",
+                value = stats.usersTotal.toString(),
+                icon = Icons.Outlined.Shield,
+                description = "${stats.usersActifs} comptes actifs",
+                onClick = onUtilisateurs.takeIf { canViewUsers }
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard(
                 modifier = Modifier.weight(1f),
-                label = "Utilisateurs",
-                value = "—",
-                icon = Icons.Outlined.Shield,
-                description = "Comptes système"
+                label = "Activités",
+                value = stats.activites7j.toString(),
+                icon = Icons.AutoMirrored.Outlined.TrendingUp,
+                description = "7 jours · ${stats.activitesAujourdhui} aujourd'hui",
+                onClick = onActivitesList.takeIf { canViewActivites }
             )
             StatCard(
                 modifier = Modifier.weight(1f),
-                label = "Activité",
-                value = "—",
-                icon = Icons.Outlined.TrendingUp,
-                description = "Aujourd'hui"
+                label = "GAV en cours",
+                value = stats.gavEnCours.toString(),
+                icon = Icons.Outlined.Gavel,
+                description = "Gardes à vue en cours",
+                alert = true,
+                onClick = onGavList.takeIf { canViewGav }
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard(
+                modifier = Modifier.weight(1f),
+                label = "Armes perçues",
+                value = stats.armesEnService.toString(),
+                icon = Icons.Outlined.MilitaryTech,
+                description = "Non réintégrées",
+                alert = true,
+                onClick = onArmementList.takeIf { canViewArmement }
+            )
+            StatCard(
+                modifier = Modifier.weight(1f),
+                label = "Véhicules en service",
+                value = stats.vehiculesEnService.toString(),
+                icon = Icons.Outlined.DirectionsCar,
+                description = "Matériel roulant en mission",
+                onClick = onMaterielRoulantList.takeIf { canViewMaterielRoulant }
+            )
+        }
+    }
+}
+
+/** Slim "Aujourd'hui" counters: events, logbook entries, unread notifications. */
+@Composable
+private fun TodayStrip(
+    stats: DashboardStats,
+    onNotifications: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(modifier = Modifier.padding(12.dp)) {
+            TodayMetric(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Outlined.WarningAmber,
+                label = "Événements",
+                value = stats.evenementsAujourdhui
+            )
+            TodayMetric(
+                modifier = Modifier.weight(1f),
+                icon = Icons.AutoMirrored.Outlined.EventNote,
+                label = "Main courante",
+                value = stats.mainCouranteAujourdhui
+            )
+            TodayMetric(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onNotifications() },
+                icon = Icons.Outlined.NotificationsNone,
+                label = "Non lues",
+                value = stats.notificationsNonLues
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodayMetric(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    label: String,
+    value: Int
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -122,10 +377,15 @@ private fun StatCard(
     label: String,
     value: String,
     icon: ImageVector,
-    description: String
+    description: String,
+    alert: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
+    val isAlertActive = alert && value != "0"
     Card(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable { onClick() } else Modifier
+        ),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -147,7 +407,8 @@ private fun StatCard(
                     modifier = Modifier
                         .size(28.dp)
                         .background(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            if (isAlertActive) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                             RoundedCornerShape(14.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -156,7 +417,8 @@ private fun StatCard(
                         imageVector = icon,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = if (isAlertActive) MaterialTheme.colorScheme.tertiary
+                               else MaterialTheme.colorScheme.primary
                     )
                 }
             }

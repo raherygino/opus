@@ -48,6 +48,7 @@ import com.gsoft.opus.domain.model.PlainteSortie
 import com.gsoft.opus.domain.model.PlainteSortieAttachment
 import com.gsoft.opus.domain.model.Convocation
 import com.gsoft.opus.domain.model.ConvocationAttachment
+import com.gsoft.opus.domain.model.DashboardStats
 import com.gsoft.opus.domain.model.User
 
 fun UserDto.toDomain(): User = User(
@@ -770,4 +771,27 @@ fun ConvocationAttachmentDto.toDomain(): ConvocationAttachment = ConvocationAtta
     mimeType = mimeType,
     fileSize = fileSize,
     createdAt = createdAt
+)
+
+fun DashboardStatsDto.toDomain(): DashboardStats = DashboardStats(
+    personnelTotal = personnelTotal,
+    personnelEnService = personnelEnService,
+    personnelEnMouvement = personnelEnMouvement,
+    mouvementsEnCours = mouvementsEnCours,
+    usersTotal = usersTotal,
+    usersActifs = usersActifs,
+    gavEnCours = gavEnCours,
+    armesEnService = armesEnService,
+    vehiculesEnService = vehiculesEnService,
+    activitesTotal = activitesTotal,
+    activites7j = activites7j,
+    activitesAujourdhui = activitesAujourdhui,
+    evenementsAujourdhui = evenementsAujourdhui,
+    mainCouranteAujourdhui = mainCouranteAujourdhui,
+    correspondancesTotal = correspondancesTotal,
+    declarationsPerteTotal = declarationsPerteTotal,
+    plaintesEnAttente = plaintesEnAttente,
+    personnesRecherchees = personnesRecherchees,
+    notificationsNonLues = notificationsNonLues,
+    generatedAt = generatedAt
 )

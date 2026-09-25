@@ -70,6 +70,7 @@ use App\Controllers\NotificationController;
 use App\Controllers\DeviceTokenController;
 use App\Controllers\AuditLogController;
 use App\Controllers\QrAuthController;
+use App\Controllers\DashboardController;
 
 // --- CORS ---
 CorsMiddleware::handle();
@@ -611,6 +612,11 @@ $router->post('/api/devices/test-push',    [DeviceTokenController::class, 'testP
 // ========================
 $router->get('/api/audit-logs',       [AuditLogController::class, 'index']);
 $router->get('/api/audit-logs/{id}',  [AuditLogController::class, 'show']);
+
+// ========================
+// Dashboard Stats (aggregated KPIs)
+// ========================
+$router->get('/api/dashboard/stats', [DashboardController::class, 'stats']);
 
 // ========================
 // Health Check

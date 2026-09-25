@@ -1645,3 +1645,29 @@ export interface DispositifExceptionnelInput {
   date_fin: string;
   effectifs?: DispositifExceptionnelEffectifInput[];
 }
+
+// ========================
+// Dashboard Stats (aggregated KPIs from GET /api/dashboard/stats)
+// ========================
+export interface DashboardStats {
+  personnel_total: number;
+  personnel_en_service: number;
+  personnel_en_mouvement: number;
+  mouvements_en_cours: number;
+  users_total: number;
+  users_actifs: number;
+  gav_en_cours: number;
+  armes_en_service: number;
+  vehicules_en_service: number;
+  activites_total: number;
+  activites_7j: number;
+  activites_aujourdhui: number;
+  evenements_aujourdhui: number;
+  main_courante_aujourdhui: number;
+  correspondances_total: number;
+  declarations_perte_total: number;
+  plaintes_en_attente: number;
+  personnes_recherchees: number;
+  notifications_non_lues: number;
+  generated_at: string;
+}
