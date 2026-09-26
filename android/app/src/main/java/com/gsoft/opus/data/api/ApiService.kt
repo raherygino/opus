@@ -65,6 +65,14 @@ import com.gsoft.opus.data.api.dto.PerquisitionAttachmentDto
 import com.gsoft.opus.data.api.dto.PerquisitionDto
 import com.gsoft.opus.data.api.dto.PerquisitionNextNumberDto
 import com.gsoft.opus.data.api.dto.PerquisitionRequest
+import com.gsoft.opus.data.api.dto.RegistreEnqueteAttachmentDto
+import com.gsoft.opus.data.api.dto.RegistreEnqueteDto
+import com.gsoft.opus.data.api.dto.RegistreEnqueteNextNumberDto
+import com.gsoft.opus.data.api.dto.RegistreEnqueteRequest
+import com.gsoft.opus.data.api.dto.RegistreDeferrementAttachmentDto
+import com.gsoft.opus.data.api.dto.RegistreDeferrementDto
+import com.gsoft.opus.data.api.dto.RegistreDeferrementNextNumberDto
+import com.gsoft.opus.data.api.dto.RegistreDeferrementRequest
 import com.gsoft.opus.data.api.dto.RenseignementPjAttachmentDto
 import com.gsoft.opus.data.api.dto.RenseignementPjDto
 import com.gsoft.opus.data.api.dto.RenseignementPjRequest
@@ -1324,6 +1332,103 @@ interface ApiService {
 
     @DELETE("api/perquisitions/{id}/attachments/{attachId}")
     suspend fun deletePerquisitionAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Unit>>
+
+    // ========================
+    // Registre d'enquête (Police Judiciaire)
+    // ========================
+
+    @GET("api/registres-enquete")
+    suspend fun getRegistreEnqueteList(
+        @Query("search") search: String? = null,
+        @Query("statut") statut: String? = null
+    ): Response<ApiResponse<List<RegistreEnqueteDto>>>
+
+    @GET("api/registres-enquete/next-number")
+    suspend fun getRegistreEnqueteNextNumber(): Response<ApiResponse<RegistreEnqueteNextNumberDto>>
+
+    @GET("api/registres-enquete/{id}")
+    suspend fun getRegistreEnquete(@Path("id") id: Int): Response<ApiResponse<RegistreEnqueteDto>>
+
+    @POST("api/registres-enquete")
+    suspend fun createRegistreEnquete(@Body data: RegistreEnqueteRequest): Response<ApiResponse<RegistreEnqueteDto>>
+
+    @PUT("api/registres-enquete/{id}")
+    suspend fun updateRegistreEnquete(@Path("id") id: Int, @Body data: RegistreEnqueteRequest): Response<ApiResponse<RegistreEnqueteDto>>
+
+    @DELETE("api/registres-enquete/{id}")
+    suspend fun deleteRegistreEnquete(@Path("id") id: Int): Response<ApiResponse<Unit>>
+
+    @GET("api/registres-enquete/{id}/attachments")
+    suspend fun getRegistreEnqueteAttachments(@Path("id") id: Int): Response<ApiResponse<List<RegistreEnqueteAttachmentDto>>>
+
+    @Multipart
+    @POST("api/registres-enquete/{id}/attachments")
+    suspend fun createRegistreEnqueteAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<RegistreEnqueteAttachmentDto>>
+
+    @PUT("api/registres-enquete/{id}/attachments/{attachId}")
+    suspend fun updateRegistreEnqueteAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<RegistreEnqueteAttachmentDto>>
+
+    @DELETE("api/registres-enquete/{id}/attachments/{attachId}")
+    suspend fun deleteRegistreEnqueteAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Unit>>
+
+    // ========================
+    // Registre de déferrement (Police Judiciaire)
+    // ========================
+
+    @GET("api/registres-deferrement")
+    suspend fun getRegistreDeferrementList(
+        @Query("search") search: String? = null
+    ): Response<ApiResponse<List<RegistreDeferrementDto>>>
+
+    @GET("api/registres-deferrement/next-number")
+    suspend fun getRegistreDeferrementNextNumber(): Response<ApiResponse<RegistreDeferrementNextNumberDto>>
+
+    @GET("api/registres-deferrement/{id}")
+    suspend fun getRegistreDeferrement(@Path("id") id: Int): Response<ApiResponse<RegistreDeferrementDto>>
+
+    @POST("api/registres-deferrement")
+    suspend fun createRegistreDeferrement(@Body data: RegistreDeferrementRequest): Response<ApiResponse<RegistreDeferrementDto>>
+
+    @PUT("api/registres-deferrement/{id}")
+    suspend fun updateRegistreDeferrement(@Path("id") id: Int, @Body data: RegistreDeferrementRequest): Response<ApiResponse<RegistreDeferrementDto>>
+
+    @DELETE("api/registres-deferrement/{id}")
+    suspend fun deleteRegistreDeferrement(@Path("id") id: Int): Response<ApiResponse<Unit>>
+
+    @GET("api/registres-deferrement/{id}/attachments")
+    suspend fun getRegistreDeferrementAttachments(@Path("id") id: Int): Response<ApiResponse<List<RegistreDeferrementAttachmentDto>>>
+
+    @Multipart
+    @POST("api/registres-deferrement/{id}/attachments")
+    suspend fun createRegistreDeferrementAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<RegistreDeferrementAttachmentDto>>
+
+    @PUT("api/registres-deferrement/{id}/attachments/{attachId}")
+    suspend fun updateRegistreDeferrementAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<RegistreDeferrementAttachmentDto>>
+
+    @DELETE("api/registres-deferrement/{id}/attachments/{attachId}")
+    suspend fun deleteRegistreDeferrementAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Unit>>

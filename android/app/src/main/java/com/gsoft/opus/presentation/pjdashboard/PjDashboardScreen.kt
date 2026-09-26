@@ -64,6 +64,8 @@ fun PjDashboardScreen(
     onPlainteDetail: (Int) -> Unit,
     onCreatePlainte: () -> Unit,
     onEnquete: () -> Unit,
+    onEnqueteDetail: (Int) -> Unit,
+    onCreateEnquete: () -> Unit,
     onMandatList: () -> Unit,
     onMandatDetail: (Int) -> Unit,
     onCreateMandat: () -> Unit,
@@ -90,6 +92,8 @@ fun PjDashboardScreen(
     onPerquisitionDetail: (Int) -> Unit,
     onCreatePerquisition: () -> Unit,
     onDeferrement: () -> Unit,
+    onDeferrementDetail: (Int) -> Unit,
+    onCreateDeferrement: () -> Unit,
     onRenseignementList: () -> Unit,
     onRenseignementDetail: (Int) -> Unit,
     onCreateRenseignement: () -> Unit,
@@ -153,6 +157,7 @@ fun PjDashboardScreen(
                     onItemClick = { item ->
                         when (item.type) {
                             PjActivityType.PLAINTE -> onPlainteDetail(item.targetId)
+                            PjActivityType.ENQUETE -> onEnqueteDetail(item.targetId)
                             PjActivityType.MANDAT -> onMandatDetail(item.targetId)
                             PjActivityType.CONVOCATION -> onConvocationDetail(item.targetId)
                             PjActivityType.ARRESTATION -> onArrestationDetail(item.targetId)
@@ -162,6 +167,7 @@ fun PjDashboardScreen(
                             PjActivityType.OBJET_SAISI -> onObjetSaisiDetail(item.targetId)
                             PjActivityType.OBJET_TROUVE -> onObjetTrouveDetail(item.targetId)
                             PjActivityType.PERQUISITION -> onPerquisitionDetail(item.targetId)
+                            PjActivityType.DEFERREMENT -> onDeferrementDetail(item.targetId)
                             PjActivityType.RENSEIGNEMENT -> onRenseignementDetail(item.targetId)
                         }
                     }
@@ -170,7 +176,7 @@ fun PjDashboardScreen(
                 QuickActionsCard(
                     state = state,
                     onPlainte = onCreatePlainte,
-                    onEnquete = onEnquete,
+                    onEnquete = onCreateEnquete,
                     onMandat = onCreateMandat,
                     onConvocation = onCreateConvocation,
                     onArrestation = onCreateArrestation,
@@ -179,7 +185,7 @@ fun PjDashboardScreen(
                     onPersonneRecherchee = onCreatePersonneRecherchee,
                     onObjet = onCreateObjet,
                     onPerquisition = onCreatePerquisition,
-                    onDeferrement = onDeferrement,
+                    onDeferrement = onCreateDeferrement,
                     onRenseignement = onCreateRenseignement
                 )
             }
@@ -256,10 +262,9 @@ private fun StatCardsSection(
         if (state.canViewEnquete) {
             add(PjStatData(
                 label = "Registre d'enquête",
-                value = "Bientôt",
-                description = "Bientôt disponible",
+                value = state.enquetes.size.toString(),
+                description = "${state.enquetes.count { it.statut == "EN_COURS" }} en cours",
                 icon = Icons.Outlined.FindInPage,
-                comingSoon = true,
                 onClick = onEnquete
             ))
         }
@@ -338,10 +343,9 @@ private fun StatCardsSection(
         if (state.canViewDeferrement) {
             add(PjStatData(
                 label = "Registre déferrement",
-                value = "Bientôt",
-                description = "Bientôt disponible",
+                value = state.deferrements.size.toString(),
+                description = "Total enregistré",
                 icon = Icons.Outlined.Gavel,
-                comingSoon = true,
                 onClick = onDeferrement
             ))
         }
@@ -645,6 +649,8 @@ private fun pjActivityDotColor(type: PjActivityType): Color = when (type) {
     PjActivityType.OBJET_SAISI -> Color(0xFF06B6D4) // cyan
     PjActivityType.OBJET_TROUVE -> Color(0xFF10B981) // emerald
     PjActivityType.PERQUISITION -> Color(0xFFEC4899) // pink
+    PjActivityType.ENQUETE -> Color(0xFF0EA5E9) // sky
+    PjActivityType.DEFERREMENT -> Color(0xFFF43F5E) // rose
     PjActivityType.RENSEIGNEMENT -> Color(0xFF8B5CF6) // violet
 }
 

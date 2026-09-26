@@ -15,6 +15,8 @@ import com.gsoft.opus.domain.model.Perquisition
 import com.gsoft.opus.domain.model.PersonneRecherchee
 import com.gsoft.opus.domain.model.PlainteEntree
 import com.gsoft.opus.domain.model.PlainteEntreeSummary
+import com.gsoft.opus.domain.model.RegistreDeferrement
+import com.gsoft.opus.domain.model.RegistreEnquete
 import com.gsoft.opus.domain.model.RenseignementPj
 import com.gsoft.opus.domain.model.Requisition
 import com.gsoft.opus.domain.repository.ArrestationRepository
@@ -26,6 +28,8 @@ import com.gsoft.opus.domain.repository.ObjetTrouveRepository
 import com.gsoft.opus.domain.repository.PerquisitionRepository
 import com.gsoft.opus.domain.repository.PersonneRechercheeRepository
 import com.gsoft.opus.domain.repository.PlainteRepository
+import com.gsoft.opus.domain.repository.RegistreDeferrementRepository
+import com.gsoft.opus.domain.repository.RegistreEnqueteRepository
 import com.gsoft.opus.domain.repository.RenseignementPjRepository
 import com.gsoft.opus.domain.repository.RequisitionRepository
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
@@ -61,8 +65,9 @@ data class PjActivityItem(
 )
 
 enum class PjActivityType {
-    PLAINTE, MANDAT, CONVOCATION, ARRESTATION, GAV, REQUISITION,
-    PERSONNE_RECHERCHEE, OBJET_SAISI, OBJET_TROUVE, PERQUISITION, RENSEIGNEMENT
+    PLAINTE, ENQUETE, MANDAT, CONVOCATION, ARRESTATION, GAV, REQUISITION,
+    PERSONNE_RECHERCHEE, OBJET_SAISI, OBJET_TROUVE, PERQUISITION, DEFERREMENT,
+    RENSEIGNEMENT
 }
 
 data class PjDashboardUiState(
@@ -78,6 +83,8 @@ data class PjDashboardUiState(
     val objetsSaisis: List<ObjetSaisi> = emptyList(),
     val objetsTrouves: List<ObjetTrouve> = emptyList(),
     val perquisitions: List<Perquisition> = emptyList(),
+    val enquetes: List<RegistreEnquete> = emptyList(),
+    val deferrements: List<RegistreDeferrement> = emptyList(),
     val renseignements: List<RenseignementPj> = emptyList(),
     val canViewPlainte: Boolean = false,
     val canViewEnquete: Boolean = false,
@@ -219,6 +226,28 @@ data class PjDashboardUiState(
                     )
                 )
             }
+            enquetes.forEach { e ->
+                items.add(
+                    PjActivityItem(
+                        id = "enquete-${e.id}",
+                        action = "Enquête ${e.numero} — ${e.natureInfraction}",
+                        createdAt = e.createdAt,
+                        type = PjActivityType.ENQUETE,
+                        targetId = e.id
+                    )
+                )
+            }
+            deferrements.forEach { d ->
+                items.add(
+                    PjActivityItem(
+                        id = "deferrement-${d.id}",
+                        action = "Déferrement ${d.numero} — ${d.personneNom}",
+                        createdAt = d.createdAt,
+                        type = PjActivityType.DEFERREMENT,
+                        targetId = d.id
+                    )
+                )
+            }
             renseignements.forEach { r ->
                 items.add(
                     PjActivityItem(
@@ -253,6 +282,8 @@ class PjDashboardViewModel @Inject constructor(
     private val objetSaisiRepository: ObjetSaisiRepository,
     private val objetTrouveRepository: ObjetTrouveRepository,
     private val perquisitionRepository: PerquisitionRepository,
+    private val registreEnqueteRepository: RegistreEnqueteRepository,
+    private val registreDeferrementRepository: RegistreDeferrementRepository,
     private val renseignementPjRepository: RenseignementPjRepository,
     private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
@@ -347,6 +378,12 @@ class PjDashboardViewModel @Inject constructor(
             val perquisitionDeferred = async {
                 if (canViewPerquisition) perquisitionRepository.getPerquisitionList() else Resource.success(emptyList<Perquisition>())
             }
+            val enqueteDeferred = async {
+                if (canViewEnquete) registreEnqueteRepository.getEnqueteList() else Resource.success(emptyList<RegistreEnquete>())
+            }
+            val deferrementDeferred = async {
+                if (canViewDeferrement) registreDeferrementRepository.getDeferrementList() else Resource.success(emptyList<RegistreDeferrement>())
+            }
             val renseignementDeferred = async {
                 if (canViewRenseignement) renseignementPjRepository.getRenseignementPjList() else Resource.success(emptyList<RenseignementPj>())
             }
@@ -362,6 +399,8 @@ class PjDashboardViewModel @Inject constructor(
             val objetsSaisis = (objetSaisiDeferred.await() as? Resource.Success)?.data ?: emptyList()
             val objetsTrouves = (objetTrouveDeferred.await() as? Resource.Success)?.data ?: emptyList()
             val perquisitions = (perquisitionDeferred.await() as? Resource.Success)?.data ?: emptyList()
+            val enquetes = (enqueteDeferred.await() as? Resource.Success)?.data ?: emptyList()
+            val deferrements = (deferrementDeferred.await() as? Resource.Success)?.data ?: emptyList()
             val renseignements = (renseignementDeferred.await() as? Resource.Success)?.data ?: emptyList()
 
             _state.update {
@@ -378,6 +417,8 @@ class PjDashboardViewModel @Inject constructor(
                     objetsSaisis = objetsSaisis,
                     objetsTrouves = objetsTrouves,
                     perquisitions = perquisitions,
+                    enquetes = enquetes,
+                    deferrements = deferrements,
                     renseignements = renseignements
                 )
             }

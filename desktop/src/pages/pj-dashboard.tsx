@@ -36,6 +36,8 @@ import { getPersonneRechercheeList } from "@/lib/api/personne-recherchee";
 import { getObjetSaisiList, getObjetTrouveList } from "@/lib/api/objet";
 import { getPerquisitionList } from "@/lib/api/perquisition";
 import { getRenseignementPjList } from "@/lib/api/renseignement-pj";
+import { getRegistreEnqueteList } from "@/lib/api/registre-enquete";
+import { getRegistreDeferrementList } from "@/lib/api/registre-deferrement";
 import type {
   PlainteEntree,
   PlainteEntreeSummary,
@@ -49,6 +51,8 @@ import type {
   ObjetTrouve,
   Perquisition,
   RenseignementPj,
+  RegistreEnquete,
+  RegistreDeferrement,
 } from "@/types";
 
 const container = {
@@ -85,6 +89,7 @@ interface ActivityItem {
 
 type ActivityType =
   | "plainte"
+  | "enquete"
   | "mandat"
   | "convocation"
   | "arrestation"
@@ -94,6 +99,7 @@ type ActivityType =
   | "objet_saisi"
   | "objet_trouve"
   | "perquisition"
+  | "deferrement"
   | "renseignement";
 
 /** Format an ISO timestamp as a French relative time string. */
@@ -136,6 +142,8 @@ export function PjDashboard() {
   const [objetsTrouves, setObjetsTrouves] = useState<ObjetTrouve[]>([]);
   const [perquisitions, setPerquisitions] = useState<Perquisition[]>([]);
   const [renseignements, setRenseignements] = useState<RenseignementPj[]>([]);
+  const [enquetes, setEnquetes] = useState<RegistreEnquete[]>([]);
+  const [deferrements, setDeferrements] = useState<RegistreDeferrement[]>([]);
   const [loading, setLoading] = useState(true);
 
   const canViewPlainte = hasPermission(user, MODULE_PLAINTE, "can_view");
@@ -245,6 +253,20 @@ export function PjDashboard() {
           .catch(() => addNotification("error", "Erreur", "Impossible de charger les perquisitions")),
       );
     }
+    if (canViewEnquete) {
+      tasks.push(
+        getRegistreEnqueteList()
+          .then(setEnquetes)
+          .catch(() => addNotification("error", "Erreur", "Impossible de charger le registre d'enquête")),
+      );
+    }
+    if (canViewDeferrement) {
+      tasks.push(
+        getRegistreDeferrementList()
+          .then(setDeferrements)
+          .catch(() => addNotification("error", "Erreur", "Impossible de charger le registre de déferrement")),
+      );
+    }
     if (canViewRenseignement) {
       tasks.push(
         getRenseignementPjList()
@@ -278,11 +300,10 @@ export function PjDashboard() {
     if (canViewEnquete) {
       cards.push({
         label: "Registre d'enquête",
-        value: 0,
-        change: "Bientôt disponible",
+        value: enquetes.length,
+        change: `${enquetes.filter((e) => e.statut === "EN_COURS").length} en cours`,
         icon: FileSearch,
         path: "/pj/registre-enquete",
-        comingSoon: true,
       });
     }
     if (canViewMandat) {
@@ -360,11 +381,10 @@ export function PjDashboard() {
     if (canViewDeferrement) {
       cards.push({
         label: "Registre de déferrement",
-        value: 0,
-        change: "Bientôt disponible",
+        value: deferrements.length,
+        change: "Total enregistré",
         icon: Gavel,
         path: "/pj/registre-deferrement",
-        comingSoon: true,
       });
     }
     if (canViewRenseignement) {
@@ -383,7 +403,7 @@ export function PjDashboard() {
     canViewPerquisition, canViewDeferrement, canViewRenseignement,
     plaintes, plaintesPending, mandats, convocations, arrestations, gavs,
     requisitions, personnesRecherchees, objetsSaisis, objetsTrouves,
-    perquisitions, renseignements,
+    perquisitions, renseignements, enquetes, deferrements,
   ]);
 
   // Merge recent items across all PJ modules, sorted by created_at descending.
@@ -479,6 +499,24 @@ export function PjDashboard() {
         path: `/pj/perquisition/${p.id}`,
       });
     });
+    enquetes.forEach((e) => {
+      items.push({
+        id: `enquete-${e.id}`,
+        action: `Enquête ${e.numero} — ${e.nature_infraction}`,
+        createdAt: e.created_at,
+        type: "enquete",
+        path: `/pj/registre-enquete/${e.id}`,
+      });
+    });
+    deferrements.forEach((d) => {
+      items.push({
+        id: `deferrement-${d.id}`,
+        action: `Déferrement ${d.numero} — ${d.personne_nom}`,
+        createdAt: d.created_at,
+        type: "deferrement",
+        path: `/pj/registre-deferrement/${d.id}`,
+      });
+    });
     renseignements.forEach((r) => {
       items.push({
         id: `renseignement-${r.id}`,
@@ -494,6 +532,7 @@ export function PjDashboard() {
   }, [
     plaintes, mandats, convocations, arrestations, gavs, requisitions,
     personnesRecherchees, objetsSaisis, objetsTrouves, perquisitions, renseignements,
+    enquetes, deferrements,
   ]);
 
   // Quick actions: navigate to the new-form route, gated by can_create.
@@ -503,7 +542,7 @@ export function PjDashboard() {
       actions.push({ label: "Nouvelle plainte", icon: ScrollText, path: "/pj/plainte/new" });
     }
     if (canCreateEnquete) {
-      actions.push({ label: "Registre d'enquête", icon: FileSearch, path: "/pj/registre-enquete" });
+      actions.push({ label: "Registre d'enquête", icon: FileSearch, path: "/pj/registre-enquete/new" });
     }
     if (canCreateMandat) {
       actions.push({ label: "Créer un mandat", icon: Scale, path: "/pj/mandat/new" });
@@ -530,7 +569,7 @@ export function PjDashboard() {
       actions.push({ label: "Nouvelle perquisition", icon: Search, path: "/pj/perquisition/new" });
     }
     if (canCreateDeferrement) {
-      actions.push({ label: "Registre de déferrement", icon: Gavel, path: "/pj/registre-deferrement" });
+      actions.push({ label: "Registre de déferrement", icon: Gavel, path: "/pj/registre-deferrement/new" });
     }
     if (canCreateRenseignement) {
       actions.push({ label: "Nouveau renseignement", icon: MessageCircleMore, path: "/pj/renseignement/new" });
@@ -553,6 +592,8 @@ export function PjDashboard() {
     objet_saisi: "bg-cyan-500/70",
     objet_trouve: "bg-emerald-500/70",
     perquisition: "bg-pink-500/70",
+    enquete: "bg-sky-500/70",
+    deferrement: "bg-rose-500/70",
     renseignement: "bg-violet-500/70",
   };
 

@@ -205,7 +205,7 @@ OPUS
 ├── Division Police Judiciaire
 │   ├── Dashboard PJ
 │   ├── Plainte (Entrée + Sortie)
-│   ├── Registre d'enquête           (écran « Bientôt disponible »)
+│   ├── Registre d'enquête
 │   ├── Mandat
 │   ├── Convocation
 │   ├── Arrestation
@@ -214,7 +214,7 @@ OPUS
 │   ├── Personne recherchée
 │   ├── Objets (Saisi / Trouvé)
 │   ├── Perquisition
-│   ├── Registre de déferrement      (écran « Bientôt disponible »)
+│   ├── Registre de déferrement
 │   └── Renseignement
 └── Modules globaux
     ├── Cartographie (Desktop)
@@ -239,7 +239,7 @@ Barre latérale rétractable affichant le logo OPUS, organisée en :
 
 - **Palette de commandes** (`Ctrl/Cmd + K`) : recherche et exécution de commandes — aller au Dashboard / Notes / Cartographie / Paramètres, changer de thème, basculer la barre latérale ; navigation clavier (flèches, Entrée, Échap).
 - **Barre de titre personnalisée** (contrôles de fenêtre) et **barre d'état** en bas de fenêtre.
-- **Page « Bientôt disponible »** (*Coming Soon*) pour toute entrée de menu encore non implémentée (Rapport. Situation GAV, Envoi de renseignement, Registre d'enquête, Registre de déferrement).
+- **Page « Bientôt disponible »** (*Coming Soon*) pour toute entrée de menu encore non implémentée (Rapport. Situation GAV, Envoi de renseignement).
 
 ### 6.2 Android — onglets inférieurs + menu latéral
 
@@ -508,9 +508,13 @@ Note de renseignement judiciaire : **nature de l'infraction**, **date et lieu de
 
 **N° auto-généré (ARR)** modifiable mais unique ; **date et heure** ; **personne arrêtée** ; lieu ; motif ; **policiers ayant procédé à l'arrestation** (un par ligne) ; n° du dossier rattaché ; observations.
 
-### 12.11 Registre d'enquête / Registre de déferrement
+### 12.11 Registre d'enquête
 
-Entrées de menu et cartes du dashboard présentes, écrans **« Bientôt disponible »** (non implémentés).
+**N° auto-généré (ENQ)** modifiable mais unique ; **date d'ouverture** ; n° du dossier rattaché (plainte, rapport…) ; **nature de l'infraction** ; date et lieu des faits ; plaignant / partie civile ; mise en cause ; **enquêteur** (sélection personnel, requis) et **OPJ** (sélection personnel, optionnel) ; **statut** (*En cours*, *Suspendue*, *Transmise*, *Clôturée*) ; observations ; pièces jointes.
+
+### 12.12 Registre de déferrement
+
+**N° auto-généré (DEF)** modifiable mais unique ; **date et heure du déferrement** ; **personne déférée** (nom et prénom, date et lieu de naissance) ; infraction reprochée ; autorité judiciaire saisie ; destination ; **éléments d'escorte** (un par ligne) ; suite donnée (décision du magistrat) ; n° du dossier rattaché ; observations ; pièces jointes.
 
 ---
 

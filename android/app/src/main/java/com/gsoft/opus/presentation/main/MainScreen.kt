@@ -145,6 +145,12 @@ import com.gsoft.opus.presentation.objet.ObjetTrouveFormScreen
 import com.gsoft.opus.presentation.perquisition.PerquisitionDetailScreen
 import com.gsoft.opus.presentation.perquisition.PerquisitionFormScreen
 import com.gsoft.opus.presentation.perquisition.PerquisitionScreen
+import com.gsoft.opus.presentation.registreenquete.RegistreEnqueteDetailScreen
+import com.gsoft.opus.presentation.registreenquete.RegistreEnqueteFormScreen
+import com.gsoft.opus.presentation.registreenquete.RegistreEnqueteScreen
+import com.gsoft.opus.presentation.registredeferrement.RegistreDeferrementDetailScreen
+import com.gsoft.opus.presentation.registredeferrement.RegistreDeferrementFormScreen
+import com.gsoft.opus.presentation.registredeferrement.RegistreDeferrementScreen
 import com.gsoft.opus.presentation.renseignementpj.RenseignementPjDetailScreen
 import com.gsoft.opus.presentation.renseignementpj.RenseignementPjFormScreen
 import com.gsoft.opus.presentation.renseignementpj.RenseignementPjScreen
@@ -745,6 +751,8 @@ fun MainScreen(
                             onPlainteDetail = { id -> navController.navigate(MainRoutes.PlainteDetail.createRoute(id)) },
                             onCreatePlainte = { navController.navigate(MainRoutes.PlainteForm.createRoute(0)) },
                             onEnquete = { navController.navigate(MainRoutes.RegistreEnquete.route) },
+                            onEnqueteDetail = { id -> navController.navigate(MainRoutes.RegistreEnqueteDetail.createRoute(id)) },
+                            onCreateEnquete = { navController.navigate(MainRoutes.RegistreEnqueteForm.createRoute(0)) },
                             onMandatList = { navController.navigate(MainRoutes.Mandat.route) },
                             onMandatDetail = { id -> navController.navigate(MainRoutes.MandatDetail.createRoute(id)) },
                             onCreateMandat = { navController.navigate(MainRoutes.MandatForm.createRoute(0)) },
@@ -771,13 +779,24 @@ fun MainScreen(
                             onPerquisitionDetail = { id -> navController.navigate(MainRoutes.PerquisitionDetail.createRoute(id)) },
                             onCreatePerquisition = { navController.navigate(MainRoutes.PerquisitionForm.createRoute(0)) },
                             onDeferrement = { navController.navigate(MainRoutes.RegistreDeferrement.route) },
+                            onDeferrementDetail = { id -> navController.navigate(MainRoutes.RegistreDeferrementDetail.createRoute(id)) },
+                            onCreateDeferrement = { navController.navigate(MainRoutes.RegistreDeferrementForm.createRoute(0)) },
                             onRenseignementList = { navController.navigate(MainRoutes.RenseignementPj.route) },
                             onRenseignementDetail = { id -> navController.navigate(MainRoutes.RenseignementPjDetail.createRoute(id)) },
                             onCreateRenseignement = { navController.navigate(MainRoutes.RenseignementPjForm.createRoute(0)) }
                         )
                     }
                     composable(MainRoutes.Plainte.route) { ContextMenuItemScreens.Plainte(navController) }
-                    composable(MainRoutes.RegistreEnquete.route) { ContextMenuItemScreens.RegistreEnquete() }
+                    composable(MainRoutes.RegistreEnquete.route) {
+                        RegistreEnqueteScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.RegistreEnqueteDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.RegistreEnqueteForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.Mandat.route) {
                         MandatScreen(
                             onItemClick = { id ->
@@ -855,7 +874,16 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.RegistreDeferrement.route) { ContextMenuItemScreens.RegistreDeferrement() }
+                    composable(MainRoutes.RegistreDeferrement.route) {
+                        RegistreDeferrementScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.RegistreDeferrementDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.RegistreDeferrementForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.RenseignementPj.route) {
                         RenseignementPjScreen(
                             onItemClick = { id ->
@@ -2248,6 +2276,120 @@ fun MainScreen(
                         )
                     }
                     composable(
+                        route = MainRoutes.RegistreEnqueteDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("registreEnqueteId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RegistreEnqueteDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.RegistreEnqueteForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RegistreEnqueteForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("registreEnqueteId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RegistreEnqueteFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RegistreDeferrementDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("registreDeferrementId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RegistreDeferrementDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.RegistreDeferrementForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RegistreDeferrementForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("registreDeferrementId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RegistreDeferrementFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
                         route = MainRoutes.RenseignementPjDetail.route,
                         arguments = listOf(
                             androidx.navigation.navArgument("renseignementId") {
@@ -2637,6 +2779,10 @@ private fun handleNotificationLink(
             MainRoutes.ObjetTrouveDetail.createRoute(id)
         path.startsWith("/pj/perquisition/") ->
             MainRoutes.PerquisitionDetail.createRoute(id)
+        path.startsWith("/pj/registre-enquete/") ->
+            MainRoutes.RegistreEnqueteDetail.createRoute(id)
+        path.startsWith("/pj/registre-deferrement/") ->
+            MainRoutes.RegistreDeferrementDetail.createRoute(id)
         path.startsWith("/pj/renseignement/") ->
             MainRoutes.RenseignementPjDetail.createRoute(id)
         path.startsWith("/sg/rassemblement-journalier/") ->

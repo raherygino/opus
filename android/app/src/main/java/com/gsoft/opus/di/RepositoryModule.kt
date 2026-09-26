@@ -30,6 +30,8 @@ import com.gsoft.opus.data.repository.PersonneRechercheeRepositoryImpl
 import com.gsoft.opus.data.repository.ObjetSaisiRepositoryImpl
 import com.gsoft.opus.data.repository.ObjetTrouveRepositoryImpl
 import com.gsoft.opus.data.repository.PerquisitionRepositoryImpl
+import com.gsoft.opus.data.repository.RegistreEnqueteRepositoryImpl
+import com.gsoft.opus.data.repository.RegistreDeferrementRepositoryImpl
 import com.gsoft.opus.data.repository.RenseignementPjRepositoryImpl
 import com.gsoft.opus.data.repository.MandatRepositoryImpl
 import com.gsoft.opus.data.repository.ArrestationRepositoryImpl
@@ -64,6 +66,8 @@ import com.gsoft.opus.domain.repository.PersonneRechercheeRepository
 import com.gsoft.opus.domain.repository.ObjetSaisiRepository
 import com.gsoft.opus.domain.repository.ObjetTrouveRepository
 import com.gsoft.opus.domain.repository.PerquisitionRepository
+import com.gsoft.opus.domain.repository.RegistreEnqueteRepository
+import com.gsoft.opus.domain.repository.RegistreDeferrementRepository
 import com.gsoft.opus.domain.repository.RenseignementPjRepository
 import com.gsoft.opus.domain.repository.MandatRepository
 import com.gsoft.opus.domain.repository.ArrestationRepository
@@ -197,6 +201,14 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPerquisitionRepository(impl: PerquisitionRepositoryImpl): PerquisitionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRegistreEnqueteRepository(impl: RegistreEnqueteRepositoryImpl): RegistreEnqueteRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRegistreDeferrementRepository(impl: RegistreDeferrementRepositoryImpl): RegistreDeferrementRepository
 
     @Binds
     @Singleton

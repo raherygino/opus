@@ -157,11 +157,14 @@ object ContextMenuItemScreens {
     }
 
     @Composable
-    fun RegistreEnquete() {
-        PlaceholderScreen(
-            title = "Registre d'enquête",
-            description = "Registre dossier d'enquête",
-            icon = Icons.Outlined.FindInPage
+    fun RegistreEnquete(navController: androidx.navigation.NavHostController) {
+        com.gsoft.opus.presentation.registreenquete.RegistreEnqueteScreen(
+            onItemClick = { id ->
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.RegistreEnqueteDetail.createRoute(id))
+            },
+            onCreate = {
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.RegistreEnqueteForm.createRoute(0))
+            }
         )
     }
 
@@ -223,11 +226,14 @@ object ContextMenuItemScreens {
     }
 
     @Composable
-    fun RegistreDeferrement() {
-        PlaceholderScreen(
-            title = "Registre de déferrement",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.Gavel
+    fun RegistreDeferrement(navController: androidx.navigation.NavHostController) {
+        com.gsoft.opus.presentation.registredeferrement.RegistreDeferrementScreen(
+            onItemClick = { id ->
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.RegistreDeferrementDetail.createRoute(id))
+            },
+            onCreate = {
+                navController.navigate(com.gsoft.opus.navigation.MainRoutes.RegistreDeferrementForm.createRoute(0))
+            }
         )
     }
 

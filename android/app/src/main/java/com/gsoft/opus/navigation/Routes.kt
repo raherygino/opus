@@ -303,4 +303,22 @@ sealed class MainRoutes(val route: String) {
         fun createRoute(arrestationId: Int = 0) =
             "pj_arrestation_form?arrestationId=$arrestationId"
     }
+
+    // Registre d'enquête (Police Judiciaire)
+    data object RegistreEnqueteDetail : MainRoutes("pj_registre_enquete_detail/{registreEnqueteId}") {
+        fun createRoute(registreEnqueteId: Int) = "pj_registre_enquete_detail/$registreEnqueteId"
+    }
+    data object RegistreEnqueteForm : MainRoutes("pj_registre_enquete_form?registreEnqueteId={registreEnqueteId}") {
+        fun createRoute(registreEnqueteId: Int = 0) =
+            "pj_registre_enquete_form?registreEnqueteId=$registreEnqueteId"
+    }
+
+    // Registre de déferrement (Police Judiciaire)
+    data object RegistreDeferrementDetail : MainRoutes("pj_registre_deferrement_detail/{registreDeferrementId}") {
+        fun createRoute(registreDeferrementId: Int) = "pj_registre_deferrement_detail/$registreDeferrementId"
+    }
+    data object RegistreDeferrementForm : MainRoutes("pj_registre_deferrement_form?registreDeferrementId={registreDeferrementId}") {
+        fun createRoute(registreDeferrementId: Int = 0) =
+            "pj_registre_deferrement_form?registreDeferrementId=$registreDeferrementId"
+    }
 }

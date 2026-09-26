@@ -38,6 +38,8 @@ class PlainteSequence
         'PEQ'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/PEQ/CSP/TRIMO/{yy}',
         'MAN'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/MAN/CSP/TRIMO/{yy}',
         'ARR'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/ARR/CSP/TRIMO/{yy}',
+        'ENQ'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/ENQ/CSP/TRIMO/{yy}',
+        'DEF'    => 'N°{seq}/MSP/SG/DGPN/DGA/DRSP.1/DEF/CSP/TRIMO/{yy}',
     ];
 
     /** ENTRÉE type → sequence type_key map. */
@@ -64,6 +66,12 @@ class PlainteSequence
 
     /** ARRESTATION sequence type_key. */
     public const ARRESTATION_KEY = 'ARR';
+
+    /** REGISTRE D'ENQUÊTE sequence type_key. */
+    public const ENQUETE_KEY = 'ENQ';
+
+    /** REGISTRE DE DÉFERREMENT sequence type_key. */
+    public const DEFERREMENT_KEY = 'DEF';
 
     /**
      * Generate the next dossier/record number for the given type_key.

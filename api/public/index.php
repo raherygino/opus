@@ -54,6 +54,10 @@ use App\Controllers\MandatController;
 use App\Controllers\MandatAttachmentController;
 use App\Controllers\ArrestationController;
 use App\Controllers\ArrestationAttachmentController;
+use App\Controllers\RegistreEnqueteController;
+use App\Controllers\RegistreEnqueteAttachmentController;
+use App\Controllers\RegistreDeferrementController;
+use App\Controllers\RegistreDeferrementAttachmentController;
 use App\Controllers\RassemblementJournalierController;
 use App\Controllers\EvenementSurvenuController;
 use App\Controllers\EvenementSurvenuAttachmentController;
@@ -512,6 +516,38 @@ $router->delete('/api/arrestations/{id}/attachments/{attachId}',                
 $router->get('/api/arrestations/{id}/attachments/{attachId}/download',            [ArrestationAttachmentController::class, 'download']);
 
 // ========================
+// Registre d'enquête Routes (Police Judiciaire)
+// ========================
+$router->get('/api/registres-enquete',                                              [RegistreEnqueteController::class, 'index']);
+$router->get('/api/registres-enquete/next-number',                                  [RegistreEnqueteController::class, 'nextNumber']);
+$router->get('/api/registres-enquete/{id}',                                         [RegistreEnqueteController::class, 'show']);
+$router->post('/api/registres-enquete',                                             [RegistreEnqueteController::class, 'store']);
+$router->put('/api/registres-enquete/{id}',                                         [RegistreEnqueteController::class, 'update']);
+$router->delete('/api/registres-enquete/{id}',                                      [RegistreEnqueteController::class, 'destroy']);
+
+$router->get('/api/registres-enquete/{id}/attachments',                             [RegistreEnqueteAttachmentController::class, 'index']);
+$router->post('/api/registres-enquete/{id}/attachments',                            [RegistreEnqueteAttachmentController::class, 'store']);
+$router->put('/api/registres-enquete/{id}/attachments/{attachId}',                  [RegistreEnqueteAttachmentController::class, 'update']);
+$router->delete('/api/registres-enquete/{id}/attachments/{attachId}',               [RegistreEnqueteAttachmentController::class, 'destroy']);
+$router->get('/api/registres-enquete/{id}/attachments/{attachId}/download',         [RegistreEnqueteAttachmentController::class, 'download']);
+
+// ========================
+// Registre de déferrement Routes (Police Judiciaire)
+// ========================
+$router->get('/api/registres-deferrement',                                          [RegistreDeferrementController::class, 'index']);
+$router->get('/api/registres-deferrement/next-number',                              [RegistreDeferrementController::class, 'nextNumber']);
+$router->get('/api/registres-deferrement/{id}',                                     [RegistreDeferrementController::class, 'show']);
+$router->post('/api/registres-deferrement',                                         [RegistreDeferrementController::class, 'store']);
+$router->put('/api/registres-deferrement/{id}',                                     [RegistreDeferrementController::class, 'update']);
+$router->delete('/api/registres-deferrement/{id}',                                  [RegistreDeferrementController::class, 'destroy']);
+
+$router->get('/api/registres-deferrement/{id}/attachments',                         [RegistreDeferrementAttachmentController::class, 'index']);
+$router->post('/api/registres-deferrement/{id}/attachments',                        [RegistreDeferrementAttachmentController::class, 'store']);
+$router->put('/api/registres-deferrement/{id}/attachments/{attachId}',              [RegistreDeferrementAttachmentController::class, 'update']);
+$router->delete('/api/registres-deferrement/{id}/attachments/{attachId}',           [RegistreDeferrementAttachmentController::class, 'destroy']);
+$router->get('/api/registres-deferrement/{id}/attachments/{attachId}/download',     [RegistreDeferrementAttachmentController::class, 'download']);
+
+// ========================
 // Rassemblement Journalier Routes (Service Général)
 // ========================
 $router->get('/api/rassemblements',                                                [RassemblementJournalierController::class, 'index']);
@@ -619,16 +655,52 @@ $router->get('/api/audit-logs/{id}',  [AuditLogController::class, 'show']);
 $router->get('/api/dashboard/stats', [DashboardController::class, 'stats']);
 
 // ========================
-// Health Check
+// Health Check (API + DB connectivity — diagnostic, no auth required)
 // ========================
-$router->get('/api/health', function () {
-    echo json_encode([
-        'success' => true,
-        'message' => 'OPUS API is running',
-        'version' => '1.0.0',
-        'time'    => date('c'),
-    ]);
-});
+$healthCheck = function () {
+    $config = require __DIR__ . '/../config/database.php';
+    try {
+        $pdo = new PDO(
+            sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+                $config['host'],
+                $config['port'],
+                $config['dbname'],
+                $config['charset']
+            ),
+            $config['username'],
+            $config['password'],
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'OPUS API is running — database connected',
+            'version' => '1.0.0',
+            'time'    => date('c'),
+            'database' => [
+                'host'          => $config['host'] . ':' . $config['port'],
+                'database'      => $config['dbname'],
+                'mysql_version' => $pdo->query('SELECT VERSION()')->fetchColumn(),
+                'tables'        => $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN),
+            ],
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database connection failed',
+            'error'   => $e->getMessage(),
+            'config'  => [
+                'host'     => $config['host'] . ':' . $config['port'],
+                'database' => $config['dbname'],
+                'username' => $config['username'],
+            ],
+        ]);
+    }
+};
+$router->get('/api/health',  $healthCheck);
+$router->post('/api/health', $healthCheck);
 
 // --- Dispatch ---
 $method = $_SERVER['REQUEST_METHOD'];

@@ -1389,6 +1389,134 @@ export interface ArrestationInput {
 }
 
 // ========================
+// Registre d'enquête (Police Judiciaire)
+// ========================
+
+export type RegistreEnqueteStatut = "EN_COURS" | "SUSPENDUE" | "TRANSMISE" | "CLOTUREE";
+
+export const REGISTRE_ENQUETE_STATUTS: RegistreEnqueteStatut[] = [
+  "EN_COURS",
+  "SUSPENDUE",
+  "TRANSMISE",
+  "CLOTUREE",
+];
+
+export const REGISTRE_ENQUETE_STATUT_LABELS: Record<RegistreEnqueteStatut, string> = {
+  EN_COURS: "En cours",
+  SUSPENDUE: "Suspendue",
+  TRANSMISE: "Transmise",
+  CLOTUREE: "Clôturée",
+};
+
+export interface RegistreEnquete {
+  id: number;
+  numero: string;
+  date_ouverture: string;
+  numero_dossier: string | null;
+  nature_infraction: string;
+  date_lieu_faits: string | null;
+  plaignant: string | null;
+  mise_en_cause: string | null;
+  enqueteur_personnel_id: number | null;
+  opj_personnel_id: number | null;
+  statut: RegistreEnqueteStatut;
+  observations: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  enqueteur_prenoms?: string | null;
+  enqueteur_nom?: string | null;
+  enqueteur_grade?: string | null;
+  enqueteur_im?: string | null;
+  opj_prenoms?: string | null;
+  opj_nom?: string | null;
+  opj_grade?: string | null;
+  opj_im?: string | null;
+  attachments?: RegistreEnqueteAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegistreEnqueteAttachment {
+  id: number;
+  registre_enquete_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegistreEnqueteInput {
+  numero?: string | null;
+  date_ouverture: string;
+  numero_dossier?: string | null;
+  nature_infraction: string;
+  date_lieu_faits?: string | null;
+  plaignant?: string | null;
+  mise_en_cause?: string | null;
+  enqueteur_personnel_id?: number | null;
+  opj_personnel_id?: number | null;
+  statut?: RegistreEnqueteStatut;
+  observations?: string | null;
+}
+
+// ========================
+// Registre de déferrement (Police Judiciaire)
+// ========================
+
+export interface RegistreDeferrement {
+  id: number;
+  numero: string;
+  date_heure_deferrement: string;
+  personne_nom: string;
+  date_lieu_naissance: string | null;
+  infraction: string | null;
+  numero_dossier: string | null;
+  autorite: string | null;
+  destination: string | null;
+  escorte: string | null;
+  suite_donnee: string | null;
+  observations: string | null;
+  created_by: number | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: RegistreDeferrementAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegistreDeferrementAttachment {
+  id: number;
+  registre_deferrement_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegistreDeferrementInput {
+  numero?: string | null;
+  date_heure_deferrement: string;
+  personne_nom: string;
+  date_lieu_naissance?: string | null;
+  infraction?: string | null;
+  numero_dossier?: string | null;
+  autorite?: string | null;
+  destination?: string | null;
+  escorte?: string | null;
+  suite_donnee?: string | null;
+  observations?: string | null;
+}
+
+// ========================
 // Rassemblement Journalier (Service Général)
 // ========================
 

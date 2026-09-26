@@ -1,6 +1,13 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const rawBaseUrl = import.meta.env.VITE_API_URL || "/api";
+
+// nmap.mg 301-redirects to www.nmap.mg; browsers refuse to follow redirects on
+// CORS preflight requests, so always target the canonical host instead.
+export const API_BASE_URL = rawBaseUrl.replace(
+  /^https:\/\/nmap\.mg/,
+  "https://www.nmap.mg",
+);
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

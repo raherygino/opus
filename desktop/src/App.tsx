@@ -134,6 +134,24 @@ const RenseignementPjForm = lazy(() =>
 const RenseignementPjDetail = lazy(() =>
   import("@/pages/renseignement-pj-detail").then((m) => ({ default: m.RenseignementPjDetail })),
 );
+const RegistreEnqueteList = lazy(() =>
+  import("@/pages/registre-enquete-list").then((m) => ({ default: m.RegistreEnqueteList })),
+);
+const RegistreEnqueteForm = lazy(() =>
+  import("@/pages/registre-enquete-form").then((m) => ({ default: m.RegistreEnqueteForm })),
+);
+const RegistreEnqueteDetail = lazy(() =>
+  import("@/pages/registre-enquete-detail").then((m) => ({ default: m.RegistreEnqueteDetail })),
+);
+const RegistreDeferrementList = lazy(() =>
+  import("@/pages/registre-deferrement-list").then((m) => ({ default: m.RegistreDeferrementList })),
+);
+const RegistreDeferrementForm = lazy(() =>
+  import("@/pages/registre-deferrement-form").then((m) => ({ default: m.RegistreDeferrementForm })),
+);
+const RegistreDeferrementDetail = lazy(() =>
+  import("@/pages/registre-deferrement-detail").then((m) => ({ default: m.RegistreDeferrementDetail })),
+);
 
 // Mandat (Police Judiciaire)
 const MandatList = lazy(() =>
@@ -1450,6 +1468,88 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<TableSkeleton />}>
                       <ArrestationForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Registre d'enquête */}
+              <Route
+                path="registre-enquete"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreEnqueteList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="registre-enquete/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreEnqueteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="registre-enquete/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreEnqueteDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="registre-enquete/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreEnqueteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              {/* Registre de déferrement */}
+              <Route
+                path="registre-deferrement"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreDeferrementList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="registre-deferrement/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreDeferrementForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="registre-deferrement/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreDeferrementDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="registre-deferrement/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RegistreDeferrementForm />
                     </Suspense>
                   </ErrorBoundary>
                 }
