@@ -100,6 +100,7 @@ import com.gsoft.opus.data.api.dto.DeclarationPerteAttachmentDto
 import com.gsoft.opus.data.api.dto.DeclarationPerteDto
 import com.gsoft.opus.data.api.dto.DeclarationPerteRequest
 import com.gsoft.opus.data.api.dto.DashboardStatsDto
+import com.gsoft.opus.data.api.dto.RapportDto
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
 import com.gsoft.opus.data.api.dto.LoginRequestDto
@@ -195,6 +196,14 @@ interface ApiService {
 
     @GET("api/dashboard/stats")
     suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>>
+
+    // ─── Rapport (Sédentaire > Secrétariat) ─────────────────────────
+
+    @GET("api/rapports")
+    suspend fun getRapport(
+        @Query("type") type: String,
+        @Query("date") date: String
+    ): Response<ApiResponse<RapportDto>>
 
     // ─── Notifications ──────────────────────────────────────────────
 

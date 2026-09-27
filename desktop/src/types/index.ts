@@ -1799,3 +1799,38 @@ export interface DashboardStats {
   notifications_non_lues: number;
   generated_at: string;
 }
+
+// ========================
+// Rapport (aggregated record counts per Sédentaire module — GET /api/rapports)
+// ========================
+export type RapportType = "daily" | "weekly" | "monthly";
+
+export interface RapportSection {
+  key: string;
+  label: string;
+  /** Records created inside the period. */
+  created: number;
+  /** Pre-existing records modified inside the period. */
+  updated: number;
+  /** created + updated — distinct records touched during the period. */
+  total: number;
+}
+
+export interface RapportGroup {
+  key: string;
+  label: string;
+  sections: RapportSection[];
+}
+
+export interface Rapport {
+  type: RapportType;
+  type_label: string;
+  /** Anchor date (Y-m-d) the period was built around. */
+  date: string;
+  /** Inclusive period bounds (Y-m-d) for display. */
+  period_start: string;
+  period_end: string;
+  groups: RapportGroup[];
+  totals: { created: number; updated: number; total: number };
+  generated_at: string;
+}

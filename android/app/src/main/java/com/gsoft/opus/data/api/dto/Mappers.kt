@@ -49,6 +49,10 @@ import com.gsoft.opus.domain.model.PlainteSortieAttachment
 import com.gsoft.opus.domain.model.Convocation
 import com.gsoft.opus.domain.model.ConvocationAttachment
 import com.gsoft.opus.domain.model.DashboardStats
+import com.gsoft.opus.domain.model.Rapport
+import com.gsoft.opus.domain.model.RapportGroup
+import com.gsoft.opus.domain.model.RapportSection
+import com.gsoft.opus.domain.model.RapportTotals
 import com.gsoft.opus.domain.model.User
 
 fun UserDto.toDomain(): User = User(
@@ -794,4 +798,35 @@ fun DashboardStatsDto.toDomain(): DashboardStats = DashboardStats(
     personnesRecherchees = personnesRecherchees,
     notificationsNonLues = notificationsNonLues,
     generatedAt = generatedAt
+)
+
+fun RapportDto.toDomain(): Rapport = Rapport(
+    type = type,
+    typeLabel = typeLabel,
+    date = date,
+    periodStart = periodStart,
+    periodEnd = periodEnd,
+    groups = groups.map { it.toDomain() },
+    totals = totals.toDomain(),
+    generatedAt = generatedAt
+)
+
+fun RapportGroupDto.toDomain(): RapportGroup = RapportGroup(
+    key = key,
+    label = label,
+    sections = sections.map { it.toDomain() }
+)
+
+fun RapportSectionDto.toDomain(): RapportSection = RapportSection(
+    key = key,
+    label = label,
+    created = created,
+    updated = updated,
+    total = total
+)
+
+fun RapportTotalsDto.toDomain(): RapportTotals = RapportTotals(
+    created = created,
+    updated = updated,
+    total = total
 )

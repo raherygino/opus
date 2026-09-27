@@ -94,6 +94,7 @@ import com.gsoft.opus.presentation.correspondance.CorrespondanceScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteDetailScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteFormScreen
 import com.gsoft.opus.presentation.declarationperte.DeclarationPerteScreen
+import com.gsoft.opus.presentation.rapport.RapportScreen
 import com.gsoft.opus.presentation.armement.ArmementDetailScreen
 import com.gsoft.opus.presentation.armement.ArmementFormScreen
 import com.gsoft.opus.presentation.armement.ArmementReintegrationScreen
@@ -611,7 +612,7 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.Rapport.route) { ContextMenuItemScreens.Rapport() }
+                    composable(MainRoutes.Rapport.route) { RapportScreen() }
                     composable(MainRoutes.MainCouranteSec.route) {
                         MainCouranteScreen(
                             onEntryClick = { id ->

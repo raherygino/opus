@@ -1,5 +1,10 @@
 RewriteEngine On
 
+# Forward the Authorization header to PHP — Apache/FastCGI strips it otherwise.
+SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
 # Redirect all requests to public/ directory
 RewriteCond %{REQUEST_URI} !^/public/
 RewriteRule ^(.*)$ public/$1 [L]

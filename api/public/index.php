@@ -75,6 +75,7 @@ use App\Controllers\DeviceTokenController;
 use App\Controllers\AuditLogController;
 use App\Controllers\QrAuthController;
 use App\Controllers\DashboardController;
+use App\Controllers\RapportController;
 
 // --- CORS ---
 CorsMiddleware::handle();
@@ -653,6 +654,11 @@ $router->get('/api/audit-logs/{id}',  [AuditLogController::class, 'show']);
 // Dashboard Stats (aggregated KPIs)
 // ========================
 $router->get('/api/dashboard/stats', [DashboardController::class, 'stats']);
+
+// ========================
+// Rapport Routes (Sédentaire > Secrétariat — activity reports)
+// ========================
+$router->get('/api/rapports', [RapportController::class, 'index']);
 
 // ========================
 // Health Check (API + DB connectivity — diagnostic, no auth required)

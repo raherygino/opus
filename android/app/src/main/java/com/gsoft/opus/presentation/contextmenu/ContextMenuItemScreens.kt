@@ -19,7 +19,6 @@ import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Square
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import com.gsoft.opus.ui.components.PlaceholderScreen
@@ -56,15 +55,6 @@ object ContextMenuItemScreens {
             title = "Gestion du personnel",
             description = "Gestion du personnel",
             icon = Icons.Outlined.People
-        )
-    }
-
-    @Composable
-    fun Rapport() {
-        PlaceholderScreen(
-            title = "Rapport",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.Square
         )
     }
 

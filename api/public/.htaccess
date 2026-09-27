@@ -1,5 +1,10 @@
 RewriteEngine On
 
+# Forward the Authorization header to PHP — Apache/FastCGI strips it otherwise.
+SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
 # If the request is not for an existing file, rewrite to index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

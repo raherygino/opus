@@ -35,6 +35,11 @@ const SgDashboard = lazy(() =>
   import("@/pages/sg-dashboard").then((m) => ({ default: m.SgDashboard })),
 );
 
+// Rapport (Sédentaire > Secrétariat — daily/weekly/monthly activity report)
+const RapportPage = lazy(() =>
+  import("@/pages/rapport").then((m) => ({ default: m.RapportPage })),
+);
+
 // Plainte (Police Judiciaire)
 const PlainteList = lazy(() =>
   import("@/pages/plainte-list").then((m) => ({ default: m.PlainteList })),
@@ -560,6 +565,16 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <MainCouranteForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="secretariat/rapport"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <RapportPage />
                     </Suspense>
                   </ErrorBoundary>
                 }
