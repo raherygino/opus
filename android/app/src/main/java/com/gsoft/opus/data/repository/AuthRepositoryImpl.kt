@@ -96,9 +96,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentUser(): Resource<User> {
         return try {
-            val token = userPreferences.getAccessToken()
+            // The header is added by AuthInterceptor — do NOT also pass it via
+            // @Header here: two Authorization headers make nginx reject the
+            // request with HTTP 400 before it ever reaches the API.
+            userPreferences.getAccessToken()
                 ?: return Resource.error("Not authenticated", 401)
-            val response = apiService.getCurrentUser("Bearer $token")
+            val response = apiService.getCurrentUser()
             if (response.isSuccessful) {
                 val data = response.body()?.data
                 if (data != null) {

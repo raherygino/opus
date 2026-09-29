@@ -16,7 +16,10 @@ class AuthInterceptor @Inject constructor(
         val token = runBlocking { userPreferences.getAccessToken() }
         val request = chain.request().newBuilder().apply {
             if (token != null && chain.request().url.encodedPath.contains("/api/auth/login").not()) {
-                addHeader("Authorization", "Bearer $token")
+                // header(), not addHeader(): TokenAuthenticator retries already carry an
+                // Authorization header, and duplicate headers are rejected by the server
+                // (nginx answers HTTP 400 before PHP ever runs).
+                header("Authorization", "Bearer $token")
             }
         }.build()
         return chain.proceed(request)

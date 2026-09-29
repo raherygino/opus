@@ -141,7 +141,6 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -161,7 +160,7 @@ interface ApiService {
     suspend fun refreshToken(@Body request: RefreshTokenRequestDto): Response<ApiResponse<RefreshResponseDto>>
 
     @GET("api/auth/me")
-    suspend fun getCurrentUser(@Header("Authorization") token: String): Response<ApiResponse<UserDto>>
+    suspend fun getCurrentUser(): Response<ApiResponse<UserDto>>
 
     @PUT("api/auth/profile")
     suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<ApiResponse<UserDto>>

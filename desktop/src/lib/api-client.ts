@@ -97,7 +97,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem("opus-access-token");
         localStorage.removeItem("opus-refresh-token");
         localStorage.removeItem("opus-user");
-        window.location.href = "/login";
+        window.location.hash = "#/login";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
