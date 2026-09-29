@@ -136,8 +136,8 @@ class Personnel
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO personnel (im, grade, lastname, firstname, affectation, phone, address, photo, signature, code_secret_hash)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO personnel (im, grade, lastname, firstname, affectation, phone, email, address, photo, signature, code_secret_hash)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $codeSecretHash = null;
         if (!empty($data['code_secret'])) {
@@ -152,6 +152,7 @@ class Personnel
             $data['firstname'],
             $data['affectation'] ?? null,
             $data['phone'] ?? null,
+            $data['email'] ?? null,
             $data['address'] ?? null,
             $data['photo'] ?? null,
             $data['signature'] ?? null,
@@ -167,7 +168,7 @@ class Personnel
         $fields = [];
         $values = [];
 
-        $allowed = ['im', 'grade', 'lastname', 'firstname', 'affectation', 'phone', 'address', 'photo', 'thumbnail', 'signature', 'signature_svg'];
+        $allowed = ['im', 'grade', 'lastname', 'firstname', 'affectation', 'phone', 'email', 'address', 'photo', 'thumbnail', 'signature', 'signature_svg'];
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "$field = ?";

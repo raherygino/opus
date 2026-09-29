@@ -12,7 +12,6 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 import { FormSkeleton } from "@/components/skeletons/form-skeleton";
 import { TableSkeleton } from "@/components/skeletons/table-skeleton";
-import { MapSkeleton } from "@/components/skeletons/map-skeleton";
 
 // Auth
 const LoginPage = lazy(() =>
@@ -309,6 +308,17 @@ const MaterielRoulantDetail = lazy(() =>
   import("@/pages/materiel-roulant-detail").then((m) => ({ default: m.MaterielRoulantDetail })),
 );
 
+// Situation GAV (Sédentaire > Poste — contrôles des personnes en garde à vue)
+const SituationGavList = lazy(() =>
+  import("@/pages/situation-gav-list").then((m) => ({ default: m.SituationGavList })),
+);
+const SituationGavForm = lazy(() =>
+  import("@/pages/situation-gav-form").then((m) => ({ default: m.SituationGavForm })),
+);
+const SituationGavDetail = lazy(() =>
+  import("@/pages/situation-gav-detail").then((m) => ({ default: m.SituationGavDetail })),
+);
+
 // Main courante (Sédentaire > Secrétariat & Poste — event logbook)
 const MainCouranteList = lazy(() =>
   import("@/pages/main-courante-list").then((m) => ({ default: m.MainCouranteList })),
@@ -339,11 +349,6 @@ const RolesList = lazy(() =>
 );
 const RoleForm = lazy(() =>
   import("@/pages/roles-form").then((m) => ({ default: m.RoleForm })),
-);
-
-// Cartographie
-const Cartographie = lazy(() =>
-  import("@/pages/cartographie").then((m) => ({ default: m.Cartographie })),
 );
 
 // Legacy notes (keep for now)
@@ -775,6 +780,46 @@ export default function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<FormSkeleton />}>
                       <MaterielRoulantForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/situation-gav"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<TableSkeleton />}>
+                      <SituationGavList />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/situation-gav/new"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <SituationGavForm />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/situation-gav/:id"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <SituationGavDetail />
+                    </Suspense>
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="poste/situation-gav/:id/edit"
+                element={
+                  <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                      <SituationGavForm />
                     </Suspense>
                   </ErrorBoundary>
                 }
@@ -1685,18 +1730,6 @@ export default function App() {
                 <ErrorBoundary>
                   <Suspense fallback={<FormSkeleton />}>
                     <RoleForm />
-                  </Suspense>
-                </ErrorBoundary>
-              }
-            />
-
-            {/* Cartographie */}
-            <Route
-              path="/cartographie"
-              element={
-                <ErrorBoundary>
-                  <Suspense fallback={<MapSkeleton />}>
-                    <Cartographie />
                   </Suspense>
                 </ErrorBoundary>
               }

@@ -56,6 +56,7 @@ $migrations = [
     '027_add_armement_verification_signature.sql',
     '028_add_armement_location.sql',
     '029_add_armement_reintegration_location.sql',
+    '067_add_email_personnel.sql',
 ];
 foreach ($migrations as $file) {
     $sql = file_get_contents($root . '/database/' . $file);

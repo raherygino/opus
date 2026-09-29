@@ -40,7 +40,6 @@ const MODULES = [
   { key: "pj_perquisition", label: "Police Judiciaire > Perquisition" },
   { key: "pj_deferrement", label: "Police Judiciaire > Registre de déferrement" },
   { key: "pj_renseignement", label: "Police Judiciaire > Renseignement" },
-  { key: "cartographie", label: "Cartographie" },
   { key: "users", label: "Utilisateurs" },
 ];
 

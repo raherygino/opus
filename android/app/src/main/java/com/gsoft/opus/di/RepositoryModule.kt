@@ -25,6 +25,7 @@ import com.gsoft.opus.data.repository.DispositifExceptionnelRepositoryImpl
 import com.gsoft.opus.data.repository.PlainteRepositoryImpl
 import com.gsoft.opus.data.repository.ConvocationRepositoryImpl
 import com.gsoft.opus.data.repository.GardeAVueRepositoryImpl
+import com.gsoft.opus.data.repository.SituationGavRepositoryImpl
 import com.gsoft.opus.data.repository.RequisitionRepositoryImpl
 import com.gsoft.opus.data.repository.PersonneRechercheeRepositoryImpl
 import com.gsoft.opus.data.repository.ObjetSaisiRepositoryImpl
@@ -62,6 +63,7 @@ import com.gsoft.opus.domain.repository.DispositifExceptionnelRepository
 import com.gsoft.opus.domain.repository.PlainteRepository
 import com.gsoft.opus.domain.repository.ConvocationRepository
 import com.gsoft.opus.domain.repository.GardeAVueRepository
+import com.gsoft.opus.domain.repository.SituationGavRepository
 import com.gsoft.opus.domain.repository.RequisitionRepository
 import com.gsoft.opus.domain.repository.PersonneRechercheeRepository
 import com.gsoft.opus.domain.repository.ObjetSaisiRepository
@@ -183,6 +185,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindGardeAVueRepository(impl: GardeAVueRepositoryImpl): GardeAVueRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSituationGavRepository(impl: SituationGavRepositoryImpl): SituationGavRepository
 
     @Binds
     @Singleton

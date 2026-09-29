@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +48,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gsoft.opus.core.Constants
 import com.gsoft.opus.domain.model.ColorPalette
@@ -69,6 +73,9 @@ fun ProfileScreen(
     onNavigateToSignature: () -> Unit = {},
     onNavigateToPhoto: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     homeViewModel: HomeViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -76,6 +83,19 @@ fun ProfileScreen(
     val settingsState by settingsViewModel.state.collectAsState()
     var themeMenuExpanded by rememberSaveable { mutableStateOf(false) }
     var paletteMenuExpanded by rememberSaveable { mutableStateOf(false) }
+
+    // Re-fetch the user whenever this tab becomes visible again so edits made
+    // in "Gérer le profil" (name, photo, …) are reflected immediately.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                homeViewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val displayName = remember(homeState.firstName, homeState.lastName) {
         val first = homeState.firstName?.takeIf { it.isNotBlank() } ?: ""
@@ -144,13 +164,13 @@ fun ProfileScreen(
             ProfileMenuRow(
                 icon = Icons.Outlined.Person,
                 label = "Gérer le profil",
-                onClick = { }
+                onClick = onNavigateToEditProfile
             )
             ProfileMenuDivider()
             ProfileMenuRow(
                 icon = Icons.Outlined.Lock,
                 label = "Mot de passe & Sécurité",
-                onClick = { }
+                onClick = onNavigateToSecurity
             )
             ProfileMenuDivider()
             ProfileMenuRow(
@@ -182,7 +202,7 @@ fun ProfileScreen(
             ProfileMenuRow(
                 icon = Icons.Outlined.Info,
                 label = "À propos",
-                onClick = { }
+                onClick = onNavigateToAbout
             )
             ProfileMenuDivider()
 

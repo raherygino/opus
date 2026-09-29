@@ -16,7 +16,11 @@ data class UserDto(
     @SerializedName("lastname") val lastname: String? = null,
     @SerializedName("photo") val photo: String? = null,
     @SerializedName("grade") val grade: String? = null,
-    @SerializedName("affectation") val affectation: String? = null
+    @SerializedName("affectation") val affectation: String? = null,
+    @SerializedName("im") val im: String? = null,
+    @SerializedName("phone") val phone: String? = null,
+    @SerializedName("email") val email: String? = null,
+    @SerializedName("address") val address: String? = null
 )
 
 data class PermissionDto(

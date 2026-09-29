@@ -11,16 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
-  Monitor,
   Moon,
   Sun,
   Type,
   Keyboard,
   Palette,
-  Bell,
-  Database,
-  Users,
-  Shield,
   Contrast,
   Sparkles,
   Terminal,
@@ -42,10 +37,6 @@ const sections = [
   { id: "editor", label: "Editor", icon: Type },
   { id: "shortcuts", label: "Keyboard Shortcuts", icon: Keyboard },
   { id: "theme-creator", label: "Theme Creator", icon: Paintbrush },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "storage", label: "Storage", icon: Database },
-  { id: "account", label: "Account", icon: Users },
-  { id: "privacy", label: "Privacy & Security", icon: Shield },
 ];
 
 const builtInThemeIcons: Record<string, React.ElementType> = {
@@ -1133,22 +1124,6 @@ export function Settings() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        )}
-
-        {!["appearance", "theme-creator", "editor", "shortcuts"].includes(activeSection) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-16 text-center"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-              <Monitor className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="mt-4 text-sm font-medium">Coming soon</h3>
-            <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-              This section is under development and will be available in a future update.
-            </p>
           </motion.div>
         )}
       </motion.div>

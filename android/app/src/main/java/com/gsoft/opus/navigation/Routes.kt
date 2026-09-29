@@ -56,7 +56,6 @@ sealed class MainRoutes(val route: String) {
     data object RenseignementPj : MainRoutes("pj_renseignement")
 
     // Global modules
-    data object Cartographie : MainRoutes("cartographie")
     data object Utilisateurs : MainRoutes("utilisateurs")
     data object Roles : MainRoutes("roles")
 
@@ -70,6 +69,11 @@ sealed class MainRoutes(val route: String) {
 
     // QR auth — scan to log in a desktop from the phone
     data object QrAuthScanner : MainRoutes("qr_auth_scanner_main")
+
+    // Profile sub-pages (Compte / Préférences sections of the Profile tab)
+    data object EditProfile : MainRoutes("profile_edit")
+    data object ChangePassword : MainRoutes("profile_password")
+    data object About : MainRoutes("profile_about")
 
     // Personnel management
     data object PersonnelDetail : MainRoutes("personnel_detail/{personnelId}") {
@@ -118,6 +122,14 @@ sealed class MainRoutes(val route: String) {
     }
     data object ArmementForm : MainRoutes("sed_armement_form?armementId={armementId}") {
         fun createRoute(armementId: Int = 0) = "sed_armement_form?armementId=$armementId"
+    }
+
+    // Situation GAV (Sédentaire — Poste): contrôles des personnes en garde à vue
+    data object SituationGavDetail : MainRoutes("sed_situation_gav_detail/{situationGavId}") {
+        fun createRoute(situationGavId: Int) = "sed_situation_gav_detail/$situationGavId"
+    }
+    data object SituationGavForm : MainRoutes("sed_situation_gav_form?situationGavId={situationGavId}") {
+        fun createRoute(situationGavId: Int = 0) = "sed_situation_gav_form?situationGavId=$situationGavId"
     }
     data object ArmementReintegration : MainRoutes("sed_armement_reintegration/{armementId}") {
         fun createRoute(armementId: Int) = "sed_armement_reintegration/$armementId"

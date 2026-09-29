@@ -29,12 +29,10 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
-  Map as MapIcon,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Cartographie", path: "/cartographie", icon: MapIcon },
   { label: "Notes", path: "/notes", icon: FileText },
   { label: "Settings", path: "/settings", icon: Settings },
 ];

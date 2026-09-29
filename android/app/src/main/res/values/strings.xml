@@ -2,7 +2,7 @@
     <string name="app_name">Opus</string>
 
     <!-- Splash -->
-    <string name="splash_tagline">Gestion d\'Entreprise</string>
+    <string name="splash_tagline">Opérations Policières Unifiées et Structurées</string>
 
     <!-- Login -->
     <string name="login_welcome">Bon retour</string>

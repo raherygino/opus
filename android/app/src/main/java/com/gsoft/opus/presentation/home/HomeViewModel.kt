@@ -2,6 +2,7 @@ package com.gsoft.opus.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.usecase.LogoutUseCase
@@ -25,7 +26,9 @@ data class HomeUiState(
     val affectation: String? = null,
     val isLoading: Boolean = false,
     /** Full authenticated user, exposed so screens can gate UI on permissions. */
-    val user: User? = null
+    val user: User? = null,
+    /** Set when the session was cleared (e.g. user no longer exists); the shell must navigate to login. */
+    val loggedOut: Boolean = false
 )
 
 @HiltViewModel
@@ -41,9 +44,20 @@ class HomeViewModel @Inject constructor(
         loadUser()
     }
 
+    /** Re-fetch the current user (e.g. after a profile edit). */
+    fun refresh() {
+        loadUser()
+    }
+
     private fun loadUser() {
         viewModelScope.launch {
             val result = getCurrentUserUseCase()
+            if (result is Resource.Error && result.code == 404) {
+                // User not found on the server — log out instead of
+                // leaving the profile blank.
+                _state.update { it.copy(isLoading = false, loggedOut = true) }
+                return@launch
+            }
             val user = result.getOrNull()
             _state.update {
                 it.copy(

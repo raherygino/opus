@@ -13,7 +13,11 @@ data class User(
     val lastName: String?,
     val photo: String?,
     val grade: String?,
-    val affectation: String?
+    val affectation: String?,
+    val im: String?,
+    val phone: String?,
+    val email: String?,
+    val address: String?
 )
 
 data class Permission(

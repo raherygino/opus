@@ -22,7 +22,6 @@ import {
   Car,
   Scale,
   Settings,
-  Map as MapIcon,
   UserCircle,
   ShieldCheck,
   ChevronRight,
@@ -238,9 +237,6 @@ function buildNavItems(user: User): NavItem[] {
   }
 
   // Global modules
-  if (hasPermission(user, "cartographie", "can_view")) {
-    items.push({ icon: MapIcon, label: "Cartographie", path: "/cartographie" });
-  }
   if (hasPermission(user, "users", "can_view")) {
     items.push({ icon: UserCog, label: "Utilisateurs", path: "/users" });
   }

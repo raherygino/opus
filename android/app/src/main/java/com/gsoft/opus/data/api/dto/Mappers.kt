@@ -68,7 +68,11 @@ fun UserDto.toDomain(): User = User(
     lastName = lastname,
     photo = photo,
     grade = grade,
-    affectation = affectation
+    affectation = affectation,
+    im = im,
+    phone = phone,
+    email = email,
+    address = address
 )
 
 fun PermissionDto.toDomain(): Permission = Permission(

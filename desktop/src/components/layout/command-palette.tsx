@@ -17,7 +17,6 @@ import {
   Command,
   ArrowRight,
   Palette,
-  Map as MapIcon,
 } from "lucide-react";
 
 interface CommandItem {
@@ -59,17 +58,6 @@ export function CommandPalette() {
       icon: FileText,
       action: () => {
         navigate("/notes");
-        close();
-      },
-    },
-    {
-      id: "go-cartographie",
-      label: "Go to Cartographie",
-      description: "Navigate to the cartography page",
-      shortcut: "G C",
-      icon: MapIcon,
-      action: () => {
-        navigate("/cartographie");
         close();
       },
     },

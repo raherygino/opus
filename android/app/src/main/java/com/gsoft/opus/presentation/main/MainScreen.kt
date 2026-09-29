@@ -31,7 +31,6 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.LocalPolice
-import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.People
@@ -83,6 +82,9 @@ import com.gsoft.opus.presentation.dashboard.DashboardScreen
 import com.gsoft.opus.presentation.home.HomeViewModel
 import com.gsoft.opus.presentation.notifications.NotificationsScreen
 import com.gsoft.opus.presentation.notifications.UnreadBadgeViewModel
+import com.gsoft.opus.presentation.profile.AboutScreen
+import com.gsoft.opus.presentation.profile.ChangePasswordScreen
+import com.gsoft.opus.presentation.profile.EditProfileScreen
 import com.gsoft.opus.presentation.profile.ProfileScreen
 import com.gsoft.opus.presentation.settings.SettingsScreen
 import com.gsoft.opus.presentation.signature.SignaturePairingScreen
@@ -164,6 +166,9 @@ import com.gsoft.opus.presentation.arrestation.ArrestationScreen
 import com.gsoft.opus.presentation.passation.PassationDetailScreen
 import com.gsoft.opus.presentation.passation.PassationFormScreen
 import com.gsoft.opus.presentation.passation.PassationScreen
+import com.gsoft.opus.presentation.situationgav.SituationGavDetailScreen
+import com.gsoft.opus.presentation.situationgav.SituationGavFormScreen
+import com.gsoft.opus.presentation.situationgav.SituationGavScreen
 import com.gsoft.opus.presentation.personnel.PersonnelScreen
 import com.gsoft.opus.presentation.personnel.PersonnelDetailScreen
 import com.gsoft.opus.presentation.personnel.PersonnelFormScreen
@@ -219,6 +224,12 @@ fun MainScreen(
 
     val homeViewModel: HomeViewModel = hiltViewModel()
     val homeState by homeViewModel.state.collectAsState()
+
+    // Auto-logout: the session was cleared because the user no longer
+    // exists on the server — leave the app shell for the login screen.
+    LaunchedEffect(homeState.loggedOut) {
+        if (homeState.loggedOut) onLogout()
+    }
 
     // The badge is driven by the app-wide UnreadCountStore (via a thin
     // ViewModel) so it stays in sync even when the notifications screen has
@@ -306,7 +317,6 @@ fun MainScreen(
             "pj_perquisition" to MainRoutes.Perquisition.route,
             "pj_registre_deferrement" to MainRoutes.RegistreDeferrement.route,
             "pj_renseignement" to MainRoutes.RenseignementPj.route,
-            "cartographie" to MainRoutes.Cartographie.route,
             "utilisateurs" to MainRoutes.Utilisateurs.route,
             "roles" to MainRoutes.Roles.route,
             "signature_pairing" to MainRoutes.SignaturePairing.route,
@@ -515,8 +525,35 @@ fun MainScreen(
                             },
                             onNavigateToNotifications = {
                                 navController.navigateToTab(MainRoutes.Notifications.route)
+                            },
+                            onNavigateToEditProfile = {
+                                navController.navigate(MainRoutes.EditProfile.route)
+                            },
+                            onNavigateToSecurity = {
+                                navController.navigate(MainRoutes.ChangePassword.route)
+                            },
+                            onNavigateToAbout = {
+                                navController.navigate(MainRoutes.About.route)
+                            },
+                            // Share the shell-scoped HomeViewModel so the drawer
+                            // header and profile card stay in sync after edits.
+                            homeViewModel = homeViewModel
+                        )
+                    }
+                    composable(MainRoutes.EditProfile.route) {
+                        EditProfileScreen(
+                            onBack = { navController.popBackStack() },
+                            onSaved = {
+                                homeViewModel.refresh()
+                                navController.popBackStack()
                             }
                         )
+                    }
+                    composable(MainRoutes.ChangePassword.route) {
+                        ChangePasswordScreen(onBack = { navController.popBackStack() })
+                    }
+                    composable(MainRoutes.About.route) {
+                        AboutScreen(onBack = { navController.popBackStack() })
                     }
                     composable(MainRoutes.PersonnelList.route) {
                         PersonnelBrowseScreen(
@@ -674,7 +711,16 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.SituationGav.route) { ContextMenuItemScreens.SituationGav() }
+                    composable(MainRoutes.SituationGav.route) {
+                        SituationGavScreen(
+                            onItemClick = { id ->
+                                navController.navigate(MainRoutes.SituationGavDetail.createRoute(id))
+                            },
+                            onCreate = {
+                                navController.navigate(MainRoutes.SituationGavForm.createRoute(0))
+                            }
+                        )
+                    }
                     composable(MainRoutes.MainCourantePoste.route) {
                         MainCouranteScreen(
                             onEntryClick = { id ->
@@ -897,7 +943,6 @@ fun MainScreen(
                     }
 
                     // Global modules
-                    composable(MainRoutes.Cartographie.route) { ContextMenuItemScreens.Cartographie() }
                     composable(MainRoutes.Utilisateurs.route) { ContextMenuItemScreens.Utilisateurs() }
                     composable(MainRoutes.Roles.route) { ContextMenuItemScreens.Roles() }
 
@@ -1209,6 +1254,65 @@ fun MainScreen(
                         }
                     ) {
                         PassationFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    // Situation GAV (Sédentaire — Poste)
+                    composable(
+                        route = MainRoutes.SituationGavDetail.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("situationGavId") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        SituationGavDetailScreen(
+                            onEdit = { id ->
+                                navController.navigate(MainRoutes.SituationGavForm.createRoute(id))
+                            },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.SituationGavForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("situationGavId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        SituationGavFormScreen(
                             onSaved = { navController.popBackStack() },
                             onBack = { navController.popBackStack() }
                         )
@@ -2985,7 +3089,6 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
 
     // ── Global modules ──
     val globalChildren = listOf(
-        ContextMenuItem(id = "cartographie", title = "Cartographie", icon = Icons.Outlined.Map, module = "cartographie"),
         ContextMenuItem(id = "utilisateurs", title = "Utilisateurs", icon = Icons.Outlined.Badge, module = "users"),
         ContextMenuItem(id = "roles", title = "Rôles", icon = Icons.Outlined.Tune, module = "roles"),
     ).filter { hasVisibleItem(user, it) }

@@ -13,7 +13,7 @@ class User
         $sql = 'SELECT u.id, u.username, u.is_active, u.last_login, u.created_at,
                        r.code AS role_code, r.name AS role_name,
                        p.im, p.lastname, p.firstname, p.grade,
-                       p.affectation, p.phone, p.photo, p.address,
+                       p.affectation, p.phone, p.email, p.photo, p.address,
                        COALESCE(
                            (SELECT mp.type_mouvement
                             FROM mouvement_personnel mp
@@ -36,7 +36,7 @@ class User
         $db = Database::getInstance()->getConnection();
         $sql = 'SELECT u.*, r.code AS role_code, r.name AS role_name,
                        p.im, p.lastname, p.firstname, p.grade,
-                       p.affectation, p.phone, p.photo, p.address,
+                       p.affectation, p.phone, p.email, p.photo, p.address,
                        COALESCE(
                            (SELECT mp.type_mouvement
                             FROM mouvement_personnel mp
@@ -61,7 +61,7 @@ class User
         $db = Database::getInstance()->getConnection();
         $sql = 'SELECT u.*, r.code AS role_code, r.name AS role_name,
                        p.im, p.lastname, p.firstname, p.grade,
-                       p.affectation, p.phone, p.photo, p.address,
+                       p.affectation, p.phone, p.email, p.photo, p.address,
                        COALESCE(
                            (SELECT mp.type_mouvement
                             FROM mouvement_personnel mp

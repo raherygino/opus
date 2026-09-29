@@ -193,6 +193,72 @@ class AuthController
     }
 
     /**
+     * PUT /api/auth/profile
+     * Body: { lastname, firstname, phone?, email?, address? }
+     *
+     * Lets the authenticated user update the contact/identity fields of their
+     * own personnel record. Administrative fields (im, grade, affectation) are
+     * intentionally not editable here — they are managed by the secretariat.
+     */
+    public function updateProfile(array $params): void
+    {
+        $authUser = self::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized();
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        $errors = AuthValidator::validateProfileUpdate($data);
+        if (!empty($errors)) {
+            Response::error('Validation failed', 422, $errors);
+        }
+
+        $user = User::getById($authUser['sub']);
+        if (!$user) {
+            Response::notFound('User not found');
+        }
+
+        $personnelId = (int) $user['personnel_id'];
+        $person = Personnel::getById($personnelId);
+        if (!$person) {
+            Response::notFound('Personnel record not found');
+        }
+
+        $updateData = [
+            'lastname'  => trim((string) $data['lastname']),
+            'firstname' => trim((string) $data['firstname']),
+        ];
+        // Optional contact fields — an explicit empty string clears the value.
+        foreach (['phone', 'email', 'address'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $value = $data[$field];
+                $updateData[$field] = ($value === null || trim((string) $value) === '')
+                    ? null
+                    : trim((string) $value);
+            }
+        }
+
+        Personnel::update($personnelId, $updateData);
+
+        // --- Audit log ---
+        AuditLog::create([
+            'user_id' => $authUser['sub'],
+            'action' => 'profile_update',
+            'module' => 'auth',
+            'entity_id' => $personnelId,
+            'description' => "Profil mis à jour par l'utilisateur '{$user['username']}' (personnel ID {$personnelId})",
+            'new_values' => $updateData,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+
+        $updatedUser = User::getById($user['id']);
+        unset($updatedUser['password_hash']);
+        Response::success($updatedUser, 'Profile updated successfully');
+    }
+
+    /**
      * POST /api/auth/photo
      * Multipart: photo (file)
      * Uploads profile photo for the authenticated user's personnel record

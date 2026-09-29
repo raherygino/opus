@@ -1014,6 +1014,58 @@ export interface GardeAVueInput {
 }
 
 // ========================
+// Situation GAV (Sédentaire > Poste — contrôles des personnes en GAV)
+// ========================
+
+export interface SituationGav {
+  id: number;
+  garde_a_vue_id: number;
+  date_controle: string;
+  agent_controle_id: number | null;
+  etat_general: string | null;
+  observations: string | null;
+  mesures_prises: string | null;
+  created_by: number | null;
+  /** Joined from garde_a_vue (personne concernée). */
+  personne_nom?: string | null;
+  personne_prenoms?: string | null;
+  personne_debut_gav?: string | null;
+  personne_fin_gav?: string | null;
+  /** Joined from personnel (agent ayant effectué le contrôle). */
+  agent_controle_grade?: string | null;
+  agent_controle_nom?: string | null;
+  agent_controle_prenoms?: string | null;
+  agent_controle_im?: string | null;
+  agent_username?: string | null;
+  agent_prenoms?: string | null;
+  agent_nom?: string | null;
+  attachments?: SituationGavAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SituationGavAttachment {
+  id: number;
+  situation_gav_id: number;
+  title: string;
+  filename: string;
+  original_filename: string;
+  mime_type: string | null;
+  file_size: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SituationGavInput {
+  garde_a_vue_id: number;
+  date_controle: string;
+  agent_controle_id?: number | null;
+  etat_general?: string | null;
+  observations?: string | null;
+  mesures_prises?: string | null;
+}
+
+// ========================
 // Requisition (Police Judiciaire)
 // ========================
 

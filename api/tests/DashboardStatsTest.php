@@ -56,6 +56,7 @@ $migrations = [
     '050_create_personne_recherchee.sql',
     '058_create_evenement_survenu.sql',
     '062_create_activite.sql',
+    '067_add_email_personnel.sql',
 ];
 foreach ($migrations as $file) {
     $sql = file_get_contents($root . '/database/' . $file);

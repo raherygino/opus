@@ -50,6 +50,7 @@ $migrations = [
     '009_create_notifications.sql',
     '018_add_notification_link.sql',
     '022_create_passation.sql',
+    '067_add_email_personnel.sql',
     '023_create_attach_passation.sql',
 ];
 foreach ($migrations as $file) {

@@ -25,6 +25,7 @@ import {
   Download,
   Paperclip,
   Image as ImageIcon,
+  MapPin,
 } from "lucide-react";
 import type { Activite, ActiviteAttachment } from "@/types";
 
@@ -54,6 +55,7 @@ export function ActiviteDetail() {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [viewerTarget, setViewerTarget] = useState<ActiviteAttachment | null>(null);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     load();
@@ -146,14 +148,6 @@ export function ActiviteDetail() {
             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label="Date" value={new Date(entry.date_activite).toLocaleDateString("fr-FR")} />
               <Field label="Heure" value={entry.heure_activite} />
-              <Field
-                label="Position GPS"
-                value={
-                  entry.latitude != null && entry.longitude != null
-                    ? `${Number(entry.latitude).toFixed(6)}, ${Number(entry.longitude).toFixed(6)}`
-                    : null
-                }
-              />
             </dl>
           </CardContent>
         </Card>
@@ -234,6 +228,45 @@ export function ActiviteDetail() {
             </dl>
           </CardContent>
         </Card>
+
+        {/* ── Localisation GPS ── */}
+        {entry.latitude != null && entry.longitude != null && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Localisation GPS
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Latitude" value={Number(entry.latitude).toFixed(6)} />
+                <Field label="Longitude" value={Number(entry.longitude).toFixed(6)} />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMap(!showMap)}
+                className="gap-2"
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                {showMap ? "Masquer la carte" : "Voir sur la carte"}
+              </Button>
+              {showMap && (
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <iframe
+                    title="Localisation GPS"
+                    width="100%"
+                    height="400"
+                    loading="lazy"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(entry.longitude) - 0.005}%2C${Number(entry.latitude) - 0.005}%2C${Number(entry.longitude) + 0.005}%2C${Number(entry.latitude) + 0.005}&layer=mapnik&marker=${entry.latitude}%2C${entry.longitude}`}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* ── Pièces jointes ── */}
         <Card>

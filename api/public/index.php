@@ -39,6 +39,8 @@ use App\Controllers\ConvocationController;
 use App\Controllers\ConvocationAttachmentController;
 use App\Controllers\GardeAVueController;
 use App\Controllers\GardeAVueAttachmentController;
+use App\Controllers\SituationGavController;
+use App\Controllers\SituationGavAttachmentController;
 use App\Controllers\RequisitionController;
 use App\Controllers\RequisitionAttachmentController;
 use App\Controllers\PersonneRechercheeController;
@@ -90,6 +92,7 @@ $router->post('/api/auth/login',    [AuthController::class, 'login']);
 $router->post('/api/auth/refresh',  [AuthController::class, 'refresh']);
 $router->get('/api/auth/me',        [AuthController::class, 'me']);
 $router->put('/api/auth/password',  [AuthController::class, 'password']);
+$router->put('/api/auth/profile',   [AuthController::class, 'updateProfile']);
 $router->post('/api/auth/verify',   [AuthController::class, 'verify']);
 $router->post('/api/auth/photo',    [AuthController::class, 'uploadPhoto']);
 $router->delete('/api/auth/photo',    [AuthController::class, 'deletePhoto']);
@@ -391,6 +394,21 @@ $router->post('/api/garde-a-vue/{id}/attachments',                      [GardeAV
 $router->put('/api/garde-a-vue/{id}/attachments/{attachId}',            [GardeAVueAttachmentController::class, 'update']);
 $router->delete('/api/garde-a-vue/{id}/attachments/{attachId}',         [GardeAVueAttachmentController::class, 'destroy']);
 $router->get('/api/garde-a-vue/{id}/attachments/{attachId}/download',   [GardeAVueAttachmentController::class, 'download']);
+
+// ========================
+// Situation GAV Routes (Sédentaire — Poste: contrôles des personnes en GAV)
+// ========================
+$router->get('/api/situations-gav',                          [SituationGavController::class, 'index']);
+$router->get('/api/situations-gav/{id}',                     [SituationGavController::class, 'show']);
+$router->post('/api/situations-gav',                         [SituationGavController::class, 'store']);
+$router->put('/api/situations-gav/{id}',                     [SituationGavController::class, 'update']);
+$router->delete('/api/situations-gav/{id}',                  [SituationGavController::class, 'destroy']);
+
+$router->get('/api/situations-gav/{id}/attachments',                       [SituationGavAttachmentController::class, 'index']);
+$router->post('/api/situations-gav/{id}/attachments',                      [SituationGavAttachmentController::class, 'store']);
+$router->put('/api/situations-gav/{id}/attachments/{attachId}',            [SituationGavAttachmentController::class, 'update']);
+$router->delete('/api/situations-gav/{id}/attachments/{attachId}',         [SituationGavAttachmentController::class, 'destroy']);
+$router->get('/api/situations-gav/{id}/attachments/{attachId}/download',   [SituationGavAttachmentController::class, 'download']);
 
 // ========================
 // Requisition Routes (Police Judiciaire)

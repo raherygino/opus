@@ -48,6 +48,9 @@ import com.gsoft.opus.data.api.dto.ConvocationAttachmentDto
 import com.gsoft.opus.data.api.dto.GardeAVueDto
 import com.gsoft.opus.data.api.dto.GardeAVueRequest
 import com.gsoft.opus.data.api.dto.GardeAVueAttachmentDto
+import com.gsoft.opus.data.api.dto.SituationGavDto
+import com.gsoft.opus.data.api.dto.SituationGavRequest
+import com.gsoft.opus.data.api.dto.SituationGavAttachmentDto
 import com.gsoft.opus.data.api.dto.RequisitionDto
 import com.gsoft.opus.data.api.dto.RequisitionRequest
 import com.gsoft.opus.data.api.dto.RequisitionAttachmentDto
@@ -103,6 +106,7 @@ import com.gsoft.opus.data.api.dto.DashboardStatsDto
 import com.gsoft.opus.data.api.dto.RapportDto
 import com.gsoft.opus.data.api.dto.DeviceTokenRequestDto
 import com.gsoft.opus.data.api.dto.DeviceTokenResponseDto
+import com.gsoft.opus.data.api.dto.ChangePasswordRequest
 import com.gsoft.opus.data.api.dto.LoginRequestDto
 import com.gsoft.opus.data.api.dto.LoginResponseDto
 import com.gsoft.opus.data.api.dto.MouvementAttachmentDto
@@ -126,6 +130,7 @@ import com.gsoft.opus.data.api.dto.QrAuthStatusResponseDto
 import com.gsoft.opus.data.api.dto.RefreshResponseDto
 import com.gsoft.opus.data.api.dto.RefreshTokenRequestDto
 import com.gsoft.opus.data.api.dto.ReintegrationRequest
+import com.gsoft.opus.data.api.dto.UpdateProfileRequest
 import com.gsoft.opus.data.api.dto.UserDto
 import com.gsoft.opus.data.api.dto.VerifyCodeSecretRequest
 import com.gsoft.opus.data.api.dto.VerifyIdentityRequest
@@ -157,6 +162,22 @@ interface ApiService {
 
     @GET("api/auth/me")
     suspend fun getCurrentUser(@Header("Authorization") token: String): Response<ApiResponse<UserDto>>
+
+    @PUT("api/auth/profile")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<ApiResponse<UserDto>>
+
+    @PUT("api/auth/password")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<ApiResponse<Nothing>>
+
+    @Multipart
+    @POST("api/auth/photo")
+    suspend fun uploadProfilePhoto(
+        @Part photo: MultipartBody.Part,
+        @Part thumbnail: MultipartBody.Part? = null
+    ): Response<ApiResponse<UserDto>>
+
+    @DELETE("api/auth/photo")
+    suspend fun deleteProfilePhoto(): Response<ApiResponse<UserDto>>
 
     @GET("api/health")
     suspend fun healthCheck(): Response<ApiResponse<Nothing>>
@@ -1106,6 +1127,53 @@ interface ApiService {
 
     @DELETE("api/garde-a-vue/{id}/attachments/{attachId}")
     suspend fun deleteGardeAVueAttachment(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int
+    ): Response<ApiResponse<Nothing>>
+
+    // ========================
+    // Situation GAV (Sédentaire — Poste)
+    // ========================
+    @GET("api/situations-gav")
+    suspend fun getSituationGavList(
+        @Query("search") search: String? = null,
+        @Query("date_from") dateFrom: String? = null,
+        @Query("date_to") dateTo: String? = null,
+        @Query("garde_a_vue_id") gardeAVueId: Int? = null
+    ): Response<ApiResponse<List<SituationGavDto>>>
+
+    @GET("api/situations-gav/{id}")
+    suspend fun getSituationGav(@Path("id") id: Int): Response<ApiResponse<SituationGavDto>>
+
+    @POST("api/situations-gav")
+    suspend fun createSituationGav(@Body request: SituationGavRequest): Response<ApiResponse<SituationGavDto>>
+
+    @PUT("api/situations-gav/{id}")
+    suspend fun updateSituationGav(@Path("id") id: Int, @Body request: SituationGavRequest): Response<ApiResponse<SituationGavDto>>
+
+    @DELETE("api/situations-gav/{id}")
+    suspend fun deleteSituationGav(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @GET("api/situations-gav/{id}/attachments")
+    suspend fun getSituationGavAttachments(@Path("id") id: Int): Response<ApiResponse<List<SituationGavAttachmentDto>>>
+
+    @Multipart
+    @POST("api/situations-gav/{id}/attachments")
+    suspend fun createSituationGavAttachment(
+        @Path("id") id: Int,
+        @Part("title") title: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<SituationGavAttachmentDto>>
+
+    @PUT("api/situations-gav/{id}/attachments/{attachId}")
+    suspend fun updateSituationGavAttachmentTitle(
+        @Path("id") id: Int,
+        @Path("attachId") attachId: Int,
+        @Body body: AttachmentTitleRequest
+    ): Response<ApiResponse<SituationGavAttachmentDto>>
+
+    @DELETE("api/situations-gav/{id}/attachments/{attachId}")
+    suspend fun deleteSituationGavAttachment(
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Nothing>>

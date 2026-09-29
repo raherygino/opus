@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
-import { Pencil, Trash2, ArrowLeft, Paperclip, Download, Eye } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, Paperclip, Download, Eye, MapPin } from "lucide-react";
 import type { EvenementSurvenu, EvenementSurvenuAttachment } from "@/types";
 
 const SG_EVENEMENT_MODULE = "sg_evenement_survenu";
@@ -33,6 +33,7 @@ export function EvenementSurvenuDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [viewerTarget, setViewerTarget] = useState<EvenementSurvenuAttachment | null>(null);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     load();
@@ -122,14 +123,6 @@ export function EvenementSurvenuDetail() {
           <div className="border-t pt-4">
             <DetailField label="Lieu exact" value={item.lieu_exact} />
           </div>
-          {item.latitude != null && item.longitude != null && (
-            <div className="border-t pt-4">
-              <DetailField
-                label="Position GPS"
-                value={`${Number(item.latitude).toFixed(6)}, ${Number(item.longitude).toFixed(6)}`}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -161,6 +154,44 @@ export function EvenementSurvenuDetail() {
           )}
         </CardContent>
       </Card>
+
+      {item.latitude != null && item.longitude != null && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Localisation GPS
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <DetailField label="Latitude" value={Number(item.latitude).toFixed(6)} />
+              <DetailField label="Longitude" value={Number(item.longitude).toFixed(6)} />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMap(!showMap)}
+              className="gap-2"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              {showMap ? "Masquer la carte" : "Voir sur la carte"}
+            </Button>
+            {showMap && (
+              <div className="overflow-hidden rounded-lg border border-border">
+                <iframe
+                  title="Localisation GPS"
+                  width="100%"
+                  height="400"
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(item.longitude) - 0.005}%2C${Number(item.latitude) - 0.005}%2C${Number(item.longitude) + 0.005}%2C${Number(item.latitude) + 0.005}&layer=mapnik&marker=${item.latitude}%2C${item.longitude}`}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

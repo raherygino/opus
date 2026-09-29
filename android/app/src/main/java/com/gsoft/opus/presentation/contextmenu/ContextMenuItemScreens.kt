@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.LocalPolice
-import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.People
@@ -237,15 +236,6 @@ object ContextMenuItemScreens {
     }
 
     // ── Global modules ──
-
-    @Composable
-    fun Cartographie() {
-        PlaceholderScreen(
-            title = "Cartographie",
-            description = "Cette fonctionnalité sera bientôt disponible",
-            icon = Icons.Outlined.Map
-        )
-    }
 
     @Composable
     fun Utilisateurs() {
