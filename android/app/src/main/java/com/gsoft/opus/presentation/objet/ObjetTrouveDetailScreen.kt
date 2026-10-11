@@ -158,9 +158,14 @@ fun ObjetTrouveDetailScreen(
         }
     }
 
-    ImageViewerDialog(
-        imageUrl = viewerTarget?.let { objetTrouveAttachmentDownloadUrl(state.entry?.id ?: 0, it.id) } ?: "",
-        title = viewerTarget?.title,
-        onDismiss = { viewerTarget = null }
-    )
+    // Full-screen zoomable viewer for image attachments
+    viewerTarget?.let { att ->
+        state.entry?.let { entry ->
+            ImageViewerDialog(
+                imageUrl = objetTrouveAttachmentDownloadUrl(entry.id, att.id),
+                title = att.title,
+                onDismiss = { viewerTarget = null }
+            )
+        }
+    }
 }

@@ -46,6 +46,11 @@ fun ImageViewerDialog(
     title: String? = null,
     onDismiss: () -> Unit
 ) {
+    // Nothing to show: render nothing instead of an empty black overlay.
+    // Composable call sites may pass a blank URL by mistake; guard here so the
+    // dialog never traps the user on a black screen.
+    if (imageUrl.isBlank()) return
+
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 

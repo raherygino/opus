@@ -163,9 +163,14 @@ fun ObjetSaisiDetailScreen(
         }
     }
 
-    ImageViewerDialog(
-        imageUrl = viewerTarget?.let { objetSaisiAttachmentDownloadUrl(state.entry?.id ?: 0, it.id) } ?: "",
-        title = viewerTarget?.title,
-        onDismiss = { viewerTarget = null }
-    )
+    // Full-screen zoomable viewer for image attachments
+    viewerTarget?.let { att ->
+        state.entry?.let { entry ->
+            ImageViewerDialog(
+                imageUrl = objetSaisiAttachmentDownloadUrl(entry.id, att.id),
+                title = att.title,
+                onDismiss = { viewerTarget = null }
+            )
+        }
+    }
 }
