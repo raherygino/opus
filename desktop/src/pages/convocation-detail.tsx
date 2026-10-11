@@ -21,7 +21,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { Convocation, ConvocationAttachment } from "@/types";
 
 const PJ_CONVOCATION_MODULE = "pj_convocation";
@@ -99,12 +101,22 @@ export function ConvocationDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/convocation/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/convocation/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Informations */}
@@ -190,4 +202,35 @@ export function ConvocationDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Convocation");
+
+    report.section("Informations").rows([
+      ["Type", CONVOCATION_TYPE_LABELS[entry.type] ?? entry.type],
+      ["Date", formatDate(entry.date_convocation)],
+      ["Numéro", entry.numero],
+      ["Nom", entry.nom || "—"],
+      ["Adresse", entry.adresse || "—"],
+      ["Infraction", entry.infraction || "—"],
+      ["Personne ayant accusée réception", entry.personne_accuse_recu || "—"],
+      ["Numéro du dossier", entry.numero_dossier || "—"],
+    ]);
+
+    if (entry.observation) {
+      report.labeledText("Observation", entry.observation);
+    }
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`convocation_${entry.numero}_${entry.id}.pdf`);
+  }
 }

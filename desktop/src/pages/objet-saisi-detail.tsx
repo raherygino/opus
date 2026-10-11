@@ -20,7 +20,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { ObjetSaisi, ObjetSaisiAttachment } from "@/types";
 import { OBJET_SAISI_TYPE_LABELS } from "@/types";
 
@@ -93,12 +95,22 @@ export function ObjetSaisiDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — Objet saisi</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/objets/saisi/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/objets/saisi/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -168,4 +180,27 @@ export function ObjetSaisiDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche d'Objet Saisi");
+
+    report.section("Objet saisi").rows([
+      ["N° du dossier concerné", entry.numero_dossier || "—"],
+      ["Type d'objet", OBJET_SAISI_TYPE_LABELS[entry.type_objet] ?? entry.type_objet],
+      ["Propriétaire", entry.proprietaire || "—"],
+      ["Motif", entry.motif || "—"],
+    ]);
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`objet_saisi_${entry.id}.pdf`);
+  }
 }

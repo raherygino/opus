@@ -20,7 +20,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { GardeAVue, GardeAVueAttachment } from "@/types";
 
 const PJ_GAV_MODULE = "pj_gav";
@@ -107,12 +109,22 @@ export function GardeAVueDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/gav/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/gav/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Identité */}
@@ -224,4 +236,47 @@ export function GardeAVueDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Garde à Vue");
+
+    report
+      .section("Identité")
+      .rows([
+        ["Nom", entry.nom || "—"],
+        ["Prénoms", entry.prenoms || "—"],
+        ["Date de naissance", formatDate(entry.date_naissance)],
+        ["Adresse", entry.adresse || "—"],
+      ])
+      .section("Enquête")
+      .rows([
+        ["Enquêteur de permanence", entry.enqueteur_permance || "—"],
+        ["OPJ ayant décidé la garde à vue", entry.opj_gav || "—"],
+      ], 90)
+      .labeledText("Motif", entry.motif || "—")
+      .section("Santé & droits")
+      .rows([
+        ["État de santé", entry.etat_sante || "—"],
+        ["Personne à contacter", entry.personne_contacter || "—"],
+      ])
+      .labeledText("Droits notifiés", entry.droits_notifies || "—")
+      .section("Dates de la garde à vue")
+      .rows([
+        ["Début de GAV", formatDateTime(entry.debut_gav)],
+        ["Fin de GAV", formatDateTime(entry.fin_gav)],
+        ["Prolongation de GAV", formatDateTime(entry.prolongation_gav)],
+      ]);
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`garde_a_vue_${entry.id}.pdf`);
+  }
 }

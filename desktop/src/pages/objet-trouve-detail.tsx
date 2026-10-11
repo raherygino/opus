@@ -21,7 +21,9 @@ import {
   Download,
   Eye,
   CheckCircle2,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { ObjetTrouve, ObjetTrouveAttachment } from "@/types";
 import { OBJET_TROUVE_MOTIF_LABELS } from "@/types";
 
@@ -94,12 +96,22 @@ export function ObjetTrouveDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — Objet trouvé</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/objets/trouve/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/objets/trouve/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -180,4 +192,29 @@ export function ObjetTrouveDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche d'Objet Trouvé");
+
+    report.section("Objet trouvé").rows([
+      ["Affaire", entry.affaire || "—"],
+      [
+        "Motif de découverte",
+        OBJET_TROUVE_MOTIF_LABELS[entry.motif_decouverte] ?? entry.motif_decouverte,
+      ],
+      ["Restitution", entry.restitution === 1 ? "Restitué" : "Non restitué"],
+    ]);
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`objet_trouve_${entry.id}.pdf`);
+  }
 }

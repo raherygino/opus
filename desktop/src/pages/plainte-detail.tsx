@@ -22,7 +22,9 @@ import {
   Download,
   Eye,
   ArrowRightLeft,
+  FileDown,
 } from "lucide-react";
+import { PdfReport, type PdfRow } from "@/lib/pdf-report";
 import type { PlainteEntree, PlainteEntreeAttachment } from "@/types";
 
 const PJ_PLAINTE_MODULE = "pj_plainte";
@@ -105,12 +107,22 @@ export function PlainteDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — ENTRÉE</p>
           </div>
         </div>
-        {canEdit && (
-          <Button variant="outline" onClick={() => navigate(`/pj/plainte/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button variant="outline" onClick={() => navigate(`/pj/plainte/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Informations */}
@@ -226,4 +238,56 @@ export function PlainteDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Plainte — ENTRÉE");
+
+    const opj =
+      [entry.opj_prenoms, entry.opj_nom].filter(Boolean).join(" ") +
+        (entry.opj_grade ? ` (${entry.opj_grade})` : "") || "—";
+    const enqueteur =
+      [entry.enqueteur_prenoms, entry.enqueteur_nom].filter(Boolean).join(" ") +
+        (entry.enqueteur_grade ? ` (${entry.enqueteur_grade})` : "") || "—";
+    const agent =
+      [entry.agent_prenoms, entry.agent_nom].filter(Boolean).join(" ") ||
+      entry.agent_username ||
+      "—";
+
+    const rows: PdfRow[] = [
+      ["Type", PLAINTE_ENTREE_TYPE_LABELS[entry.type] ?? entry.type],
+      ["N° de dossier", entry.numero_dossier],
+      ["Date", formatDate(entry.date_plainte)],
+    ];
+    if (entry.numero_st) rows.push(["Numéro du ST", entry.numero_st]);
+    rows.push(["OPJ", opj], ["Enquêteur", enqueteur]);
+    if (entry.partie_civile) rows.push(["Partie civile (PC)", entry.partie_civile]);
+    rows.push(["Mise en cause (MC)", entry.mise_en_cause || "—"]);
+    if (entry.adresse_pc) rows.push(["Adresse du PC", entry.adresse_pc]);
+    rows.push(
+      ["Infraction", entry.infraction || "—"],
+      ["Préjudice", entry.prejudice || "—"],
+      ["Lieu de l'infraction", entry.lieu_infraction || "—"],
+      ["Heure de l'infraction", formatHeure(entry.heure_infraction)],
+    );
+    report.section("Informations").rows(rows);
+
+    if (entry.observation) {
+      report.labeledText("Observation", entry.observation);
+    }
+    if (entry.agent_prenoms || entry.agent_nom || entry.agent_username) {
+      report.rows([["Agent", agent]]);
+    }
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`plainte_entree_${entry.numero_dossier}_${entry.id}.pdf`);
+  }
 }

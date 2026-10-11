@@ -21,7 +21,9 @@ import {
   Loader2,
   Crosshair,
   History,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { Arme, ArmeMunitionsConsommation } from "@/types";
 
 const LIST_PATH = "/sedentaire/poste/armes";
@@ -125,10 +127,16 @@ export function ArmeDetail() {
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={() => navigate(`${LIST_PATH}/${arme.id}/edit`)} className="gap-2">
-          <Pencil className="h-4 w-4" />
-          Modifier
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
+          <Button variant="outline" onClick={() => navigate(`${LIST_PATH}/${arme.id}/edit`)} className="gap-2">
+            <Pencil className="h-4 w-4" />
+            Modifier
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -184,4 +192,30 @@ export function ArmeDetail() {
 
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!arme) return;
+
+    const report = new PdfReport("Fiche d'Arme");
+
+    report.section("Arme").rows([
+      ["Type d'arme", arme.type_arme_nom || "—"],
+      ["Matricule", arme.matricule],
+      ["Munitions disponibles (type)", String(arme.type_arme_munitions_stock)],
+    ]);
+
+    if (consommations.length > 0) {
+      report.section("Historique des consommations").table(
+        ["Date et heure", "Quantité", "Agent", "Perception liée"],
+        consommations.map((c) => [
+          formatDateTime(c.date_consommation),
+          String(c.quantite),
+          agentDisplay(c),
+          c.armement_id ? `#${c.armement_id}` : "—",
+        ]),
+      );
+    }
+
+    report.save(`arme_${arme.matricule}_${arme.id}.pdf`);
+  }
 }

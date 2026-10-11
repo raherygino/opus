@@ -32,7 +32,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { MaterielRoulant, MaterielRoulantAttachment } from "@/types";
 import { formatDate, formatHeure } from "@/pages/passation-list";
 import { MATERIEL_ROULANT_MODULE } from "@/pages/materiel-roulant-management";
@@ -218,6 +220,14 @@ export function MaterielRoulantDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
           {canEdit && !isReintegre && (
             <Button className="gap-2" onClick={openReintegration}>
               <ShieldCheck className="h-4 w-4" />
@@ -580,4 +590,76 @@ export function MaterielRoulantDetail() {
       />
     </motion.div>
   );
+
+  async function handleExportPDF() {
+    if (!item) return;
+
+    const report = new PdfReport("Fiche de Matériel Roulant");
+
+    report
+      .section("Véhicule & Perception")
+      .rows(
+        [
+          ["Type de véhicule", item.type_materiel || "—"],
+          ["Immatriculation", item.numero_immatriculation || "—"],
+          ["Description", item.description_vehicule || "—"],
+          ["Date de la perception", formatDate(item.date_perception)],
+          ["Heure de la perception", formatHeure(item.heure_perception)],
+        ],
+        80,
+      )
+      .section("Agent conducteur")
+      .rows([
+        ["IM", item.agent_conducteur_im || "—"],
+        ["Grade", item.agent_conducteur_grade || "—"],
+        ["Nom complet", item.agent_conducteur_nom || "—"],
+        ["Identité vérifiée", item.agent_verifie ? "Oui" : "Non"],
+      ]);
+
+    if (item.signature_svg) {
+      await report.addSvg(item.signature_svg, "Signature du conducteur", 60);
+    }
+
+    if (item.chef_de_bord_personnel_id) {
+      report.section("Chef de bord").rows([
+        ["IM", item.chef_de_bord_im || "—"],
+        ["Grade", item.chef_de_bord_grade || "—"],
+        ["Nom complet", item.chef_de_bord_nom || "—"],
+      ]);
+    }
+
+    report.section("Compteurs de départ").rows([
+      ["Kilométrage de départ (km)", item.kilometrage_depart || "—"],
+      ["Carburant de départ (%)", item.niveau_carburant_depart || "—"],
+    ]);
+
+    if (isReintegre) {
+      report
+        .section("Réintégration")
+        .rows(
+          [
+            ["Date de la réintégration", formatDate(item.date_reintegration)],
+            ["Heure de la réintégration", formatHeure(item.heure_reintegration)],
+            ["Kilométrage de retour (km)", item.kilometrage_retour || "—"],
+            ["Carburant de retour (%)", item.niveau_carburant_retour || "—"],
+          ],
+          80,
+        )
+        .section("Observations techniques")
+        .paragraph(item.observations_techniques || "Aucune observation technique")
+        .section("Défaillances signalées")
+        .paragraph(hasDefaillances ? item.defaillances! : "Aucune défaillance signalée");
+    }
+
+    const attachments = item.attachments ?? [];
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`materiel_roulant_${item.date_perception}_${item.id}.pdf`);
+  }
 }

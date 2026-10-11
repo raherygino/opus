@@ -22,7 +22,9 @@ import {
   Eye,
   ArrowDownLeft,
   ArrowUpRight,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { Correspondance, CorrespondanceAttachment } from "@/types";
 import {
   CORRESPONDANCE_MODULE,
@@ -119,16 +121,26 @@ export function CorrespondanceDetail() {
             </p>
           </div>
         </div>
-        {canEdit && (
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            onClick={handleExportPDF}
             className="gap-2"
-            onClick={() => navigate(`${LIST_PATH}/${correspondance.id}/edit`)}
           >
-            <Pencil className="h-4 w-4" />
-            Modifier
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(`${LIST_PATH}/${correspondance.id}/edit`)}
+            >
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -219,4 +231,41 @@ export function CorrespondanceDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!correspondance) return;
+
+    const report = new PdfReport("Fiche de Correspondance");
+
+    report.section("Informations de la correspondance").rows([
+      ["Date", formatDate(correspondance.date_correspondance)],
+      ["Heure d'enregistrement", formatHeure(correspondance.heure_enregistrement)],
+      ["Sens", correspondance.sens],
+      ["N° d'ordre / Référence", correspondance.reference],
+      [
+        correspondance.sens === "Sortant" ? "Destinataire" : "Émetteur",
+        correspondance.emetteur_destinataire,
+      ],
+      ["Objet", correspondance.objet],
+      ["Statut", correspondance.statut],
+      ["Agent secrétariat", agent || "—"],
+      [
+        "Enregistrée le",
+        correspondance.created_at
+          ? new Date(correspondance.created_at.replace(" ", "T")).toLocaleString("fr-FR")
+          : "—",
+      ],
+    ]);
+
+    const attachments = correspondance.attachments ?? [];
+    if (attachments.length > 0) {
+      report.section("Fichiers joints").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`correspondance_${correspondance.reference}_${correspondance.id}.pdf`);
+  }
 }

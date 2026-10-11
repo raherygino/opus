@@ -22,7 +22,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport, type PdfRow } from "@/lib/pdf-report";
 import type { PlainteSortie, PlainteSortieAttachment } from "@/types";
 
 const PJ_PLAINTE_MODULE = "pj_plainte";
@@ -105,12 +107,22 @@ export function PlainteSortieDetail() {
               <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — SORTIE</p>
             </div>
           </div>
-          {canEdit && (
-            <Button variant="outline" onClick={() => navigate(`/pj/plainte/sortie/${sortie.id}/edit`)} className="gap-2">
-              <Pencil className="h-4 w-4" />
-              Modifier
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportPDF}
+              className="gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Export PDF
             </Button>
-          )}
+            {canEdit && (
+              <Button variant="outline" onClick={() => navigate(`/pj/plainte/sortie/${sortie.id}/edit`)} className="gap-2">
+                <Pencil className="h-4 w-4" />
+                Modifier
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -225,4 +237,64 @@ export function PlainteSortieDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!sortie) return;
+
+    const report = new PdfReport("Fiche de Plainte — SORTIE");
+
+    const entreeRows: PdfRow[] = [];
+    if (sortie.entree_type) {
+      entreeRows.push([
+        "Type",
+        PLAINTE_ENTREE_TYPE_LABELS[sortie.entree_type] ?? sortie.entree_type,
+      ]);
+    }
+    if (sortie.entree_numero_dossier) {
+      entreeRows.push(["N° de dossier", sortie.entree_numero_dossier]);
+    }
+    entreeRows.push(
+      ["Date", formatDate(sortie.entree_date_plainte)],
+      ["Infraction", sortie.entree_infraction || "—"],
+      ["Mise en cause (MC)", sortie.entree_mise_en_cause || "—"],
+    );
+    if (sortie.entree_partie_civile) {
+      entreeRows.push(["Partie civile (PC)", sortie.entree_partie_civile]);
+    }
+    entreeRows.push(["OPJ", entreeOpjName || "—"]);
+    report.section("Plainte ENTRÉE associée").rows(entreeRows);
+
+    const sortieRows: PdfRow[] = [
+      ["Nature", PLAINTE_SORTIE_NATURE_LABELS[sortie.nature] ?? sortie.nature],
+      ["Numéro", sortie.numero],
+      ["Date", formatDate(sortie.date_sortie)],
+      ["N° TTR", sortie.numero_ttr || "—"],
+      ["Nom du Substitut", sortie.nom_substitut || "—"],
+    ];
+    if (sortie.date_deferrement) {
+      sortieRows.push(["Date du déferrement", formatDate(sortie.date_deferrement)]);
+    }
+    report.section("Sortie").rows(sortieRows);
+
+    if (sortie.observation) {
+      report.labeledText("Observation", sortie.observation);
+    }
+    if (sortie.agent_prenoms || sortie.agent_nom || sortie.agent_username) {
+      const agent =
+        [sortie.agent_prenoms, sortie.agent_nom].filter(Boolean).join(" ") ||
+        sortie.agent_username ||
+        "—";
+      report.rows([["Agent", agent]]);
+    }
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`plainte_sortie_${sortie.numero}_${sortie.id}.pdf`);
+  }
 }

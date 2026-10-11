@@ -7,7 +7,8 @@ import { getRassemblementById, deleteRassemblement } from "@/lib/api/rassembleme
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, FileDown } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import {
   RepartitionSecteurTable,
   type EditableRepartitionRow,
@@ -92,6 +93,10 @@ export function RassemblementJournalierDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/rassemblement-journalier/${item.id}/edit`)}>
               <Pencil className="h-4 w-4 mr-2" />
@@ -163,6 +168,60 @@ export function RassemblementJournalierDetail() {
       />
     </div>
   );
+
+  function handleExportPDF() {
+    if (!item) return;
+
+    const report = new PdfReport("Fiche de Rassemblement Journalier");
+
+    report
+      .section("Informations générales")
+      .rows(
+        [
+          ["Date", new Date(item.date_rassemblement).toLocaleDateString("fr-FR")],
+          ["Heure", item.heure_rassemblement || "—"],
+          ["Brigade de service", item.brigade_service || "—"],
+          ["Officier de permanence", item.officier_permanence || "—"],
+          ["Inspecteur de permanence", item.inspecteur_permanence || "—"],
+          ["Chef de poste", item.chef_poste || "—"],
+        ],
+        80,
+      )
+      .section("Situation de prise d'arme")
+      .rows([
+        ["Effectif théorique", String(item.effectif_theorique)],
+        ["Présent", String(item.present)],
+        ["Absent", String(item.absent)],
+      ])
+      .labeledText("Motif d'absence", item.motif_absence || "—")
+      .labeledText("Instructions de l'autorité", item.instructions_autorite || "—");
+
+    if (repartitionRows.length > 0) {
+      report.section("Répartition par secteur").table(
+        [
+          "Service",
+          "Secteur",
+          "Effectif engagé",
+          "Chef d'élément avec contact",
+          "Contrôle avec contact",
+          "Matériels et armements",
+          "Missions",
+        ],
+        repartitionRows.map((r) => [
+          r.type === "diurne" ? "Diurne" : "Nocturne",
+          r.secteur || "—",
+          String(r.effectif_engage ?? "—"),
+          r.chef_element_contact || "—",
+          r.controle_contact || "—",
+          r.materiels_armements || "—",
+          r.missions || "—",
+        ]),
+        7,
+      );
+    }
+
+    report.save(`rassemblement_${item.date_rassemblement}_${item.id}.pdf`);
+  }
 }
 
 function DetailField({ label, value, multiline }: { label: string; value: string | null; multiline?: boolean }) {

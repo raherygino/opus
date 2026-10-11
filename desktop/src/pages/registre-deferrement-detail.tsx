@@ -20,7 +20,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { RegistreDeferrement, RegistreDeferrementAttachment } from "@/types";
 
 const PJ_DEFERREMENT_MODULE = "pj_deferrement";
@@ -99,12 +101,22 @@ export function RegistreDeferrementDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire — Registre de déferrement</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/registre-deferrement/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/registre-deferrement/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -215,4 +227,51 @@ export function RegistreDeferrementDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Déferrement");
+
+    report
+      .section("Enregistrement")
+      .rows(
+        [
+          ["Numéro", entry.numero],
+          ["Date et heure du déferrement", formatDateTime(entry.date_heure_deferrement)],
+        ],
+        90,
+      )
+      .section("Personne déférée")
+      .rows([
+        ["Nom et prénom", entry.personne_nom || "—"],
+        ["Date et lieu de naissance", entry.date_lieu_naissance || "—"],
+        ["Infraction reprochée", entry.infraction || "—"],
+      ])
+      .section("Autorité & escorte")
+      .rows([
+        ["Autorité judiciaire", entry.autorite || "—"],
+        ["Destination", entry.destination || "—"],
+        ["Éléments d'escorte", entry.escorte || "—"],
+      ])
+      .section("Suite & dossier rattaché")
+      .rows([
+        ["Suite donnée", entry.suite_donnee || "—"],
+        ["N° du dossier rattaché", entry.numero_dossier || "—"],
+      ]);
+
+    if (entry.observations) {
+      report.section("Observations").paragraph(entry.observations);
+    }
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`registre_deferrement_${entry.numero}_${entry.id}.pdf`);
+  }
 }

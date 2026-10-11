@@ -23,7 +23,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { DeclarationPerte, DeclarationPerteAttachment } from "@/types";
 import {
   DECLARATION_PERTE_MODULE,
@@ -106,16 +108,26 @@ export function DeclarationPerteDetail() {
             </p>
           </div>
         </div>
-        {canEdit && (
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            onClick={handleExportPDF}
             className="gap-2"
-            onClick={() => navigate(`${LIST_PATH}/${declaration.id}/edit`)}
           >
-            <Pencil className="h-4 w-4" />
-            Modifier
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(`${LIST_PATH}/${declaration.id}/edit`)}
+            >
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -244,4 +256,49 @@ export function DeclarationPerteDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!declaration) return;
+
+    const report = new PdfReport("Fiche de Déclaration de Perte");
+
+    report
+      .section("Déclaration")
+      .rows([
+        ["Date de déclaration", formatDate(declaration.date_declaration)],
+        ["Heure de déclaration", formatHeure(declaration.heure_declaration)],
+        ["Identité du déclarant", declaration.identite_declarant || "—"],
+        ["Nom de l'agent", declaration.nom_agent || "—"],
+      ])
+      .section("Objet perdu")
+      .rows([["Nature de l'objet", declaration.nature_objet || "—"]])
+      .labeledText("Description de l'objet", declaration.description_objet || "—")
+      .section("Perte présumée")
+      .rows([
+        ["Date de perte", formatDate(declaration.date_perte)],
+        ["Lieu de perte", declaration.lieu_perte || "—"],
+      ])
+      .section("Attestation")
+      .rows([
+        ["Numéro d'attestation", declaration.numero_attestation],
+        ["Enregistrée par", agent || "—"],
+        [
+          "Enregistrée le",
+          declaration.created_at
+            ? new Date(declaration.created_at.replace(" ", "T")).toLocaleString("fr-FR")
+            : "—",
+        ],
+      ]);
+
+    const attachments = declaration.attachments ?? [];
+    if (attachments.length > 0) {
+      report.section("Fichiers joints").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`declaration_perte_${declaration.numero_attestation}.pdf`);
+  }
 }

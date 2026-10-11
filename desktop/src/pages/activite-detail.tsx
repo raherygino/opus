@@ -26,7 +26,9 @@ import {
   Paperclip,
   Image as ImageIcon,
   MapPin,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { Activite, ActiviteAttachment } from "@/types";
 
 const SG_ACTIVITE_MODULE = "sg_activite";
@@ -119,6 +121,10 @@ export function ActiviteDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/activites/${entry.id}/edit`)}>
               <Pencil className="h-4 w-4 mr-2" />
@@ -353,4 +359,72 @@ export function ActiviteDetail() {
       />
     </div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche d'Activité");
+
+    report.section("Informations générales").rows([
+      ["Date", new Date(entry.date_activite).toLocaleDateString("fr-FR")],
+      ["Heure", entry.heure_activite || "—"],
+    ]);
+
+    const patrouilleRows: string[][] = [];
+    for (const type of PATROUILLE_TYPES) {
+      for (const mode of PATROUILLE_MODES) {
+        const itineraire = entry[patrouilleItineraireField(type.key, mode.key)];
+        if (itineraire !== null) {
+          patrouilleRows.push([
+            type.label,
+            mode.label,
+            itineraire || "Itinéraire non précisé",
+          ]);
+        }
+      }
+    }
+    if (patrouilleRows.length > 0) {
+      report
+        .section("Type de patrouille")
+        .table(["Patrouille", "Mode", "Itinéraire"], patrouilleRows);
+    } else {
+      report.section("Type de patrouille").paragraph("Aucune patrouille enregistrée.");
+    }
+
+    report
+      .section("Opération & faits")
+      .labeledText("Opération ciblée", entry.operation_ciblee || "—")
+      .labeledText("Faits constatés", entry.faits_constates || "—")
+      .section("Hiérarchie")
+      .labeledText("Compte-rendu hiérarchie", entry.compte_rendu_hierarchie || "—")
+      .labeledText("Conduite à tenir", entry.conduite_a_tenir || "—")
+      .section("Intervention")
+      .labeledText("Nature de l'intervention", entry.nature_intervention || "—")
+      .labeledText("Suites données", entry.suites_donnees || "—")
+      .rows([["Agent", agentName]]);
+
+    if (entry.latitude != null && entry.longitude != null) {
+      report
+        .section("Localisation GPS")
+        .rows([
+          ["Latitude", Number(entry.latitude).toFixed(6)],
+          ["Longitude", Number(entry.longitude).toFixed(6)],
+        ])
+        .link(
+          "Voir sur la carte (OpenStreetMap)",
+          `https://www.openstreetmap.org/?mlat=${entry.latitude}&mlon=${entry.longitude}#map=17/${entry.latitude}/${entry.longitude}`,
+        );
+    }
+
+    const attachments = entry.attachments ?? [];
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`activite_${entry.date_activite}_${entry.id}.pdf`);
+  }
 }

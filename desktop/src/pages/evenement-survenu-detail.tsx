@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
-import { Pencil, Trash2, ArrowLeft, Paperclip, Download, Eye, MapPin } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, Paperclip, Download, Eye, MapPin, FileDown } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { EvenementSurvenu, EvenementSurvenuAttachment } from "@/types";
 
 const SG_EVENEMENT_MODULE = "sg_evenement_survenu";
@@ -92,6 +93,10 @@ export function EvenementSurvenuDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/evenements-survenus/${item.id}/edit`)}>
               <Pencil className="h-4 w-4 mr-2" />
@@ -263,6 +268,61 @@ export function EvenementSurvenuDetail() {
       />
     </div>
   );
+
+  function handleExportPDF() {
+    if (!item) return;
+
+    const report = new PdfReport("Fiche d'Évènement Survenu");
+
+    report
+      .section("Informations générales")
+      .rows(
+        [
+          ["Date", new Date(item.date_evenement).toLocaleDateString("fr-FR")],
+          ["Heure", item.heure_evenement || "—"],
+          [
+            "Type d'événement",
+            EVENEMENT_TYPE_LABELS[item.type_evenement] ?? item.type_evenement,
+          ],
+        ],
+        70,
+      )
+      .labeledText("Lieu exact", item.lieu_exact || "—")
+      .section("Identités des parties impliquées")
+      .labeledText("Auteur(s) présumé(s)", item.auteurs_presumes || "—")
+      .labeledText("Victime(s)", item.victimes || "—")
+      .labeledText("Témoin(s)", item.temoins || "—")
+      .section("Mesures prises")
+      .labeledText("Mesures prises", item.mesures_prises || "—");
+
+    if (agentName) {
+      report.rows([["Agent", agentName]]);
+    }
+
+    if (item.latitude != null && item.longitude != null) {
+      report
+        .section("Localisation GPS")
+        .rows([
+          ["Latitude", Number(item.latitude).toFixed(6)],
+          ["Longitude", Number(item.longitude).toFixed(6)],
+        ])
+        .link(
+          "Voir sur la carte (OpenStreetMap)",
+          `https://www.openstreetmap.org/?mlat=${item.latitude}&mlon=${item.longitude}#map=17/${item.latitude}/${item.longitude}`,
+        );
+    }
+
+    const attachments = item.attachments ?? [];
+    if (attachments.length > 0) {
+      report.section("Fichiers joints").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`evenement_survenu_${item.date_evenement}_${item.id}.pdf`);
+  }
 }
 
 function DetailField({ label, value, multiline }: { label: string; value: string | null; multiline?: boolean }) {

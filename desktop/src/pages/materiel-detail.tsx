@@ -23,7 +23,9 @@ import {
   Calendar,
   ShieldCheck,
   CheckCircle2,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { AffectationMateriel } from "@/types";
 import { formatDate, formatHeure } from "@/pages/passation-list";
 import { MATERIELS_MODULE } from "@/pages/materiels-management";
@@ -189,6 +191,14 @@ export function MaterielDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
           {canEdit && !isReintegre && (
             <Button className="gap-2" onClick={openReintegration}>
               <ShieldCheck className="h-4 w-4" />
@@ -418,4 +428,49 @@ export function MaterielDetail() {
       )}
     </motion.div>
   );
+
+  async function handleExportPDF() {
+    if (!affectation) return;
+
+    const report = new PdfReport("Fiche d'Affectation de Matériel");
+
+    report
+      .section("Perception")
+      .rows([
+        ["Date de la perception", formatDate(affectation.date_perception)],
+        ["Heure de la perception", formatHeure(affectation.heure_perception)],
+      ], 80)
+      .labeledText("Observations", affectation.observations || "—")
+      .section("Agent utilisateur")
+      .rows([
+        ["IM", affectation.agent_im || "—"],
+        ["Grade", affectation.agent_grade || "—"],
+        ["Nom complet", affectation.agent_nom || "—"],
+        ["Identité vérifiée", affectation.agent_verifie ? "Oui" : "Non"],
+      ]);
+
+    if (affectation.signature_svg) {
+      await report.addSvg(affectation.signature_svg, "Signature de l'agent", 60);
+    }
+
+    if (lignes.length > 0) {
+      report.section("Matériels").table(
+        ["Type de matériel", "État à l'emport", "État à la réintégration"],
+        lignes.map((l) => [
+          l.type_materiel_nom || "—",
+          l.etat_emport || "—",
+          l.etat_reintegration || "—",
+        ]),
+      );
+    }
+
+    if (isReintegre) {
+      report.section("Réintégration").rows([
+        ["Date de la réintégration", formatDate(affectation.date_reintegration)],
+        ["Heure de la réintégration", formatHeure(affectation.heure_reintegration)],
+      ], 80);
+    }
+
+    report.save(`affectation_materiel_${affectation.date_perception}_${affectation.id}.pdf`);
+  }
 }

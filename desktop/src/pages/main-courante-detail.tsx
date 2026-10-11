@@ -20,7 +20,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { MainCourante, MainCouranteAttachment, MainCouranteOrigine } from "@/types";
 import {
   listPathForOrigine,
@@ -121,16 +123,26 @@ export function MainCouranteDetail() {
             </p>
           </div>
         </div>
-        {canEdit && (
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            onClick={handleExportPDF}
             className="gap-2"
-            onClick={() => navigate(`${listPath}/${entry.id}/edit`)}
           >
-            <Pencil className="h-4 w-4" />
-            Modifier
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(`${listPath}/${entry.id}/edit`)}
+            >
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -221,4 +233,38 @@ export function MainCouranteDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Main Courante");
+
+    report
+      .section("Informations de l'événement")
+      .rows([
+        ["Période (Date)", formatDate(entry.date_evenement)],
+        ["Heure précise", formatHeure(entry.heure_evenement)],
+        ["Catégorie", entry.categorie],
+        ["Origine", entry.origine === "Poste" ? "Poste" : "Secrétariat"],
+        ["Agent", agent || "—"],
+        [
+          "Enregistrée le",
+          entry.created_at
+            ? new Date(entry.created_at.replace(" ", "T")).toLocaleString("fr-FR")
+            : "—",
+        ],
+      ])
+      .labeledText("Description des faits", entry.description || "—");
+
+    const attachments = entry.attachments ?? [];
+    if (attachments.length > 0) {
+      report.section("Fichiers joints").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`main_courante_${entry.date_evenement}_${entry.id}.pdf`);
+  }
 }

@@ -18,7 +18,9 @@ import {
   Pencil,
   Camera,
   ImageIcon,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type {
   PersonneRecherchee,
   PersonneRechercheePhoto,
@@ -95,12 +97,22 @@ export function PersonneRechercheeDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/personne-recherchee/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/personne-recherchee/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -179,4 +191,31 @@ export function PersonneRechercheeDetail() {
       />
     </motion.div>
   );
+
+  async function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Personne Recherchée");
+
+    report
+      .section("Identité")
+      .rows([
+        ["Nom", entry.nom || "—"],
+        ["Adresse", entry.adresse || "—"],
+      ])
+      .section("Motif")
+      .paragraph(entry.motif || "—");
+
+    if (photos.length > 0) {
+      report.section("Photos");
+      await report.addPhotoGrid(
+        photos.map((p) => ({
+          url: getPersonneRechercheePhotoDownloadUrl(entry.id, p.id),
+          caption: p.caption ?? p.original_filename,
+        })),
+      );
+    }
+
+    report.save(`personne_recherchee_${entry.id}.pdf`);
+  }
 }

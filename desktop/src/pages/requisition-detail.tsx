@@ -21,7 +21,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import type { Requisition, RequisitionAttachment } from "@/types";
 
 const PJ_REQUISITION_MODULE = "pj_requisition";
@@ -99,12 +101,22 @@ export function RequisitionDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/requisition/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/requisition/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -186,4 +198,36 @@ export function RequisitionDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Réquisition");
+
+    report
+      .section("Réquisition")
+      .rows([
+        ["Type", REQUISITION_TYPE_LABELS[entry.type] ?? entry.type],
+        ["Numéro", entry.numero],
+        ["Date", formatDate(entry.date_requisition)],
+      ])
+      .section("Informations judiciaires")
+      .rows([
+        ["N° TTR", entry.numero_ttr || "—"],
+        ["Nom du Substitut", entry.nom_substitut || "—"],
+        ["Affaire", entry.affaire || "—"],
+        ["Numéro du dossier", entry.numero_dossier || "—"],
+        ["OPJ", entry.opj || "—"],
+      ]);
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`requisition_${entry.numero}_${entry.id}.pdf`);
+  }
 }

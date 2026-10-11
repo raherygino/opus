@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Pencil, Trash2, ArrowLeft, Loader2 } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, Loader2, FileDown } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import {
   EffectifEngageTable,
   type EditableEffectifRow,
@@ -103,6 +104,10 @@ export function DispositifExceptionnelDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/dispositifs-exceptionnels/${item.id}/edit`)}>
               <Pencil className="h-4 w-4 mr-2" />
@@ -164,6 +169,46 @@ export function DispositifExceptionnelDetail() {
       />
     </div>
   );
+
+  function handleExportPDF() {
+    if (!item) return;
+
+    const report = new PdfReport("Fiche de Dispositif Exceptionnel");
+
+    report.section("Informations générales").rows(
+      [
+        ["Nature de l'évènement", item.nature_evenement || "—"],
+        [
+          "Période",
+          `Du ${new Date(item.date_debut).toLocaleDateString("fr-FR")} au ${new Date(item.date_fin).toLocaleDateString("fr-FR")}`,
+        ],
+        ["Agent", agentName],
+      ],
+      70,
+    );
+
+    if (effectifRows.length > 0) {
+      report.section("Effectif engagé").table(
+        [
+          "Secteur",
+          "Chef d'élément avec contact",
+          "Contrôle avec contact",
+          "Matériels et armements",
+          "Missions",
+        ],
+        effectifRows.map((r) => [
+          r.secteur || "—",
+          r.chef_element_contact || "—",
+          r.controle_contact || "—",
+          r.materiels_armements || "—",
+          r.missions || "—",
+        ]),
+        8,
+      );
+    }
+
+    report.save(`dispositif_exceptionnel_${item.id}.pdf`);
+  }
 }
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {

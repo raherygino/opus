@@ -36,11 +36,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Personnel, PersonnelAttachment, Mouvement, Comportement } from "@/types";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import logoPn from "@/assets/img/logo-pn.png";
-import logoCsp from "@/assets/img/logo-csp.png";
-import logoOpus from "@/assets/img/logo-opus.png";
+import { PdfReport } from "@/lib/pdf-report";
 import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog";
 import { strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
 import { savePersonnelSignatureSvg, uploadPersonnelPhoto, generateThumbnail, cropFileToSquare, deletePersonnelPhoto } from "@/lib/api/personnel";
@@ -656,63 +652,9 @@ export function PersonnelDetail() {
   async function handleExportPDF() {
     if (!person) return;
 
-    const doc = new jsPDF();
-    const pageWidth = (doc as unknown as { getPageWidth: () => number }).getPageWidth();
-    const pageHeight = (doc as unknown as { getPageHeight: () => number }).getPageHeight();
+    const report = new PdfReport("Fiche Personnel");
 
-    // Logos - top left (PN) and top right (CSP)
-    const logoSize = 22;
-    const logoY = 8;
-    try {
-      doc.addImage(logoPn, "PNG", 14, logoY, logoSize, logoSize);
-      doc.addImage(logoCsp, "PNG", pageWidth - 14 - logoSize, logoY, logoSize, logoSize);
-    } catch {
-      // Images may fail to load in some environments
-    }
-
-    // Header text (same level as logos)
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Fiche Personnel", pageWidth / 2, logoY + 8, { align: "center" });
-
-    // Date (same level as logos, below the title)
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      `Généré le ${new Date().toLocaleDateString("fr-FR")}`,
-      pageWidth / 2,
-      logoY + 16,
-      { align: "center" },
-    );
-
-    // Separator line: green | white | red (Senegal flag colors) with thin black border
-    const lineHeight = 2;
-    const lineY = logoY + logoSize + 8;
-    const lineXStart = 14;
-    const lineXEnd = pageWidth - 14;
-    const lineThird = (lineXEnd - lineXStart) / 3;
-
-    // Black border
-    doc.setFillColor(0, 0, 0);
-    doc.rect(lineXStart, lineY, lineXEnd - lineXStart, lineHeight, "F");
-
-    // Green segment
-    doc.setFillColor(0, 150, 80);
-    doc.rect(lineXStart + 0.3, lineY + 0.3, lineThird - 0.6, lineHeight - 0.6, "F");
-    // White segment
-    doc.setFillColor(255, 255, 255);
-    doc.rect(lineXStart + lineThird + 0.3, lineY + 0.3, lineThird - 0.6, lineHeight - 0.6, "F");
-    // Red segment
-    doc.setFillColor(220, 40, 40);
-    doc.rect(lineXStart + lineThird * 2 + 0.3, lineY + 0.3, lineThird - 0.6, lineHeight - 0.6, "F");
-
-    // Personnel info
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    const infoTitleY = lineY + lineHeight + 14;
-    doc.text("Informations personnelles", 14, infoTitleY);
-
-    const infoLines: [string, string][] = [
+    report.section("Informations personnelles").rows([
       ["IM", person.im],
       ["Nom", person.lastname],
       ["Prénoms", person.firstname],
@@ -721,147 +663,46 @@ export function PersonnelDetail() {
       ["Téléphone", person.phone || "—"],
       ["Adresse", person.address || "—"],
       ["Statut", person.status],
-    ];
-
-    doc.setFontSize(10);
-    let yPos = lineY + lineHeight + 22;
-    for (const [label, value] of infoLines) {
-      doc.setFont("helvetica", "bold");
-      doc.text(`${label} :`, 14, yPos);
-      doc.setFont("helvetica", "normal");
-      doc.text(value, 60, yPos);
-      yPos += 7;
-    }
+    ]);
 
     // Photo (right of "Informations personnelles")
-    const photoBoxSize = 30;
-    const photoBoxX = pageWidth - 14 - photoBoxSize;
-    const photoBoxY = infoTitleY - 4;
+    await report.addTopRightPhoto(
+      person.photo ? getPersonnelPhotoUrl(person.id) : null,
+    );
 
-    if (person.photo) {
-      try {
-        const photoUrl = getPersonnelPhotoUrl(person.id);
-        const response = await fetch(photoUrl);
-        if (response.ok) {
-          const blob = await response.blob();
-          const reader = new FileReader();
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-          doc.addImage(dataUrl, "JPEG", photoBoxX, photoBoxY, photoBoxSize, photoBoxSize);
-        } else {
-          throw new Error("Photo not found");
-        }
-      } catch {
-        // Draw placeholder if photo fails to load
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(0.5);
-        doc.rect(photoBoxX, photoBoxY, photoBoxSize, photoBoxSize);
-      }
-    } else {
-      // No photo: draw bordered square
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.rect(photoBoxX, photoBoxY, photoBoxSize, photoBoxSize);
-    }
-
-    // Mouvements history
     if (mouvements.length > 0) {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Historique des mouvements", 14, yPos + 6);
-
-      autoTable(doc, {
-        startY: yPos + 10,
-        theme: "striped",
-        head: [["Type", "Compté du", "Jours", "Date retour", "Retour"]],
-        body: mouvements.map((m) => [
+      report.section("Historique des mouvements").table(
+        ["Type", "Compté du", "Jours", "Date retour", "Retour"],
+        mouvements.map((m) => [
           m.type_mouvement,
           m.date_depart || "—",
           m.days != null ? String(m.days) : "—",
           m.date_retour || "—",
           m.retour,
         ]),
-        headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255] },
-        styles: { fontSize: 9 },
-      });
+      );
     }
 
-    // Comportements history
     if (comportements.length > 0) {
-      const afterMouvements = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY ?? yPos;
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Historique des comportements", 14, afterMouvements + 14);
-
-      autoTable(doc, {
-        startY: afterMouvements + 18,
-        theme: "striped",
-        head: [["Type", "Date", "Motif", "Décision"]],
-        body: comportements.map((c) => [
+      report.section("Historique des comportements").table(
+        ["Type", "Date", "Motif", "Décision"],
+        comportements.map((c) => [
           c.type,
           c.date_comportement,
           c.motif,
           c.decision || "—",
         ]),
-        headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255] },
-        styles: { fontSize: 9 },
-      });
-    }
-
-    // Attachments
-    if (attachments.length > 0) {
-      const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Pièces jointes", 14, finalY + 14);
-
-      autoTable(doc, {
-        startY: finalY + 18,
-        theme: "striped",
-        head: [["Titre", "Fichier"]],
-        body: attachments.map((a) => [a.title, a.original_filename]),
-        headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255] },
-        styles: { fontSize: 10 },
-      });
-    }
-
-    // Footer with OPUS logo
-    const opusLogoSize = 14;
-    const footerTextY = pageHeight - 6;
-    const footerLogoY = footerTextY - opusLogoSize - 4;
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      try {
-        doc.addImage(
-          logoOpus,
-          "PNG",
-          pageWidth / 2 - opusLogoSize / 2,
-          footerLogoY,
-          opusLogoSize,
-          opusLogoSize,
-        );
-      } catch {
-        // Images may fail to load
-      }
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(150);
-      doc.text(
-        `OPUS — Page ${i}/${pageCount}`,
-        pageWidth / 2,
-        footerTextY,
-        { align: "center" },
       );
     }
 
-    doc.save(
-      `personnel_${person.im}_${person.lastname}.pdf`,
-    );
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`personnel_${person.im}_${person.lastname}.pdf`);
   }
 }

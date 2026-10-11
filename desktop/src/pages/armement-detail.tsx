@@ -31,11 +31,7 @@ import {
   PenTool,
   MapPin,
 } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import logoPn from "@/assets/img/logo-pn.png";
-import logoCsp from "@/assets/img/logo-csp.png";
-import logoOpus from "@/assets/img/logo-opus.png";
+import { PdfReport, type PdfRow } from "@/lib/pdf-report";
 import type { Armement, ArmementAttachment } from "@/types";
 import type { ReintegrationPayload } from "@/lib/api/armement";
 import { formatDate, formatHeure } from "@/pages/passation-list";
@@ -428,93 +424,35 @@ export function ArmementDetail() {
   async function handleExportPDF() {
     if (!armement) return;
 
-    const doc = new jsPDF();
-    const pageWidth = (doc as unknown as { getPageWidth: () => number }).getPageWidth();
-    const pageHeight = (doc as unknown as { getPageHeight: () => number }).getPageHeight();
+    const report = new PdfReport("Fiche d'Armement");
 
-    // Logos - top left (PN) and top right (CSP)
-    const logoSize = 22;
-    const logoY = 8;
-    try {
-      doc.addImage(logoPn, "PNG", 14, logoY, logoSize, logoSize);
-      doc.addImage(logoCsp, "PNG", pageWidth - 14 - logoSize, logoY, logoSize, logoSize);
-    } catch {
-      // Images may fail to load in some environments
-    }
-
-    // Header text
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Fiche d'Armement", pageWidth / 2, logoY + 8, { align: "center" });
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      `Généré le ${new Date().toLocaleDateString("fr-FR")}`,
-      pageWidth / 2,
-      logoY + 16,
-      { align: "center" },
-    );
-
-    // Separator line: green | white | red (Senegal flag colors)
-    const lineHeight = 2;
-    const lineY = logoY + logoSize + 8;
-    const lineXStart = 14;
-    const lineXEnd = pageWidth - 14;
-    const lineThird = (lineXEnd - lineXStart) / 3;
-
-    doc.setFillColor(0, 0, 0);
-    doc.rect(lineXStart, lineY, lineXEnd - lineXStart, lineHeight, "F");
-    doc.setFillColor(0, 150, 80);
-    doc.rect(lineXStart + 0.3, lineY + 0.3, lineThird - 0.6, lineHeight - 0.6, "F");
-    doc.setFillColor(255, 255, 255);
-    doc.rect(lineXStart + lineThird + 0.3, lineY + 0.3, lineThird - 0.6, lineHeight - 0.6, "F");
-    doc.setFillColor(220, 40, 40);
-    doc.rect(lineXStart + lineThird * 2 + 0.3, lineY + 0.3, lineThird - 0.6, lineHeight - 0.6, "F");
-
-    const printSection = (title: string, lines: [string, string][], startY: number): number => {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text(title, 14, startY);
-      doc.setFontSize(10);
-      let y = startY + 8;
-      for (const [label, value] of lines) {
-        doc.setFont("helvetica", "bold");
-        doc.text(`${label} :`, 14, y);
-        doc.setFont("helvetica", "normal");
-        doc.text(value, 70, y);
-        y += 7;
-      }
-      return y + 4;
-    };
-
-    let yPos = printSection(
-      "Informations de la perception",
-      [
-        ["Date", formatDate(armement.date_perception)],
-        ["Heure", formatHeure(armement.heure_perception)],
-        ["Type d'arme", armement.type_arme || "—"],
-        ["Matricule", armement.matricule_arme || "—"],
-        ["Munitions", armement.munitions !== null ? String(armement.munitions) : "—"],
-        ["Secteur / Mission", armement.secteur_mission || "—"],
-        ["État à la perception", armement.etat_perception || "—"],
-      ],
-      lineY + lineHeight + 14,
-    );
-
-    yPos = printSection(
-      "Agent preneur",
-      [
-        ["IM", armement.agent_preneur_im || "—"],
-        ["Grade", armement.agent_preneur_grade || "—"],
-        ["Nom complet", armement.agent_preneur_nom || "—"],
-        ["Identité vérifiée", armement.agent_verifie ? "Oui" : "Non"],
-      ],
-      yPos,
-    );
+    report
+      .section("Informations de la perception")
+      .rows(
+        [
+          ["Date", formatDate(armement.date_perception)],
+          ["Heure", formatHeure(armement.heure_perception)],
+          ["Type d'arme", armement.type_arme || "—"],
+          ["Matricule", armement.matricule_arme || "—"],
+          ["Munitions", armement.munitions !== null ? String(armement.munitions) : "—"],
+          ["Secteur / Mission", armement.secteur_mission || "—"],
+          ["État à la perception", armement.etat_perception || "—"],
+        ],
+        70,
+      )
+      .section("Agent preneur")
+      .rows(
+        [
+          ["IM", armement.agent_preneur_im || "—"],
+          ["Grade", armement.agent_preneur_grade || "—"],
+          ["Nom complet", armement.agent_preneur_nom || "—"],
+          ["Identité vérifiée", armement.agent_verifie ? "Oui" : "Non"],
+        ],
+        70,
+      );
 
     if (reintegree) {
-      const reintLines: [string, string][] = [
+      const reintLines: PdfRow[] = [
         ["Date", formatDate(armement.date_reintegration)],
         ["Heure", formatHeure(armement.heure_reintegration)],
         ["État à la réintégration", armement.etat_reintegration || "—"],
@@ -530,113 +468,40 @@ export function ArmementDetail() {
         reintLines.push(["Latitude (réintégration)", String(armement.reintegration_latitude)]);
         reintLines.push(["Longitude (réintégration)", String(armement.reintegration_longitude)]);
       }
-      yPos = printSection("Réintégration", reintLines, yPos);
+      report.section("Réintégration").rows(reintLines, 70);
     } else {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Réintégration", 14, yPos);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text("Arme en cours de perception (non réintégrée).", 14, yPos + 8);
-      yPos += 18;
+      report
+        .section("Réintégration")
+        .paragraph("Arme en cours de perception (non réintégrée).");
     }
 
-    // Localisation GPS
     if (armement.latitude && armement.longitude) {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Localisation GPS", 14, yPos);
-      yPos += 6;
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Latitude: ${armement.latitude}`, 14, yPos);
-      yPos += 5;
-      doc.text(`Longitude: ${armement.longitude}`, 14, yPos);
-      yPos += 5;
-      doc.setTextColor(0, 0, 200);
-      doc.textWithLink("Voir sur la carte (OpenStreetMap)", 14, yPos, {
-        url: `https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}`,
-      });
-      doc.setTextColor(0, 0, 0);
-      yPos += 8;
+      report
+        .section("Localisation GPS")
+        .rows([
+          ["Latitude", String(armement.latitude)],
+          ["Longitude", String(armement.longitude)],
+        ])
+        .link(
+          "Voir sur la carte (OpenStreetMap)",
+          `https://www.openstreetmap.org/?mlat=${armement.latitude}&mlon=${armement.longitude}#map=17/${armement.latitude}/${armement.longitude}`,
+        );
     }
 
     // Signature de l'agent (SVG → PNG via canvas, then embedded in the PDF)
     if (armement.signature_svg) {
-      try {
-        const svgBlob = new Blob([armement.signature_svg], { type: "image/svg+xml" });
-        const svgUrl = URL.createObjectURL(svgBlob);
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        const signatureImg = await new Promise<HTMLImageElement | null>((resolve) => {
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
-          img.src = svgUrl;
-        });
-        URL.revokeObjectURL(svgUrl);
-
-        if (signatureImg) {
-          const sigW = 120;
-          const sigH = (signatureImg.height / signatureImg.width) * sigW || 40;
-          doc.setFontSize(13);
-          doc.setFont("helvetica", "bold");
-          doc.text("Signature de l'agent", 14, yPos);
-          yPos += 6;
-          doc.addImage(signatureImg, "PNG", 14, yPos, sigW, sigH);
-          yPos += sigH + 8;
-        }
-      } catch {
-        // Signature conversion may fail in some environments — skip silently
-      }
+      await report.addSvg(armement.signature_svg, "Signature de l'agent", 120);
     }
 
-    // Pièces jointes
     const attachments = armement.attachments ?? [];
     if (attachments.length > 0) {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Pièces jointes", 14, yPos + 4);
-
-      autoTable(doc, {
-        startY: yPos + 8,
-        theme: "striped",
-        head: [["Titre", "Fichier"]],
-        body: attachments.map((a) => [a.title, a.original_filename]),
-        headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255] },
-        styles: { fontSize: 10 },
-      });
-    }
-
-    // Footer with OPUS logo
-    const opusLogoSize = 14;
-    const footerTextY = pageHeight - 6;
-    const footerLogoY = footerTextY - opusLogoSize - 4;
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      try {
-        doc.addImage(
-          logoOpus,
-          "PNG",
-          pageWidth / 2 - opusLogoSize / 2,
-          footerLogoY,
-          opusLogoSize,
-          opusLogoSize,
-        );
-      } catch {
-        // Images may fail to load
-      }
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(150);
-      doc.text(
-        `OPUS — Page ${i}/${pageCount}`,
-        pageWidth / 2,
-        footerTextY,
-        { align: "center" },
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
       );
     }
 
-    doc.save(`armement_${armement.date_perception}_${armement.id}.pdf`);
+    report.save(`armement_${armement.date_perception}_${armement.id}.pdf`);
   }
 }

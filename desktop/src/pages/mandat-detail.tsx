@@ -20,7 +20,9 @@ import {
   Paperclip,
   Download,
   Eye,
+  FileDown,
 } from "lucide-react";
+import { PdfReport } from "@/lib/pdf-report";
 import { getMandatTypeLabel } from "@/types";
 import type { Mandat, MandatAttachment } from "@/types";
 
@@ -100,12 +102,22 @@ export function MandatDetail() {
             <p className="text-sm text-muted-foreground mt-1">Police Judiciaire</p>
           </div>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate(`/pj/mandat/${entry.id}/edit`)} className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Modifier
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate(`/pj/mandat/${entry.id}/edit`)} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Modifier
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -224,4 +236,49 @@ export function MandatDetail() {
       />
     </motion.div>
   );
+
+  function handleExportPDF() {
+    if (!entry) return;
+
+    const report = new PdfReport("Fiche de Mandat");
+
+    report
+      .section("Mandat")
+      .rows([
+        ["Objet du mandat", getMandatTypeLabel(entry.type)],
+        ["Numéro", entry.numero],
+      ])
+      .section("Autorité")
+      .rows([["Autorité ayant délivré le mandat", entry.autorite || "—"]], 90)
+      .section("Personne concernée")
+      .rows([
+        ["Nom et prénom", entry.personne_nom || "—"],
+        ["Date et lieu de naissance", entry.date_lieu_naissance || "—"],
+      ])
+      .section("Informations judiciaires")
+      .rows([
+        ["Motif du mandat", entry.motif || "—"],
+        ["Qualification de l'infraction", entry.qualification_infraction || "—"],
+      ])
+      .section("Exécution")
+      .rows([
+        ["Nom de l'OPJ chargé de l'exécution", entry.opj_execution || "—"],
+        ["Date et heure d'exécution", formatDateTime(entry.date_heure_execution)],
+        ["Lieu d'exécution", entry.lieu_execution || "—"],
+      ]);
+
+    if (entry.observations) {
+      report.section("Observations").paragraph(entry.observations);
+    }
+
+    if (attachments.length > 0) {
+      report.section("Pièces jointes").table(
+        ["Titre", "Fichier"],
+        attachments.map((a) => [a.title, a.original_filename]),
+        10,
+      );
+    }
+
+    report.save(`mandat_${entry.numero}_${entry.id}.pdf`);
+  }
 }
