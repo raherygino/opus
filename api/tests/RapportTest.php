@@ -208,6 +208,32 @@ check(section($monthly, 'poste', 'affectation_materiel')['created'] === 1, 'mont
 check(section($monthly, 'poste', 'materiel_roulant')['created'] === 1, 'monthly: matériel roulant created=1');
 check($monthly['totals']['created'] === 20 && $monthly['totals']['total'] === 20, 'monthly: totals 20/0/20');
 
+// === Custom range (2026-09-22 → 2026-09-24) ====================================
+$custom = RapportStats::generate('custom', '2026-09-22', '2026-09-24');
+
+check($custom['type'] === 'custom', 'custom: type = custom');
+check($custom['type_label'] === 'Personnalisé', 'custom: type_label = Personnalisé');
+check($custom['period_start'] === '2026-09-22' && $custom['period_end'] === '2026-09-24', 'custom: period = 22..24 sept');
+
+$s = section($custom, 'secretariat', 'correspondance');
+check($s['created'] === 1 && $s['updated'] === 1 && $s['total'] === 2, 'custom: correspondance created=1 updated=1');
+check(section($custom, 'secretariat', 'personnel')['created'] === 1, 'custom: personnel created=1');
+check(section($custom, 'secretariat', 'personnel')['updated'] === 1, 'custom: personnel updated=1');
+check(section($custom, 'secretariat', 'comportement_personnel')['created'] === 1, 'custom: comportement created=1');
+check(section($custom, 'secretariat', 'mouvement_personnel')['total'] === 0, 'custom: mouvement = 0');
+check(section($custom, 'secretariat', 'declaration_perte')['total'] === 0, 'custom: declaration = 0');
+check(section($custom, 'poste', 'passation')['created'] === 1, 'custom: passation created=1');
+check($custom['totals']['created'] === 8 && $custom['totals']['updated'] === 2 && $custom['totals']['total'] === 10, 'custom: totals 8/2/10');
+
+// Reversed bounds are normalized to the same range.
+$customSwap = RapportStats::generate('custom', '2026-09-24', '2026-09-22');
+check($customSwap['period_start'] === '2026-09-22' && $customSwap['period_end'] === '2026-09-24', 'custom: reversed bounds normalized');
+check($customSwap['totals']['total'] === 10, 'custom: reversed bounds give same counts');
+
+// A single-day custom range behaves like a daily report.
+$customDay = RapportStats::generate('custom', '2026-09-23', '2026-09-23');
+check($customDay['totals']['total'] === $daily['totals']['total'], 'custom: single day = daily total');
+
 // === Empty period ==============================================================
 $empty = RapportStats::generate('daily', '2030-01-15');
 check($empty['totals']['total'] === 0, 'empty period: total = 0');

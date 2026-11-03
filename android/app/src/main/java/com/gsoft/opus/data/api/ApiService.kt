@@ -130,8 +130,15 @@ import com.gsoft.opus.data.api.dto.QrAuthStatusResponseDto
 import com.gsoft.opus.data.api.dto.RefreshResponseDto
 import com.gsoft.opus.data.api.dto.RefreshTokenRequestDto
 import com.gsoft.opus.data.api.dto.ReintegrationRequest
+import com.gsoft.opus.data.api.dto.RoleCreateRequest
+import com.gsoft.opus.data.api.dto.RoleDto
+import com.gsoft.opus.data.api.dto.RolePermissionsUpdateRequest
+import com.gsoft.opus.data.api.dto.RoleUpdateRequest
+import com.gsoft.opus.data.api.dto.PermissionDto
 import com.gsoft.opus.data.api.dto.UpdateProfileRequest
+import com.gsoft.opus.data.api.dto.UserCreateRequest
 import com.gsoft.opus.data.api.dto.UserDto
+import com.gsoft.opus.data.api.dto.UserUpdateRequest
 import com.gsoft.opus.data.api.dto.VerifyCodeSecretRequest
 import com.gsoft.opus.data.api.dto.VerifyIdentityRequest
 import com.gsoft.opus.data.api.dto.VerifiedIdentityDto
@@ -1650,4 +1657,48 @@ interface ApiService {
         @Path("id") id: Int,
         @Path("attachId") attachId: Int
     ): Response<ApiResponse<Unit>>
+
+    // ─── Users (Super Admin) ────────────────────────────────────────
+
+    @GET("api/users")
+    suspend fun getUserList(): Response<ApiResponse<List<UserDto>>>
+
+    @GET("api/users/{id}")
+    suspend fun getUser(@Path("id") id: Int): Response<ApiResponse<UserDto>>
+
+    @POST("api/users")
+    suspend fun createUser(@Body request: UserCreateRequest): Response<ApiResponse<UserDto>>
+
+    @PUT("api/users/{id}")
+    suspend fun updateUser(@Path("id") id: Int, @Body request: UserUpdateRequest): Response<ApiResponse<UserDto>>
+
+    @DELETE("api/users/{id}")
+    suspend fun deleteUser(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    /** Personnel records not yet linked to a user account (create form). */
+    @GET("api/personnel/available")
+    suspend fun getAvailablePersonnel(): Response<ApiResponse<List<PersonnelDto>>>
+
+    // ─── Roles (Super Admin) ────────────────────────────────────────
+
+    @GET("api/roles")
+    suspend fun getRoleList(): Response<ApiResponse<List<RoleDto>>>
+
+    @GET("api/roles/{id}")
+    suspend fun getRole(@Path("id") id: Int): Response<ApiResponse<RoleDto>>
+
+    @POST("api/roles")
+    suspend fun createRole(@Body request: RoleCreateRequest): Response<ApiResponse<RoleDto>>
+
+    @PUT("api/roles/{id}")
+    suspend fun updateRole(@Path("id") id: Int, @Body request: RoleUpdateRequest): Response<ApiResponse<RoleDto>>
+
+    @DELETE("api/roles/{id}")
+    suspend fun deleteRole(@Path("id") id: Int): Response<ApiResponse<Nothing>>
+
+    @PUT("api/roles/{id}/permissions")
+    suspend fun updateRolePermissions(
+        @Path("id") id: Int,
+        @Body request: RolePermissionsUpdateRequest
+    ): Response<ApiResponse<List<PermissionDto>>>
 }

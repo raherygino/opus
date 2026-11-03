@@ -76,7 +76,7 @@ const DIVISION_MODULES: Record<string, string[]> = {
     "sedentaire_poste_materiel_roulant",
     "sedentaire_poste_situation_gav",
     "sedentaire_poste_main_courante",
-    "sedentaire_poste_renseignement",
+    //"sedentaire_poste_renseignement",
     "personnel",
   ],
   sg: [
@@ -149,7 +149,7 @@ function buildNavItems(user: User): NavItem[] {
       { icon: Car, label: "Matériel roulant", path: "/sedentaire/poste/materiel-roulant", module: "sedentaire_poste_materiel_roulant" },
       { icon: Columns4, label: "Situation GAV", path: "/sedentaire/poste/situation-gav", module: "sedentaire_poste_situation_gav" },
       { icon: BookOpenText, label: "Main courante", path: "/sedentaire/poste/main-courante", module: "sedentaire_poste_main_courante" },
-      { icon: MessageCircleMore, label: "Renseignement", path: "/sedentaire/poste/envoi-renseignement", module: "sedentaire_poste_renseignement" },
+     /* { icon: MessageCircleMore, label: "Renseignement", path: "/sedentaire/poste/envoi-renseignement", module: "sedentaire_poste_renseignement" },*/
     ].filter((c) => hasVisibleNavItem(user, c));
 
     const hasSecretariat = secretariatChildren.length > 0;

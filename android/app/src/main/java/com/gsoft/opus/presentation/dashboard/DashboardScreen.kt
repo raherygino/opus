@@ -59,6 +59,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.hasPermission
+import com.gsoft.opus.core.userCanAccessDivision
 import com.gsoft.opus.domain.model.DashboardStats
 import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.presentation.home.HomeViewModel
@@ -77,6 +78,9 @@ fun DashboardScreen(
     onMaterielRoulantList: () -> Unit = {},
     onActivitesList: () -> Unit = {},
     onUtilisateurs: () -> Unit = {},
+    onSedDashboard: () -> Unit = {},
+    onSgDashboard: () -> Unit = {},
+    onPjDashboard: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val homeViewModel: HomeViewModel = hiltViewModel()
@@ -132,7 +136,13 @@ fun DashboardScreen(
                 )
 
                 if (isCommand) {
-                    QuickLinks()
+                    QuickLinks(
+                        user = state.user,
+                        onSedDashboard = onSedDashboard,
+                        onSgDashboard = onSgDashboard,
+                        onPjDashboard = onPjDashboard,
+                        onPersonnelList = onPersonnelList
+                    )
                 }
 
                 AccountInfo(state)
@@ -438,8 +448,51 @@ private fun StatCard(
     }
 }
 
+private data class QuickLink(
+    val icon: ImageVector,
+    val label: String,
+    val description: String,
+    val onClick: () -> Unit
+)
+
 @Composable
-private fun QuickLinks() {
+private fun QuickLinks(
+    user: User?,
+    onSedDashboard: () -> Unit,
+    onSgDashboard: () -> Unit,
+    onPjDashboard: () -> Unit,
+    onPersonnelList: () -> Unit
+) {
+    // Same visibility rule as the drawer: a division shortcut is only shown
+    // when the user can view at least one of that division's modules.
+    val links = listOfNotNull(
+        QuickLink(
+            icon = Icons.Outlined.Business,
+            label = "Division Sédentaire",
+            description = "Secrétariat & Chef de Poste",
+            onClick = onSedDashboard
+        ).takeIf { userCanAccessDivision(user, "sedentaire") },
+        QuickLink(
+            icon = Icons.Outlined.LocalPolice,
+            label = "Division SG",
+            description = "Patrouilles & Interventions",
+            onClick = onSgDashboard
+        ).takeIf { userCanAccessDivision(user, "sg") },
+        QuickLink(
+            icon = Icons.Outlined.Gavel,
+            label = "Division PJ",
+            description = "Enquêtes & Procédure",
+            onClick = onPjDashboard
+        ).takeIf { userCanAccessDivision(user, "pj") },
+        QuickLink(
+            icon = Icons.Outlined.People,
+            label = "Personnel",
+            description = "Gestion des effectifs",
+            onClick = onPersonnelList
+        ).takeIf { hasPermission(user, "personnel", PermissionAction.VIEW) }
+    )
+    if (links.isEmpty()) return
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -456,33 +509,20 @@ private fun QuickLinks() {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    QuickLinkItem(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Outlined.Business,
-                        label = "Division Sédentaire",
-                        description = "Secrétariat & Chef de Poste"
-                    )
-                    QuickLinkItem(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Outlined.LocalPolice,
-                        label = "Division SG",
-                        description = "Patrouilles & Interventions"
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    QuickLinkItem(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Outlined.Gavel,
-                        label = "Division PJ",
-                        description = "Enquêtes & Procédure"
-                    )
-                    QuickLinkItem(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Outlined.People,
-                        label = "Personnel",
-                        description = "Gestion des effectifs"
-                    )
+                links.chunked(2).forEach { rowItems ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        rowItems.forEach { link ->
+                            QuickLinkItem(
+                                modifier = Modifier.weight(1f),
+                                icon = link.icon,
+                                label = link.label,
+                                description = link.description,
+                                onClick = link.onClick
+                            )
+                        }
+                        // Keep the two-column grid when the last row is odd.
+                        if (rowItems.size == 1) Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -494,10 +534,11 @@ private fun QuickLinkItem(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     label: String,
-    description: String
+    description: String,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier.clickable { /* TODO: navigate */ },
+        modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

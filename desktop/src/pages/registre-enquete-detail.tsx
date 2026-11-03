@@ -22,6 +22,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import {
@@ -123,6 +124,14 @@ export function RegistreEnqueteDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button onClick={() => navigate(`/pj/registre-enquete/${entry.id}/edit`)} className="gap-2">
@@ -239,8 +248,8 @@ export function RegistreEnqueteDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche d'Enquête");
 
@@ -277,6 +286,24 @@ export function RegistreEnqueteDetail() {
       );
     }
 
-    report.save(`registre_enquete_${entry.numero}_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `registre_enquete_${entry!.numero}_${entry!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `registre_enquete_${entry!.numero}_${entry!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

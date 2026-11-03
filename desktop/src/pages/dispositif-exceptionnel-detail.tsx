@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Pencil, Trash2, ArrowLeft, Loader2, FileDown } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, Loader2, FileDown, FileText } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import {
   EffectifEngageTable,
@@ -108,6 +108,10 @@ export function DispositifExceptionnelDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button variant="outline" onClick={handleExportWord} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/dispositifs-exceptionnels/${item.id}/edit`)}>
               <Pencil className="h-4 w-4 mr-2" />
@@ -170,8 +174,8 @@ export function DispositifExceptionnelDetail() {
     </div>
   );
 
-  function handleExportPDF() {
-    if (!item) return;
+  function buildReport(): PdfReport | null {
+    if (!item) return null;
 
     const report = new PdfReport("Fiche de Dispositif Exceptionnel");
 
@@ -207,7 +211,21 @@ export function DispositifExceptionnelDetail() {
       );
     }
 
-    report.save(`dispositif_exceptionnel_${item.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(`dispositif_exceptionnel_${item!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`dispositif_exceptionnel_${item!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }
 

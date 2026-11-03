@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
-import { Pencil, Trash2, ArrowLeft, Paperclip, Download, Eye, MapPin, FileDown } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, Paperclip, Download, Eye, MapPin, FileDown, FileText } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { EvenementSurvenu, EvenementSurvenuAttachment } from "@/types";
 
@@ -96,6 +96,10 @@ export function EvenementSurvenuDetail() {
           <Button variant="outline" onClick={handleExportPDF} className="gap-2">
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button variant="outline" onClick={handleExportWord} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/evenements-survenus/${item.id}/edit`)}>
@@ -269,8 +273,8 @@ export function EvenementSurvenuDetail() {
     </div>
   );
 
-  function handleExportPDF() {
-    if (!item) return;
+  function buildReport(): PdfReport | null {
+    if (!item) return null;
 
     const report = new PdfReport("Fiche d'Évènement Survenu");
 
@@ -321,7 +325,25 @@ export function EvenementSurvenuDetail() {
       );
     }
 
-    report.save(`evenement_survenu_${item.date_evenement}_${item.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `evenement_survenu_${item!.date_evenement}_${item!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `evenement_survenu_${item!.date_evenement}_${item!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }
 

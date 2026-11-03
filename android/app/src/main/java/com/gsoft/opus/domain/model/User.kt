@@ -17,8 +17,16 @@ data class User(
     val im: String?,
     val phone: String?,
     val email: String?,
-    val address: String?
-)
+    val address: String?,
+    val lastLogin: String? = null,
+    val createdAt: String? = null,
+    /** Latest open mouvement type, or "En service" — user management only. */
+    val personnelStatus: String? = null
+) {
+    /** SUPER_ADMIN and STATION_ADMIN accounts are protected from admin actions. */
+    val isAdminRole: Boolean
+        get() = roleCode == "SUPER_ADMIN" || roleCode == "STATION_ADMIN"
+}
 
 data class Permission(
     val id: Int,

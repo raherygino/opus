@@ -23,8 +23,10 @@ import {
   Filter,
   X,
   FileDown,
+  FileText,
 } from "lucide-react";
 import type { AuditLog, AuditLogFilters } from "@/types";
+import type { DocxCellSpec } from "@/lib/docx-report";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -357,6 +359,56 @@ export function AuditLogPage() {
     }
   }
 
+  async function exportWord() {
+    if (logs.length === 0) return;
+    setExporting(true);
+    try {
+      const { titleBlock, dataTable, saveSimpleDocx } = await import(
+        "@/lib/docx-report"
+      );
+      const now = new Date().toLocaleString("fr-FR");
+
+      const info = [`Exporté le ${now}`, `Nombre d'entrées : ${logs.length}`];
+      if (hasActiveFilters) {
+        const activeFilters = Object.entries(filters)
+          .filter(([, v]) => v)
+          .map(([k, v]) => `${k}=${v}`)
+          .join(", ");
+        info.push(`Filtres : ${activeFilters}`);
+      }
+
+      await saveSimpleDocx({
+        title: "OPUS — Journal d'audit",
+        landscape: true,
+        filename: `audit-logs-${new Date().toISOString().slice(0, 10)}.docx`,
+        children: [
+          ...titleBlock("OPUS — Journal d'audit", info),
+          dataTable(
+            ["Date", "Utilisateur", "Action", "Module", "Description", "IP"],
+            logs.map((log) => [
+              new Date(log.created_at).toLocaleString("fr-FR"),
+              `${log.prenoms || ""} ${log.nom || ""}`.trim() || log.username || "—",
+              ACTION_LABELS[log.action] || log.action,
+              MODULE_LABELS[log.module] || log.module,
+              log.description || "—",
+              log.ip_address || "—",
+            ]),
+            {
+              fontSize: 7,
+              headFill: "6C63FF",
+              widthsMm: [35, 35, 30, 25, null, 25],
+            },
+          ),
+        ],
+      });
+      addNotification("success", "Export réussi", `${logs.length} entrées exportées en Word`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function exportSinglePdf(log: AuditLog) {
     try {
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -460,6 +512,98 @@ export function AuditLogPage() {
       addNotification("success", "Export réussi", "Entrée exportée en PDF");
     } catch {
       addNotification("error", "Erreur", "Échec de l'export PDF");
+    }
+  }
+
+  async function exportSingleWord(log: AuditLog) {
+    try {
+      const { titleBlock, dataTable, saveSimpleDocx } = await import(
+        "@/lib/docx-report"
+      );
+      const now = new Date().toLocaleString("fr-FR");
+
+      const children: import("docx").FileChild[] = [
+        ...titleBlock("OPUS — Détail du journal d'audit", [
+          `Exporté le ${now}`,
+        ]),
+        dataTable(
+          ["Champ", "Valeur"],
+          [
+            ["Date", new Date(log.created_at).toLocaleString("fr-FR")],
+            ["Utilisateur", `${log.prenoms || ""} ${log.nom || ""}`.trim() || log.username || "—"],
+            ["Nom d'utilisateur", log.username || "—"],
+            ["Action", ACTION_LABELS[log.action] || log.action],
+            ["Module", MODULE_LABELS[log.module] || log.module],
+            ["Entité ID", String(log.entity_id || "—")],
+            ["Description", log.description || "—"],
+            ["Adresse IP", log.ip_address || "—"],
+            ["User-Agent", log.user_agent || "—"],
+          ],
+          { fontSize: 9, headFill: "6C63FF", widthsMm: [50, null] },
+        ),
+      ];
+
+      // Values comparison table (old & new side by side, like the PDF export)
+      if (log.old_values || log.new_values) {
+        let oldObj: Record<string, unknown> | null = null;
+        let newObj: Record<string, unknown> | null = null;
+        try { oldObj = log.old_values ? JSON.parse(log.old_values) : null; } catch { oldObj = null; }
+        try { newObj = log.new_values ? JSON.parse(log.new_values) : null; } catch { newObj = null; }
+
+        if (
+          (oldObj && typeof oldObj === "object") ||
+          (newObj && typeof newObj === "object")
+        ) {
+          const diffEntries = getDiffEntries(oldObj, newObj);
+          const body: DocxCellSpec[][] = diffEntries.map((e) => {
+            const changed = e.status !== "unchanged";
+            return [
+              { text: e.key, bold: true, mono: true },
+              {
+                text: formatValue(e.oldValue),
+                color: "DC2626",
+                mono: true,
+                fill: changed ? "FEE2E2" : undefined,
+              },
+              {
+                text: formatValue(e.newValue),
+                color: "16A34A",
+                mono: true,
+                fill: changed ? "E2FEE2" : undefined,
+              },
+            ];
+          });
+          children.push(
+            dataTable(["Champ", "Ancien", "Nouveau"], body, {
+              fontSize: 8,
+              headFill: "6C63FF",
+              widthsMm: [40, null, null],
+            }),
+          );
+        } else {
+          children.push(
+            dataTable(
+              ["Anciennes valeurs", "Nouvelles valeurs"],
+              [
+                [
+                  { text: log.old_values || "—", color: "DC2626", mono: true },
+                  { text: log.new_values || "—", color: "16A34A", mono: true },
+                ],
+              ],
+              { fontSize: 8, headFill: "6C63FF" },
+            ),
+          );
+        }
+      }
+
+      await saveSimpleDocx({
+        title: "OPUS — Détail du journal d'audit",
+        filename: `audit-log-${log.id}-${new Date().toISOString().slice(0, 10)}.docx`,
+        children,
+      });
+      addNotification("success", "Export réussi", "Entrée exportée en Word");
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
     }
   }
 
@@ -571,6 +715,15 @@ export function AuditLogPage() {
           >
             <FileDown className="h-4 w-4" />
             Exporter PDF
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={exportWord}
+            disabled={exporting || logs.length === 0}
+          >
+            <FileText className="h-4 w-4" />
+            Exporter Word
           </Button>
           <Button
             variant={showFilters ? "default" : "outline"}
@@ -703,6 +856,15 @@ export function AuditLogPage() {
                 >
                   <FileDown className="h-4 w-4" />
                   Exporter PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => exportSingleWord(selectedLog)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Exporter Word
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedLog(null)}>
                   <X className="h-4 w-4" />

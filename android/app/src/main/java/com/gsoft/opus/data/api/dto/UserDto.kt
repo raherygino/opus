@@ -20,7 +20,10 @@ data class UserDto(
     @SerializedName("im") val im: String? = null,
     @SerializedName("phone") val phone: String? = null,
     @SerializedName("email") val email: String? = null,
-    @SerializedName("address") val address: String? = null
+    @SerializedName("address") val address: String? = null,
+    @SerializedName("personnel_status") val personnelStatus: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null
 )
 
 data class PermissionDto(
@@ -43,4 +46,23 @@ data class LoginResponseDto(
 data class RefreshResponseDto(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("refresh_token") val refreshToken: String? = null
+)
+
+/** Body for POST /api/users (Super Admin). */
+data class UserCreateRequest(
+    @SerializedName("personnel_id") val personnelId: Int,
+    @SerializedName("username") val username: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("role_id") val roleId: Int
+)
+
+/**
+ * Body for PUT /api/users/{id}. A null password is sent as JSON null and
+ * ignored by the backend (isset check), keeping the current password.
+ */
+data class UserUpdateRequest(
+    @SerializedName("username") val username: String,
+    @SerializedName("password") val password: String?,
+    @SerializedName("role_id") val roleId: Int,
+    @SerializedName("is_active") val isActive: Int
 )

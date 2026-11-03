@@ -26,6 +26,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
   CheckCircle2,
   XCircle,
   PenTool,
@@ -159,6 +160,14 @@ export function ArmementDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && !reintegree && (
             <Button className="gap-2" onClick={() => setReintOpen(true)}>
@@ -421,8 +430,8 @@ export function ArmementDetail() {
     </motion.div>
   );
 
-  async function handleExportPDF() {
-    if (!armement) return;
+  async function buildReport(): Promise<PdfReport | null> {
+    if (!armement) return null;
 
     const report = new PdfReport("Fiche d'Armement");
 
@@ -502,6 +511,25 @@ export function ArmementDetail() {
       );
     }
 
-    report.save(`armement_${armement.date_perception}_${armement.id}.pdf`);
+    return report;
+  }
+
+  async function handleExportPDF() {
+    const report = await buildReport();
+    report?.save(
+      `armement_${armement!.date_perception}_${armement!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = await buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `armement_${armement!.date_perception}_${armement!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

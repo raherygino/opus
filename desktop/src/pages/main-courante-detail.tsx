@@ -21,6 +21,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { MainCourante, MainCouranteAttachment, MainCouranteOrigine } from "@/types";
@@ -132,6 +133,14 @@ export function MainCouranteDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           {canEdit && (
             <Button
               variant="outline"
@@ -234,8 +243,8 @@ export function MainCouranteDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche de Main Courante");
 
@@ -265,6 +274,24 @@ export function MainCouranteDetail() {
       );
     }
 
-    report.save(`main_courante_${entry.date_evenement}_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `main_courante_${entry!.date_evenement}_${entry!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `main_courante_${entry!.date_evenement}_${entry!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

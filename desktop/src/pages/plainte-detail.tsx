@@ -23,6 +23,7 @@ import {
   Eye,
   ArrowRightLeft,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport, type PdfRow } from "@/lib/pdf-report";
 import type { PlainteEntree, PlainteEntreeAttachment } from "@/types";
@@ -115,6 +116,14 @@ export function PlainteDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/pj/plainte/${entry.id}/edit`)} className="gap-2">
@@ -239,8 +248,8 @@ export function PlainteDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche de Plainte — ENTRÉE");
 
@@ -288,6 +297,24 @@ export function PlainteDetail() {
       );
     }
 
-    report.save(`plainte_entree_${entry.numero_dossier}_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `plainte_entree_${entry!.numero_dossier}_${entry!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `plainte_entree_${entry!.numero_dossier}_${entry!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

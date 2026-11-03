@@ -133,7 +133,7 @@ fun SplashScreen(
                 exit = fadeOut(tween(300))
             ) {
                 Text(
-                    text = "Enterprise Management",
+                    text = "Opérations Policières Unifiées et Structurées",
                     color = Color.White.copy(alpha = 0.6f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,

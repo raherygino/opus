@@ -1855,7 +1855,7 @@ export interface DashboardStats {
 // ========================
 // Rapport (aggregated record counts per Sédentaire module — GET /api/rapports)
 // ========================
-export type RapportType = "daily" | "weekly" | "monthly";
+export type RapportType = "daily" | "weekly" | "monthly" | "custom";
 
 export interface RapportSection {
   key: string;

@@ -22,6 +22,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { Convocation, ConvocationAttachment } from "@/types";
@@ -109,6 +110,14 @@ export function ConvocationDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button onClick={() => navigate(`/pj/convocation/${entry.id}/edit`)} className="gap-2">
@@ -203,8 +212,8 @@ export function ConvocationDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche de Convocation");
 
@@ -231,6 +240,20 @@ export function ConvocationDetail() {
       );
     }
 
-    report.save(`convocation_${entry.numero}_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(`convocation_${entry!.numero}_${entry!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`convocation_${entry!.numero}_${entry!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

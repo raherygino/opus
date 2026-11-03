@@ -10,7 +10,31 @@ const FOOTER_CLEARANCE = 24;
 export type PdfRow = [string, string];
 
 /**
- * Uniform "Fiche" report builder shared by all detail-page PDF exports.
+ * Format-neutral description of report content, recorded alongside the eager
+ * jsPDF rendering so the same document can also be emitted as Word (.docx).
+ */
+export type ReportElement =
+  | { type: "section"; title: string }
+  | { type: "rows"; pairs: PdfRow[]; valueX: number }
+  | { type: "paragraph"; text: string; indent: number }
+  | { type: "labeledText"; label: string; text: string }
+  | {
+      type: "table";
+      head: string[];
+      body: (string | number)[][];
+      fontSize: number;
+    }
+  | { type: "link"; text: string; url: string }
+  | { type: "image"; dataUrl: string; widthMm: number; heightMm: number }
+  | {
+      type: "photoGrid";
+      items: { dataUrl: string | null; caption?: string | null }[];
+      sizeMm: number;
+    }
+  | { type: "topRightPhoto"; dataUrl: string | null; sizeMm: number };
+
+/**
+ * Uniform "Fiche" report builder shared by all detail-page exports.
  * Reproduces the Personnel Details layout: PN/CSP logos, centered title,
  * generation date, Senegal tricolor separator, gray-striped tables and an
  * OPUS footer with page numbers on every page.
@@ -23,9 +47,13 @@ export class PdfReport {
   readonly contentTop: number;
   /** Current vertical cursor (baseline of the next element). */
   y: number;
+  readonly title: string;
+  /** Recorded document content, in insertion order (used by saveDocx). */
+  readonly elements: ReportElement[] = [];
 
   constructor(title: string) {
     this.doc = new jsPDF();
+    this.title = title;
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
 
@@ -89,6 +117,7 @@ export class PdfReport {
 
   /** Bold section heading; advances the cursor below it. */
   section(title: string): this {
+    this.elements.push({ type: "section", title });
     this.ensureSpace(14);
     this.doc.setFontSize(13);
     this.doc.setFont("helvetica", "bold");
@@ -102,6 +131,7 @@ export class PdfReport {
    * `valueX` (60 by default, matching the reference fiche).
    */
   rows(pairs: PdfRow[], valueX = 60): this {
+    this.elements.push({ type: "rows", pairs, valueX });
     const valueWidth = this.pageWidth - valueX - PDF_MARGIN;
     this.doc.setFontSize(10);
     for (const [label, value] of pairs) {
@@ -122,6 +152,7 @@ export class PdfReport {
 
   /** Wrapped paragraph of body text (long descriptions, observations…). */
   paragraph(text: string, indent = 0): this {
+    this.elements.push({ type: "paragraph", text, indent });
     this.doc.setFontSize(10);
     this.doc.setFont("helvetica", "normal");
     const lines = this.doc.splitTextToSize(
@@ -136,6 +167,7 @@ export class PdfReport {
 
   /** Bold label on its own line followed by a wrapped paragraph. */
   labeledText(label: string, text: string): this {
+    this.elements.push({ type: "labeledText", label, text });
     this.ensureSpace(12);
     this.doc.setFontSize(10);
     this.doc.setFont("helvetica", "bold");
@@ -148,6 +180,7 @@ export class PdfReport {
 
   /** Gray-striped table; the cursor moves below it afterwards. */
   table(head: string[], body: (string | number)[][], fontSize = 9): this {
+    this.elements.push({ type: "table", head, body, fontSize });
     this.ensureSpace(14);
     autoTable(this.doc, {
       startY: this.y,
@@ -167,6 +200,7 @@ export class PdfReport {
 
   /** Blue clickable link line (e.g. "Voir sur la carte"). */
   link(text: string, url: string): this {
+    this.elements.push({ type: "link", text, url });
     this.ensureSpace(8);
     this.doc.setFontSize(10);
     this.doc.setFont("helvetica", "normal");
@@ -196,6 +230,15 @@ export class PdfReport {
       this.ensureSpace(h + 4);
       this.doc.addImage(loaded, "PNG", PDF_MARGIN, this.y, width, h);
       this.y += h + 6;
+      const png = rasterizeToDataUrl(loaded);
+      if (png) {
+        this.elements.push({
+          type: "image",
+          dataUrl: png,
+          widthMm: width,
+          heightMm: h,
+        });
+      }
     } catch {
       // Signature conversion may fail in some environments — skip silently
     }
@@ -212,6 +255,8 @@ export class PdfReport {
     size = 45,
     gap = 5,
   ): Promise<this> {
+    const grid: { dataUrl: string | null; caption?: string | null }[] = [];
+    this.elements.push({ type: "photoGrid", items: grid, sizeMm: size });
     const maxX = this.pageWidth - PDF_MARGIN;
     let x = PDF_MARGIN;
     for (const item of items) {
@@ -224,6 +269,7 @@ export class PdfReport {
       if (this.doc.getNumberOfPages() !== pagesBefore) x = PDF_MARGIN;
 
       const dataUrl = await fetchImageDataUrl(item.url);
+      grid.push({ dataUrl, caption: item.caption });
       let drawn = false;
       if (dataUrl) {
         const format = dataUrl.slice(5, dataUrl.indexOf(";")).toUpperCase();
@@ -260,6 +306,7 @@ export class PdfReport {
     const x = this.pageWidth - PDF_MARGIN - size;
     const y = this.contentTop - 4;
     const dataUrl = imageUrl ? await fetchImageDataUrl(imageUrl) : null;
+    this.elements.push({ type: "topRightPhoto", dataUrl, sizeMm: size });
     if (dataUrl) {
       try {
         this.doc.addImage(dataUrl, "JPEG", x, y, size, size);
@@ -306,6 +353,31 @@ export class PdfReport {
       this.doc.setTextColor(0, 0, 0);
     }
     this.doc.save(filename);
+  }
+
+  /**
+   * Renders the recorded content to a Word (.docx) file and downloads it.
+   * The renderer is loaded on demand so the docx library stays out of the
+   * main bundle.
+   */
+  async saveDocx(filename: string): Promise<void> {
+    const { saveReportAsDocx } = await import("./docx-report");
+    await saveReportAsDocx(this, filename);
+  }
+}
+
+/** Rasterizes a loaded image to a PNG data URL, or null on failure. */
+export function rasterizeToDataUrl(img: HTMLImageElement): string | null {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width || 600;
+    canvas.height = img.naturalHeight || img.height || Math.round(canvas.width / 3);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
   }
 }
 

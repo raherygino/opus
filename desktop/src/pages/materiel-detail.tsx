@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { AffectationMateriel } from "@/types";
@@ -198,6 +199,14 @@ export function MaterielDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && !isReintegre && (
             <Button className="gap-2" onClick={openReintegration}>
@@ -429,8 +438,8 @@ export function MaterielDetail() {
     </motion.div>
   );
 
-  async function handleExportPDF() {
-    if (!affectation) return;
+  async function buildReport(): Promise<PdfReport | null> {
+    if (!affectation) return null;
 
     const report = new PdfReport("Fiche d'Affectation de Matériel");
 
@@ -471,6 +480,25 @@ export function MaterielDetail() {
       ], 80);
     }
 
-    report.save(`affectation_materiel_${affectation.date_perception}_${affectation.id}.pdf`);
+    return report;
+  }
+
+  async function handleExportPDF() {
+    const report = await buildReport();
+    report?.save(
+      `affectation_materiel_${affectation!.date_perception}_${affectation!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = await buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `affectation_materiel_${affectation!.date_perception}_${affectation!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

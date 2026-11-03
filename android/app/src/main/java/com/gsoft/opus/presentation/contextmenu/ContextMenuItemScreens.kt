@@ -1,24 +1,18 @@
 package com.gsoft.opus.presentation.contextmenu
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.ViewColumn
 import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.FilePresent
-import androidx.compose.material.icons.outlined.FindInPage
-import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Inventory
-import androidx.compose.material.icons.outlined.LocalPolice
 import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import com.gsoft.opus.ui.components.PlaceholderScreen
 
@@ -110,15 +104,6 @@ object ContextMenuItemScreens {
             title = "Main courante",
             description = "Poste",
             icon = Icons.Outlined.NoteAlt
-        )
-    }
-
-    @Composable
-    fun RenseignementSed() {
-        PlaceholderScreen(
-            title = "Envoi de renseignement",
-            description = "Sédentaire – Poste",
-            icon = Icons.Outlined.Message
         )
     }
 
@@ -235,24 +220,5 @@ object ContextMenuItemScreens {
         )
     }
 
-    // ── Global modules ──
-
-    @Composable
-    fun Utilisateurs() {
-        PlaceholderScreen(
-            title = "Utilisateurs",
-            description = "Gestion des utilisateurs",
-            icon = Icons.Outlined.Badge
-        )
-    }
-
-    @Composable
-    fun Roles() {
-        PlaceholderScreen(
-            title = "Rôles",
-            description = "Gestion des rôles",
-            icon = Icons.Outlined.Tune
-        )
-    }
 }
 

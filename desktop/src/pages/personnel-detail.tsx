@@ -27,6 +27,7 @@ import {
   Download,
   Camera,
   FileDown,
+  FileText,
   History,
   Award,
   PenTool,
@@ -154,6 +155,14 @@ export function PersonnelDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEditProfile && (
             <Button
@@ -649,8 +658,8 @@ export function PersonnelDetail() {
     }
   }
 
-  async function handleExportPDF() {
-    if (!person) return;
+  async function buildReport(): Promise<PdfReport | null> {
+    if (!person) return null;
 
     const report = new PdfReport("Fiche Personnel");
 
@@ -703,6 +712,21 @@ export function PersonnelDetail() {
       );
     }
 
-    report.save(`personnel_${person.im}_${person.lastname}.pdf`);
+    return report;
+  }
+
+  async function handleExportPDF() {
+    const report = await buildReport();
+    report?.save(`personnel_${person!.im}_${person!.lastname}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = await buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`personnel_${person!.im}_${person!.lastname}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

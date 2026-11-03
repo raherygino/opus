@@ -21,6 +21,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { Arrestation, ArrestationAttachment } from "@/types";
@@ -109,6 +110,14 @@ export function ArrestationDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button onClick={() => navigate(`/pj/arrestation/${entry.id}/edit`)} className="gap-2">
@@ -225,8 +234,8 @@ export function ArrestationDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche d'Arrestation");
 
@@ -267,6 +276,20 @@ export function ArrestationDetail() {
       );
     }
 
-    report.save(`arrestation_${entry.numero}_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(`arrestation_${entry!.numero}_${entry!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`arrestation_${entry!.numero}_${entry!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

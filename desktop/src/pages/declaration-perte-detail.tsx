@@ -24,6 +24,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { DeclarationPerte, DeclarationPerteAttachment } from "@/types";
@@ -116,6 +117,14 @@ export function DeclarationPerteDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button
@@ -257,8 +266,8 @@ export function DeclarationPerteDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!declaration) return;
+  function buildReport(): PdfReport | null {
+    if (!declaration) return null;
 
     const report = new PdfReport("Fiche de Déclaration de Perte");
 
@@ -299,6 +308,24 @@ export function DeclarationPerteDetail() {
       );
     }
 
-    report.save(`declaration_perte_${declaration.numero_attestation}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `declaration_perte_${declaration!.numero_attestation}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `declaration_perte_${declaration!.numero_attestation}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

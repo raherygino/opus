@@ -23,6 +23,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { Correspondance, CorrespondanceAttachment } from "@/types";
@@ -130,6 +131,14 @@ export function CorrespondanceDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           {canEdit && (
             <Button
               variant="outline"
@@ -232,8 +241,8 @@ export function CorrespondanceDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!correspondance) return;
+  function buildReport(): PdfReport | null {
+    if (!correspondance) return null;
 
     const report = new PdfReport("Fiche de Correspondance");
 
@@ -266,6 +275,24 @@ export function CorrespondanceDetail() {
       );
     }
 
-    report.save(`correspondance_${correspondance.reference}_${correspondance.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `correspondance_${correspondance!.reference}_${correspondance!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `correspondance_${correspondance!.reference}_${correspondance!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

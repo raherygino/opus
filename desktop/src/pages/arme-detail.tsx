@@ -22,6 +22,7 @@ import {
   Crosshair,
   History,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { Arme, ArmeMunitionsConsommation } from "@/types";
@@ -132,6 +133,10 @@ export function ArmeDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button variant="outline" onClick={handleExportWord} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           <Button variant="outline" onClick={() => navigate(`${LIST_PATH}/${arme.id}/edit`)} className="gap-2">
             <Pencil className="h-4 w-4" />
             Modifier
@@ -193,8 +198,8 @@ export function ArmeDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!arme) return;
+  function buildReport(): PdfReport | null {
+    if (!arme) return null;
 
     const report = new PdfReport("Fiche d'Arme");
 
@@ -216,6 +221,20 @@ export function ArmeDetail() {
       );
     }
 
-    report.save(`arme_${arme.matricule}_${arme.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(`arme_${arme!.matricule}_${arme!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`arme_${arme!.matricule}_${arme!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

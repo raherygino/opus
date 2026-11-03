@@ -33,6 +33,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { MaterielRoulant, MaterielRoulantAttachment } from "@/types";
@@ -227,6 +228,14 @@ export function MaterielRoulantDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && !isReintegre && (
             <Button className="gap-2" onClick={openReintegration}>
@@ -591,8 +600,8 @@ export function MaterielRoulantDetail() {
     </motion.div>
   );
 
-  async function handleExportPDF() {
-    if (!item) return;
+  async function buildReport(): Promise<PdfReport | null> {
+    if (!item) return null;
 
     const report = new PdfReport("Fiche de Matériel Roulant");
 
@@ -660,6 +669,25 @@ export function MaterielRoulantDetail() {
       );
     }
 
-    report.save(`materiel_roulant_${item.date_perception}_${item.id}.pdf`);
+    return report;
+  }
+
+  async function handleExportPDF() {
+    const report = await buildReport();
+    report?.save(
+      `materiel_roulant_${item!.date_perception}_${item!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = await buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `materiel_roulant_${item!.date_perception}_${item!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

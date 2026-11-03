@@ -74,6 +74,7 @@ import androidx.navigation.compose.rememberNavController
 import com.gsoft.opus.R
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.hasPermission
+import com.gsoft.opus.core.userCanAccessDivision
 import com.gsoft.opus.domain.model.User
 import com.gsoft.opus.navigation.BottomNavItem
 import com.gsoft.opus.navigation.MainRoutes
@@ -177,6 +178,10 @@ import com.gsoft.opus.presentation.personnel.ComportementFormScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseScreen
 import com.gsoft.opus.presentation.personnel.PersonnelBrowseDetailScreen
 import com.gsoft.opus.presentation.qrauth.QrAuthScannerScreen
+import com.gsoft.opus.presentation.roles.RoleFormScreen
+import com.gsoft.opus.presentation.roles.RolesScreen
+import com.gsoft.opus.presentation.users.UserFormScreen
+import com.gsoft.opus.presentation.users.UsersScreen
 import com.gsoft.opus.presentation.sedentaire.SedentaireDashboardScreen
 import com.gsoft.opus.presentation.pjdashboard.PjDashboardScreen
 import com.gsoft.opus.presentation.sgdashboard.SgDashboardScreen
@@ -298,7 +303,6 @@ fun MainScreen(
             "sed_materiel_roulant" to MainRoutes.MaterielRoulant.route,
             "sed_situation_gav" to MainRoutes.SituationGav.route,
             "sed_main_courante_poste" to MainRoutes.MainCourantePoste.route,
-            "sed_renseignement" to MainRoutes.RenseignementSed.route,
             "sg_dashboard" to MainRoutes.SgDashboard.route,
             "sg_rassemblement_journalier" to MainRoutes.RassemblementJournalier.route,
             "sg_evenement_survenu" to MainRoutes.EvenementSurvenu.route,
@@ -501,6 +505,15 @@ fun MainScreen(
                             },
                             onUtilisateurs = {
                                 navController.navigateToDrawerItem(MainRoutes.Utilisateurs.route)
+                            },
+                            onSedDashboard = {
+                                navController.navigateToDrawerItem(MainRoutes.SedDashboard.route)
+                            },
+                            onSgDashboard = {
+                                navController.navigateToDrawerItem(MainRoutes.SgDashboard.route)
+                            },
+                            onPjDashboard = {
+                                navController.navigateToDrawerItem(MainRoutes.PjDashboard.route)
                             }
                         )
                     }
@@ -731,7 +744,6 @@ fun MainScreen(
                             }
                         )
                     }
-                    composable(MainRoutes.RenseignementSed.route) { ContextMenuItemScreens.RenseignementSed() }
 
                     // Division Service Général
                     composable(MainRoutes.SgDashboard.route) {
@@ -943,8 +955,82 @@ fun MainScreen(
                     }
 
                     // Global modules
-                    composable(MainRoutes.Utilisateurs.route) { ContextMenuItemScreens.Utilisateurs() }
-                    composable(MainRoutes.Roles.route) { ContextMenuItemScreens.Roles() }
+                    composable(MainRoutes.Utilisateurs.route) {
+                        UsersScreen(
+                            onUserClick = { id ->
+                                navController.navigate(MainRoutes.UserForm.createRoute(id))
+                            },
+                            onCreateUser = {
+                                navController.navigate(MainRoutes.UserForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(MainRoutes.Roles.route) {
+                        RolesScreen(
+                            onRoleClick = { id ->
+                                navController.navigate(MainRoutes.RoleForm.createRoute(id))
+                            },
+                            onCreateRole = {
+                                navController.navigate(MainRoutes.RoleForm.createRoute(0))
+                            }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.UserForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("userId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        UserFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable(
+                        route = MainRoutes.RoleForm.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("roleId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = 0
+                            }
+                        ),
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = { fadeOut(tween(200)) },
+                        popEnterTransition = { fadeIn(tween(200)) },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        RoleFormScreen(
+                            onSaved = { navController.popBackStack() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
 
                     // Detail / Form routes
                     composable(
@@ -2959,48 +3045,6 @@ private fun NavHostController.navigateToDrawerItem(route: String) {
 // the permission table entirely (see [hasPermission]).
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val DIVISION_MODULES: Map<String, List<String>> = mapOf(
-    "sedentaire" to listOf(
-        "sedentaire_secretariat_correspondance",
-        "personnel",
-        "sedentaire_secretariat_declaration_perte",
-        "sedentaire_secretariat_rapport",
-        "sedentaire_secretariat_main_courante",
-        "sedentaire_poste_passation",
-        "sedentaire_poste_armement",
-        "sedentaire_poste_arme",
-        "sedentaire_poste_materiels",
-        "sedentaire_poste_situation_gav",
-        "sedentaire_poste_main_courante",
-        "sedentaire_poste_renseignement",
-    ),
-    "sg" to listOf(
-        "sg_rassemblement_journalier",
-        "sg_evenement_survenu",
-        "sg_activite",
-        "sg_dispositif_exceptionnel",
-    ),
-    "pj" to listOf(
-        "pj_plainte",
-        "pj_enquete",
-        "pj_mandat",
-        "pj_convocation",
-        "pj_arrestation",
-        "pj_gav",
-        "pj_requisition",
-        "pj_personne_recherchee",
-        "pj_objets",
-        "pj_perquisition",
-        "pj_deferrement",
-        "pj_renseignement",
-    ),
-)
-
-private fun userCanAccessDivision(user: User?, division: String): Boolean {
-    val modules = DIVISION_MODULES[division] ?: return false
-    return modules.any { hasPermission(user, it, PermissionAction.VIEW) }
-}
-
 /**
  * Returns true when [item] should be visible to [user]. Section headers are
  * never visible on their own (they are emitted by the section builder only
@@ -3045,7 +3089,6 @@ private fun buildDrawerItems(user: User?): List<ContextMenuItem> {
             ContextMenuItem(id = "sed_materiel_roulant", title = "Matériel roulant", icon = Icons.Outlined.DirectionsCar, module = "sedentaire_poste_materiel_roulant"),
             ContextMenuItem(id = "sed_situation_gav", title = "Situation GAV", icon = Icons.Outlined.ViewColumn, module = "sedentaire_poste_situation_gav"),
             ContextMenuItem(id = "sed_main_courante_poste", title = "Main courante", icon = Icons.Outlined.NoteAlt, module = "sedentaire_poste_main_courante"),
-            ContextMenuItem(id = "sed_renseignement", title = "Envoi de renseignement", icon = Icons.Outlined.Message, module = "sedentaire_poste_renseignement"),
         ).filter { hasVisibleItem(user, it) }
 
         if (secretariatChildren.isNotEmpty()) {

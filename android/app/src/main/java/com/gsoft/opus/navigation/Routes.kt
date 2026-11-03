@@ -31,7 +31,6 @@ sealed class MainRoutes(val route: String) {
     data object Materiels : MainRoutes("sed_materiels")
     data object SituationGav : MainRoutes("sed_situation_gav")
     data object MainCourantePoste : MainRoutes("sed_main_courante_poste?origine=Poste")
-    data object RenseignementSed : MainRoutes("sed_renseignement")
 
     // Division Service Général
     data object SgDashboard : MainRoutes("sg_dashboard")
@@ -58,6 +57,16 @@ sealed class MainRoutes(val route: String) {
     // Global modules
     data object Utilisateurs : MainRoutes("utilisateurs")
     data object Roles : MainRoutes("roles")
+
+    // User management (Super Admin)
+    data object UserForm : MainRoutes("user_form?userId={userId}") {
+        fun createRoute(userId: Int = 0) = "user_form?userId=$userId"
+    }
+
+    // Role management (Super Admin)
+    data object RoleForm : MainRoutes("role_form?roleId={roleId}") {
+        fun createRoute(roleId: Int = 0) = "role_form?roleId=$roleId"
+    }
 
     // Signature pad
     data object SignaturePairing : MainRoutes("signature_pairing")

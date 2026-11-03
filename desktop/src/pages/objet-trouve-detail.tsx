@@ -22,6 +22,7 @@ import {
   Eye,
   CheckCircle2,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { ObjetTrouve, ObjetTrouveAttachment } from "@/types";
@@ -104,6 +105,14 @@ export function ObjetTrouveDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button onClick={() => navigate(`/pj/objets/trouve/${entry.id}/edit`)} className="gap-2">
@@ -193,8 +202,8 @@ export function ObjetTrouveDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche d'Objet Trouvé");
 
@@ -215,6 +224,20 @@ export function ObjetTrouveDetail() {
       );
     }
 
-    report.save(`objet_trouve_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(`objet_trouve_${entry!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`objet_trouve_${entry!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

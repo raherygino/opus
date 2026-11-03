@@ -23,6 +23,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { Passation, PassationAttachment } from "@/types";
@@ -119,6 +120,14 @@ export function PassationDetail() {
           >
             <FileDown className="h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
           </Button>
           {canEdit && (
             <Button
@@ -254,8 +263,8 @@ export function PassationDetail() {
     </motion.div>
   );
 
-  async function handleExportPDF() {
-    if (!passation) return;
+  async function buildReport(): Promise<PdfReport | null> {
+    if (!passation) return null;
 
     const report = new PdfReport("Fiche de Passation");
 
@@ -294,6 +303,25 @@ export function PassationDetail() {
       );
     }
 
-    report.save(`passation_${passation.date_passation}_${passation.id}.pdf`);
+    return report;
+  }
+
+  async function handleExportPDF() {
+    const report = await buildReport();
+    report?.save(
+      `passation_${passation!.date_passation}_${passation!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = await buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `passation_${passation!.date_passation}_${passation!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

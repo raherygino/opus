@@ -19,6 +19,7 @@ import {
   Camera,
   ImageIcon,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type {
@@ -106,6 +107,14 @@ export function PersonneRechercheeDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           {canEdit && (
             <Button onClick={() => navigate(`/pj/personne-recherchee/${entry.id}/edit`)} className="gap-2">
               <Pencil className="h-4 w-4" />
@@ -192,8 +201,8 @@ export function PersonneRechercheeDetail() {
     </motion.div>
   );
 
-  async function handleExportPDF() {
-    if (!entry) return;
+  async function buildReport(): Promise<PdfReport | null> {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche de Personne Recherchée");
 
@@ -216,6 +225,21 @@ export function PersonneRechercheeDetail() {
       );
     }
 
-    report.save(`personne_recherchee_${entry.id}.pdf`);
+    return report;
+  }
+
+  async function handleExportPDF() {
+    const report = await buildReport();
+    report?.save(`personne_recherchee_${entry!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = await buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`personne_recherchee_${entry!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }

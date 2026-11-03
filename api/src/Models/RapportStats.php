@@ -23,12 +23,13 @@ use PDO;
  */
 class RapportStats
 {
-    public const TYPES = ['daily', 'weekly', 'monthly'];
+    public const TYPES = ['daily', 'weekly', 'monthly', 'custom'];
 
     private const TYPE_LABELS = [
         'daily'   => 'Journalier',
         'weekly'  => 'Hebdomadaire',
         'monthly' => 'Mensuel',
+        'custom'  => 'Personnalisé',
     ];
 
     /**
@@ -66,12 +67,15 @@ class RapportStats
     ];
 
     /**
-     * @param string $type daily|weekly|monthly (validated by the controller)
-     * @param string $date Anchor date (Y-m-d) the period is built around.
+     * @param string $type daily|weekly|monthly|custom (validated by the controller)
+     * @param string $date Anchor date (Y-m-d) the period is built around —
+     *                     the range start for `custom`.
+     * @param string|null $endDate Range end (Y-m-d, inclusive) — required for
+     *                             `custom`, ignored otherwise.
      */
-    public static function generate(string $type, string $date): array
+    public static function generate(string $type, string $date, ?string $endDate = null): array
     {
-        [$start, $endExclusive] = self::period($type, $date);
+        [$start, $endExclusive] = self::period($type, $date, $endDate);
         $db = Database::getInstance()->getConnection();
 
         $groups = [];
@@ -118,10 +122,18 @@ class RapportStats
      * Resolve the period covered by the report.
      * @return array{0: DateTimeImmutable, 1: DateTimeImmutable} [start, endExclusive)
      */
-    private static function period(string $type, string $date): array
+    private static function period(string $type, string $date, ?string $endDate = null): array
     {
         $start = new DateTimeImmutable($date);
         switch ($type) {
+            case 'custom':
+                // Inclusive end date; bounds are normalized when reversed.
+                $end = $endDate !== null ? new DateTimeImmutable($endDate) : $start;
+                if ($end < $start) {
+                    [$start, $end] = [$end, $start];
+                }
+                $endExclusive = $end->modify('+1 day');
+                break;
             case 'weekly':
                 // ISO week: Monday to Sunday (French convention).
                 $start = $start->modify('monday this week');

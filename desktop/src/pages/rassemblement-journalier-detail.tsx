@@ -7,7 +7,7 @@ import { getRassemblementById, deleteRassemblement } from "@/lib/api/rassembleme
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Pencil, Trash2, ArrowLeft, FileDown } from "lucide-react";
+import { Pencil, Trash2, ArrowLeft, FileDown, FileText } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import {
   RepartitionSecteurTable,
@@ -97,6 +97,10 @@ export function RassemblementJournalierDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button variant="outline" onClick={handleExportWord} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           {canEdit && (
             <Button variant="outline" onClick={() => navigate(`/sg/rassemblement-journalier/${item.id}/edit`)}>
               <Pencil className="h-4 w-4 mr-2" />
@@ -169,8 +173,8 @@ export function RassemblementJournalierDetail() {
     </div>
   );
 
-  function handleExportPDF() {
-    if (!item) return;
+  function buildReport(): PdfReport | null {
+    if (!item) return null;
 
     const report = new PdfReport("Fiche de Rassemblement Journalier");
 
@@ -220,7 +224,25 @@ export function RassemblementJournalierDetail() {
       );
     }
 
-    report.save(`rassemblement_${item.date_rassemblement}_${item.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(
+      `rassemblement_${item!.date_rassemblement}_${item!.id}.pdf`,
+    );
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(
+        `rassemblement_${item!.date_rassemblement}_${item!.id}.docx`,
+      );
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }
 

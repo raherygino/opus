@@ -72,7 +72,10 @@ fun UserDto.toDomain(): User = User(
     im = im,
     phone = phone,
     email = email,
-    address = address
+    address = address,
+    lastLogin = lastLogin,
+    createdAt = createdAt,
+    personnelStatus = personnelStatus
 )
 
 fun PermissionDto.toDomain(): Permission = Permission(

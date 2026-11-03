@@ -10,10 +10,12 @@ import {
   ChevronLeft,
   ChevronRight,
   FileDown,
+  FileText,
   Inbox,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import type { DocxCellSpec } from "@/lib/docx-report";
 import { useNotificationStore } from "@/stores/notification-store";
 import { getRapport } from "@/lib/api/rapport";
 import type { Rapport, RapportType } from "@/types";
@@ -46,6 +48,9 @@ function formatDate(date: string | null | undefined): string {
 
 /** Human-readable period label, derived from the server-computed bounds. */
 function periodLabel(r: Rapport): string {
+  if (r.type === "custom") {
+    return `Du ${formatDate(r.period_start)} au ${formatDate(r.period_end)}`;
+  }
   if (r.type === "daily") return formatDate(r.period_start);
   if (r.type === "weekly") {
     return `Semaine du ${formatDate(r.period_start)} au ${formatDate(r.period_end)}`;
@@ -76,11 +81,19 @@ function toAnchor(d: Date): string {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+/** Export filename base — includes both bounds for custom ranges. */
+function fileBase(r: Rapport): string {
+  return r.type === "custom"
+    ? `rapport-custom-${r.period_start}_${r.period_end}`
+    : `rapport-${r.type}-${r.date}`;
+}
+
 export function RapportPage() {
   const { addNotification } = useNotificationStore();
 
   const [type, setType] = useState<RapportType>("daily");
   const [date, setDate] = useState<string>(todayLocal());
+  const [endDate, setEndDate] = useState<string>(todayLocal());
   const [rapport, setRapport] = useState<Rapport | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -88,7 +101,9 @@ export function RapportPage() {
   const loadRapport = useCallback(async () => {
     setLoading(true);
     try {
-      setRapport(await getRapport(type, date));
+      const [start, end] =
+        date <= endDate ? [date, endDate] : [endDate, date];
+      setRapport(await getRapport(type, start, end));
     } catch {
       setRapport(null);
       addNotification("error", "Erreur", "Impossible de charger le rapport");
@@ -96,7 +111,7 @@ export function RapportPage() {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, date]);
+  }, [type, date, endDate]);
 
   useEffect(() => {
     loadRapport();
@@ -165,10 +180,91 @@ export function RapportPage() {
         },
       });
 
-      doc.save(`rapport-${rapport.type}-${rapport.date}.pdf`);
+      doc.save(`${fileBase(rapport)}.pdf`);
       addNotification("success", "Export réussi", "Rapport exporté en PDF");
     } catch {
       addNotification("error", "Erreur", "Échec de l'export PDF");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function exportWord() {
+    if (!rapport) return;
+    setExporting(true);
+    try {
+      const { titleBlock, dataTable, saveSimpleDocx } = await import(
+        "@/lib/docx-report"
+      );
+      const now = new Date().toLocaleString("fr-FR");
+
+      // Same data as the PDF: a group header row per section group, one row
+      // per module, then the totals row.
+      const body: DocxCellSpec[][] = [];
+      rapport.groups.forEach((group) => {
+        body.push([
+          {
+            text: group.label.toUpperCase(),
+            bold: true,
+            color: "50505A",
+            fill: "EEEEF5",
+            colSpan: 4,
+          },
+        ]);
+        group.sections.forEach((s) => {
+          body.push([
+            s.label,
+            { text: String(s.created), alignRight: true },
+            { text: String(s.updated), alignRight: true },
+            { text: String(s.total), alignRight: true },
+          ]);
+        });
+      });
+      body.push([
+        { text: "Total général", bold: true, fill: "E6E6F0" },
+        {
+          text: String(rapport.totals.created),
+          bold: true,
+          fill: "E6E6F0",
+          alignRight: true,
+        },
+        {
+          text: String(rapport.totals.updated),
+          bold: true,
+          fill: "E6E6F0",
+          alignRight: true,
+        },
+        {
+          text: String(rapport.totals.total),
+          bold: true,
+          fill: "E6E6F0",
+          alignRight: true,
+        },
+      ]);
+
+      await saveSimpleDocx({
+        title: `OPUS — Rapport ${rapport.type_label.toLowerCase()}`,
+        filename: `${fileBase(rapport)}.docx`,
+        children: [
+          ...titleBlock(`OPUS — Rapport ${rapport.type_label.toLowerCase()}`, [
+            `Période : ${periodLabel(rapport)}`,
+            `Généré le ${now}`,
+          ]),
+          dataTable(
+            [
+              "Module",
+              { text: "Créés", alignRight: true },
+              { text: "Modifiés", alignRight: true },
+              { text: "Total", alignRight: true },
+            ],
+            body,
+            { headFill: "6C63FF", widthsMm: [null, 25, 25, 25] },
+          ),
+        ],
+      });
+      addNotification("success", "Export réussi", "Rapport exporté en Word");
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
     } finally {
       setExporting(false);
     }
@@ -190,14 +286,23 @@ export function RapportPage() {
                 {loading || !rapport ? "Chargement du rapport…" : periodLabel(rapport)}
               </p>
             </div>
-            <Button
-              onClick={exportPdf}
-              disabled={!rapport || loading || exporting}
-              className="shrink-0"
-            >
-              <FileDown className="h-4 w-4 mr-2" />
-              {exporting ? "Export…" : "Exporter PDF"}
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                onClick={exportPdf}
+                disabled={!rapport || loading || exporting}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                {exporting ? "Export…" : "Exporter PDF"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={exportWord}
+                disabled={!rapport || loading || exporting}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {exporting ? "Export…" : "Exporter Word"}
+              </Button>
+            </div>
           </div>
         </motion.div>
 
@@ -205,41 +310,91 @@ export function RapportPage() {
         <motion.div variants={item}>
           <Card>
             <CardContent className="flex flex-wrap items-center gap-4 p-4">
-              <Tabs value={type} onValueChange={(v) => setType(v as RapportType)}>
+              <Tabs
+                value={type}
+                onValueChange={(v) => {
+                  const t = v as RapportType;
+                  setType(t);
+                  if (t === "custom" && endDate < date) setEndDate(date);
+                }}
+              >
                 <TabsList>
                   <TabsTrigger value="daily">Journalier</TabsTrigger>
                   <TabsTrigger value="weekly">Hebdomadaire</TabsTrigger>
                   <TabsTrigger value="monthly">Mensuel</TabsTrigger>
+                  <TabsTrigger value="custom">Personnalisé</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <div className="flex items-center gap-2 ml-auto">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setDate((d) => shiftDate(type, d, -1))}
-                  aria-label="Période précédente"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="date"
-                  value={date}
-                  onChange={(e) => e.target.value && setDate(e.target.value)}
-                  className="w-[150px]"
-                  aria-label="Date du rapport"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setDate((d) => shiftDate(type, d, 1))}
-                  aria-label="Période suivante"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setDate(todayLocal())}>
-                  Aujourd'hui
-                </Button>
-              </div>
+              {type === "custom" ? (
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="text-sm text-muted-foreground">Du</span>
+                  <Input
+                    type="date"
+                    value={date}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (!v) return;
+                      setDate(v);
+                      if (v > endDate) setEndDate(v);
+                    }}
+                    className="w-[150px]"
+                    aria-label="Date de début"
+                  />
+                  <span className="text-sm text-muted-foreground">au</span>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    min={date}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (!v) return;
+                      setEndDate(v);
+                      if (v < date) setDate(v);
+                    }}
+                    className="w-[150px]"
+                    aria-label="Date de fin"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDate(todayLocal());
+                      setEndDate(todayLocal());
+                    }}
+                  >
+                    Aujourd'hui
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setDate((d) => shiftDate(type, d, -1))}
+                    aria-label="Période précédente"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="date"
+                    value={date}
+                    onChange={(e) => e.target.value && setDate(e.target.value)}
+                    className="w-[150px]"
+                    aria-label="Date du rapport"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setDate((d) => shiftDate(type, d, 1))}
+                    aria-label="Période suivante"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setDate(todayLocal())}>
+                    Aujourd'hui
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

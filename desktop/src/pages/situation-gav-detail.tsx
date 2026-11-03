@@ -21,6 +21,7 @@ import {
   Download,
   Eye,
   FileDown,
+  FileText,
 } from "lucide-react";
 import { PdfReport } from "@/lib/pdf-report";
 import type { SituationGav, SituationGavAttachment } from "@/types";
@@ -120,6 +121,14 @@ export function SituationGavDetail() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportWord}
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Export Word
+          </Button>
           {canEdit && (
             <Button onClick={() => navigate(`${LIST_PATH}/${entry.id}/edit`)} className="gap-2">
               <Pencil className="h-4 w-4" />
@@ -210,8 +219,8 @@ export function SituationGavDetail() {
     </motion.div>
   );
 
-  function handleExportPDF() {
-    if (!entry) return;
+  function buildReport(): PdfReport | null {
+    if (!entry) return null;
 
     const report = new PdfReport("Fiche de Situation GAV");
 
@@ -238,6 +247,20 @@ export function SituationGavDetail() {
       );
     }
 
-    report.save(`situation_gav_${entry.id}.pdf`);
+    return report;
+  }
+
+  function handleExportPDF() {
+    buildReport()?.save(`situation_gav_${entry!.id}.pdf`);
+  }
+
+  async function handleExportWord() {
+    const report = buildReport();
+    if (!report) return;
+    try {
+      await report.saveDocx(`situation_gav_${entry!.id}.docx`);
+    } catch {
+      addNotification("error", "Erreur", "Échec de l'export Word");
+    }
   }
 }
