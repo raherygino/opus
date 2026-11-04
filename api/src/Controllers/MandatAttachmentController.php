@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Mandat;
 use App\Models\MandatAttachment;
 
@@ -56,6 +57,8 @@ class MandatAttachmentController
             Response::notFound('Mandat introuvable');
         }
 
+        EditWindow::assertEditable('mandat', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -105,6 +108,8 @@ class MandatAttachmentController
             Response::notFound('Mandat introuvable');
         }
 
+        EditWindow::assertEditable('mandat', (int) $params['id'], $authUser);
+
         $attachment = MandatAttachment::find($attachId);
         if (!$attachment || !MandatAttachment::belongsToMandat($attachId, $mandatId)) {
             Response::notFound('Attachment not found');
@@ -135,6 +140,8 @@ class MandatAttachmentController
         if (!Mandat::find($mandatId)) {
             Response::notFound('Mandat introuvable');
         }
+
+        EditWindow::assertEditable('mandat', (int) $params['id'], $authUser);
 
         $attachment = MandatAttachment::find($attachId);
         if (!$attachment || !MandatAttachment::belongsToMandat($attachId, $mandatId)) {

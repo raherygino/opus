@@ -3,10 +3,12 @@ package com.gsoft.opus.presentation.plainte
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.PlainteEntreeSummary
 import com.gsoft.opus.domain.model.PlainteSortieAttachment
 import com.gsoft.opus.domain.repository.PlainteRepository
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.PlainteSortieFormData
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -38,13 +40,15 @@ data class PlainteSortieFormUiState(
     val observation: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class PlainteSortieFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val plainteRepository: PlainteRepository
+    private val plainteRepository: PlainteRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val plainteSortieId: Int = savedStateHandle.get<Int>("plainteSortieId") ?: 0
@@ -136,6 +140,12 @@ class PlainteSortieFormViewModel @Inject constructor(
             when (val result = plainteRepository.getPlainteSortie(plainteSortieId)) {
                 is Resource.Success -> {
                     val s = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, s.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

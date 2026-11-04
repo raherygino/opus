@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getGardeAVueList,
   deleteGardeAVue,
@@ -123,6 +124,7 @@ export function GardeAVueList() {
       className: "w-[100px]",
       render: (g) => (
         <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+          {canEditWithinWindow(user, g.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -131,6 +133,7 @@ export function GardeAVueList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

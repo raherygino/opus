@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\EvenementSurvenu;
 use App\Models\EvenementSurvenuAttachment;
 use App\Models\AuditLog;
@@ -181,6 +182,8 @@ class EvenementSurvenuController
         if (!$entry) {
             Response::notFound('Événement introuvable');
         }
+
+        EditWindow::assertEditable('evenement_survenu', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

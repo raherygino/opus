@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.dispositif
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -21,9 +22,13 @@ data class DispositifDetailUiState(
     val entry: DispositifExceptionnel? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val canEdit: Boolean = false,
+    val canEditPermission: Boolean = false,
+    val isAdmin: Boolean = false,
     val userMessage: String? = null
-)
+) {
+    val canEdit: Boolean
+        get() = canEditPermission && (isAdmin || EditWindow.isWithinWindow(entry?.createdAt))
+}
 
 @HiltViewModel
 class DispositifDetailViewModel @Inject constructor(
@@ -47,7 +52,8 @@ class DispositifDetailViewModel @Inject constructor(
             val user = getCurrentUserUseCase().getOrNull()
             _state.update {
                 it.copy(
-                    canEdit = hasPermission(user, DISPOSITIF_MODULE, PermissionAction.EDIT)
+                    canEditPermission = hasPermission(user, DISPOSITIF_MODULE, PermissionAction.EDIT),
+                    isAdmin = EditWindow.isAdmin(user)
                 )
             }
         }

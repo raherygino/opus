@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getPlainteEntreeById,
   getPlainteEntreeAttachments,
@@ -55,7 +56,7 @@ export function PlainteDetail() {
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
   const canCreate = hasPermission(user, PJ_PLAINTE_MODULE, "can_create");
-  const canEdit = hasPermission(user, PJ_PLAINTE_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, PJ_PLAINTE_MODULE, "can_edit");
 
   const [entry, setEntry] = useState<PlainteEntree | null>(null);
   const [attachments, setAttachments] = useState<PlainteEntreeAttachment[]>([]);
@@ -95,6 +96,8 @@ export function PlainteDetail() {
   }
 
   if (!entry) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, entry.created_at);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">

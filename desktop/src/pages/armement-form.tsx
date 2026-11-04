@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getArmementById,
   createArmement,
@@ -43,6 +44,7 @@ import {
 } from "lucide-react";
 import type { ArmementAttachment, Arme, Personnel } from "@/types";
 import type { ArmementPayload } from "@/lib/api/armement";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -71,6 +73,7 @@ export function ArmementForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<ArmementPayload>({
     date_perception: todayIso(),
@@ -123,6 +126,11 @@ export function ArmementForm() {
 
       if (isEdit) {
         const a = await getArmementById(Number(id));
+        if (!canEditWithinWindow(user, a.created_at)) {
+          addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+          navigate(-1);
+          return;
+        }
         setForm({
           date_perception: a.date_perception.slice(0, 10),
           heure_perception: a.heure_perception.slice(0, 5),

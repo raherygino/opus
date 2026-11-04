@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import { getPersonnelList, deletePersonnel } from "@/lib/api/personnel";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -687,7 +688,7 @@ export function PersonnelTabs() {
           className="flex items-center gap-1"
           onClick={(e) => e.stopPropagation()}
         >
-          {m.retour === "Non" && (
+          {m.retour === "Non" && canEditWithinWindow(user, m.created_at) && (
             <Button
               variant="ghost"
               size="icon"
@@ -1264,6 +1265,7 @@ export function PersonnelTabs() {
                       >
                         <Download className="h-3.5 w-3.5" />
                       </Button>
+                      {canEditWithinWindow(user, detailTarget.created_at) && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1273,6 +1275,7 @@ export function PersonnelTabs() {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
+                      )}
                     </div>
                   </div>
                 ))}

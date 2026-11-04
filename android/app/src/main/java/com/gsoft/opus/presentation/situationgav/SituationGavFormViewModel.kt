@@ -3,10 +3,12 @@ package com.gsoft.opus.presentation.situationgav
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.GardeAVue
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.GardeAVueRepository
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.SituationGavFormData
 import com.gsoft.opus.domain.repository.SituationGavRepository
@@ -34,7 +36,8 @@ data class SituationGavFormUiState(
     val personnelOptions: List<Personnel> = emptyList(),
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
@@ -42,7 +45,8 @@ class SituationGavFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val situationGavRepository: SituationGavRepository,
     private val gardeAVueRepository: GardeAVueRepository,
-    private val personnelRepository: PersonnelRepository
+    private val personnelRepository: PersonnelRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val situationGavId: Int = savedStateHandle.get<Int>("situationGavId") ?: 0
@@ -79,6 +83,12 @@ class SituationGavFormViewModel @Inject constructor(
             when (val result = situationGavRepository.getSituationGav(situationGavId)) {
                 is Resource.Success -> {
                     val s = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, s.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

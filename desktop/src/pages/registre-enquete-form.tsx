@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getRegistreEnqueteById,
   createRegistreEnquete,
@@ -32,6 +33,7 @@ import {
   Plus,
   Eye,
 } from "lucide-react";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 import {
   REGISTRE_ENQUETE_STATUTS,
   REGISTRE_ENQUETE_STATUT_LABELS,
@@ -65,6 +67,7 @@ export function RegistreEnqueteForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<RegistreEnqueteInput>({
     date_ouverture: todayIso(),
@@ -118,6 +121,11 @@ export function RegistreEnqueteForm() {
     setLoading(true);
     try {
       const e: RegistreEnquete = await getRegistreEnqueteById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_ouverture: e.date_ouverture?.slice(0, 10) ?? "",
         numero_dossier: e.numero_dossier ?? "",

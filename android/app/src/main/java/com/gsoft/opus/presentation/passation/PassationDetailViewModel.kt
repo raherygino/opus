@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.passation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -24,10 +25,14 @@ data class PassationDetailUiState(
     val attachments: List<PassationAttachment> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val canEdit: Boolean = false,
+    val canEditPermission: Boolean = false,
+    val isAdmin: Boolean = false,
     val userMessage: String? = null,
     val notFound: Boolean = false
-)
+) {
+    val canEdit: Boolean
+        get() = canEditPermission && (isAdmin || EditWindow.isWithinWindow(passation?.createdAt))
+}
 
 @HiltViewModel
 class PassationDetailViewModel @Inject constructor(
@@ -51,7 +56,8 @@ class PassationDetailViewModel @Inject constructor(
             val user = getCurrentUserUseCase().getOrNull()
             _state.update {
                 it.copy(
-                    canEdit = hasPermission(user, PASSATION_MODULE, PermissionAction.EDIT)
+                    canEditPermission = hasPermission(user, PASSATION_MODULE, PermissionAction.EDIT),
+                    isAdmin = EditWindow.isAdmin(user)
                 )
             }
         }

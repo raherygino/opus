@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getPlainteEntreeById,
   createPlainteEntree,
@@ -35,6 +36,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { PlainteEntree, PlainteEntreeAttachment, PlainteEntreeInput, Personnel } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -60,6 +62,7 @@ export function PlainteForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<PlainteEntreeInput>({
     type: "ST_PARQUET",
@@ -127,6 +130,11 @@ export function PlainteForm() {
     setLoading(true);
     try {
       const e: PlainteEntree = await getPlainteEntreeById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         type: e.type,
         date_plainte: e.date_plainte.slice(0, 10),

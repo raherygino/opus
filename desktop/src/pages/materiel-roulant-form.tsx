@@ -26,6 +26,7 @@ import { strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
 import { ArrowLeft, Loader2, Save, Car, UserCheck, Calendar, Gauge, Fuel, KeyRound, CheckCircle2, PenLine, Paperclip, Plus, Trash2, Download } from "lucide-react";
 import type { Personnel, MaterielRoulantType, MaterielRoulantAttachment } from "@/types";
 import { MATERIEL_ROULANT_MODULE } from "@/pages/materiel-roulant-management";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 const LIST_PATH = "/sedentaire/poste/materiel-roulant";
 
@@ -103,6 +104,11 @@ export function MaterielRoulantForm() {
     setLoading(true);
     try {
       const data = await getMaterielRoulantById(Number(id));
+      if (!canEditWithinWindow(user, data.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_perception: data.date_perception,
         heure_perception: data.heure_perception.slice(0, 5),

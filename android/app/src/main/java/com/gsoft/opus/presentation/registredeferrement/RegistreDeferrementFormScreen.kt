@@ -80,6 +80,13 @@ fun RegistreDeferrementFormScreen(
     var showDateTimeTimePicker by remember { mutableStateOf(false) }
     var pickedDate by remember { mutableStateOf("") }
 
+    LaunchedEffect(state.editLocked) {
+
+        if (state.editLocked) onBack()
+
+    }
+
+
     LaunchedEffect(state.saved) {
         if (state.saved) {
             onSaved()

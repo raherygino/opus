@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Activite;
 use App\Models\ActiviteAttachment;
 
@@ -59,6 +60,8 @@ class ActiviteAttachmentController
             Response::notFound('Activité introuvable');
         }
 
+        EditWindow::assertEditable('activite', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -111,6 +114,8 @@ class ActiviteAttachmentController
             Response::notFound('Activité introuvable');
         }
 
+        EditWindow::assertEditable('activite', (int) $params['id'], $authUser);
+
         $attachment = ActiviteAttachment::getById($attachId);
         if (!$attachment || !ActiviteAttachment::belongsToActivite($attachId, $activiteId)) {
             Response::notFound('Pièce jointe introuvable');
@@ -145,6 +150,8 @@ class ActiviteAttachmentController
         if (!$activite) {
             Response::notFound('Activité introuvable');
         }
+
+        EditWindow::assertEditable('activite', (int) $params['id'], $authUser);
 
         $attachment = ActiviteAttachment::getById($attachId);
         if (!$attachment || !ActiviteAttachment::belongsToActivite($attachId, $activiteId)) {

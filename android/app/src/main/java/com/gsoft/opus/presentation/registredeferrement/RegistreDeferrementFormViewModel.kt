@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.registredeferrement
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.RegistreDeferrementFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.RegistreDeferrementRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -35,13 +37,15 @@ data class RegistreDeferrementFormUiState(
     val observations: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class RegistreDeferrementFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: RegistreDeferrementRepository
+    private val repository: RegistreDeferrementRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val entryId: Int = savedStateHandle.get<Int>("registreDeferrementId") ?: 0
@@ -80,6 +84,12 @@ class RegistreDeferrementFormViewModel @Inject constructor(
             when (val result = repository.getDeferrement(entryId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

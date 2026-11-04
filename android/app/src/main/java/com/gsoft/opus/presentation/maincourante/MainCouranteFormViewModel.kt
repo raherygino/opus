@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.maincourante
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.MainCouranteCategorie
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.MainCouranteCategorieRepository
 import com.gsoft.opus.domain.repository.MainCouranteFormData
 import com.gsoft.opus.domain.repository.MainCouranteRepository
@@ -33,14 +35,16 @@ data class MainCouranteFormUiState(
     val categories: List<MainCouranteCategorie> = emptyList(),
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class MainCouranteFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val mainCouranteRepository: MainCouranteRepository,
-    private val categorieRepository: MainCouranteCategorieRepository
+    private val categorieRepository: MainCouranteCategorieRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val mainCouranteId: Int = savedStateHandle.get<Int>("mainCouranteId") ?: 0
@@ -93,6 +97,12 @@ class MainCouranteFormViewModel @Inject constructor(
             when (val result = mainCouranteRepository.getMainCourante(mainCouranteId)) {
                 is Resource.Success -> {
                     val e = result.data
+
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
                     _state.update {
                         it.copy(
                             isLoading = false,

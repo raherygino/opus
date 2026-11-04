@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\MouvementPersonnel;
 use App\Models\MouvementAttachment;
 
@@ -53,6 +54,13 @@ class MouvementAttachmentController
             Response::notFound('Mouvement not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        EditWindow::assertEditable('mouvement_personnel', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -100,6 +108,13 @@ class MouvementAttachmentController
             Response::notFound('Mouvement not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        EditWindow::assertEditable('mouvement_personnel', (int) $params['id'], $authUser);
+
         $attachment = MouvementAttachment::getById($attachId);
         if (!$attachment || !MouvementAttachment::belongsToMouvement($attachId, $mouvementId)) {
             Response::notFound('Attachment not found');
@@ -129,6 +144,13 @@ class MouvementAttachmentController
         if (!$mouvement) {
             Response::notFound('Mouvement not found');
         }
+
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        EditWindow::assertEditable('mouvement_personnel', (int) $params['id'], $authUser);
 
         $attachment = MouvementAttachment::getById($attachId);
         if (!$attachment || !MouvementAttachment::belongsToMouvement($attachId, $mouvementId)) {

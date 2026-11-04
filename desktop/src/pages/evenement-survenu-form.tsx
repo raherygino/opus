@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getEvenementSurvenuById,
   createEvenementSurvenu,
@@ -33,6 +34,7 @@ import {
   Eye,
   Settings2,
 } from "lucide-react";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 import type {
   EvenementSurvenuAttachment,
   EvenementSurvenuInput,
@@ -53,6 +55,7 @@ export function EvenementSurvenuForm() {
   const isEdit = editId > 0;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -93,6 +96,11 @@ export function EvenementSurvenuForm() {
   async function load() {
     try {
       const data = await getEvenementSurvenuById(editId);
+      if (!canEditWithinWindow(user, data.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setDateEvenement(data.date_evenement);
       setHeureEvenement(data.heure_evenement);
       setTypeEvenement(data.type_evenement);

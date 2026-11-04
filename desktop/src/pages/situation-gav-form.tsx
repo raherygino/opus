@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getSituationGavById,
   createSituationGav,
@@ -36,6 +37,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { GardeAVue, Personnel, SituationGavAttachment } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -84,6 +86,7 @@ export function SituationGavForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [gardeAVueId, setGardeAVueId] = useState("");
   const [dateControle, setDateControle] = useState(nowDateTimeLocal());
@@ -115,6 +118,11 @@ export function SituationGavForm() {
     setLoading(true);
     try {
       const s = await getSituationGavById(Number(id));
+      if (!canEditWithinWindow(user, s.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setGardeAVueId(String(s.garde_a_vue_id));
       setDateControle(toDateTimeLocal(s.date_controle));
       setAgentControleId(s.agent_controle_id ? String(s.agent_controle_id) : "");

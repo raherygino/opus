@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getMainCouranteList,
   deleteMainCourante,
@@ -159,6 +160,7 @@ export function MainCouranteList() {
       className: "w-[100px]",
       render: (e) => (
         <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+          {canEditWithinWindow(user, e.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -167,6 +169,7 @@ export function MainCouranteList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

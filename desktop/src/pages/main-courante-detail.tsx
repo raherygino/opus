@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getMainCouranteById,
   getMainCouranteAttachmentDownloadUrl,
@@ -93,7 +94,9 @@ export function MainCouranteDetail() {
 
   const listPath = listPathForOrigine(entry.origine);
   const module = moduleForOrigine(entry.origine);
-  const canEdit = hasPermission(user, module, "can_edit");
+  const canEdit =
+    hasPermission(user, module, "can_edit") &&
+    canEditWithinWindow(user, entry.created_at);
   const agent =
     [entry.agent_prenoms, entry.agent_nom]
       .filter(Boolean)

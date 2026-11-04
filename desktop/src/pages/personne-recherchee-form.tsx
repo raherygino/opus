@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getPersonneRechercheeById,
   createPersonneRecherchee,
@@ -30,6 +31,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import type { PersonneRecherchee, PersonneRechercheeInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface PhotoItem {
   id?: number;
@@ -46,6 +48,7 @@ export function PersonneRechercheeForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<PersonneRechercheeInput>({
     nom: "",
@@ -71,6 +74,11 @@ export function PersonneRechercheeForm() {
     setLoading(true);
     try {
       const e: PersonneRecherchee = await getPersonneRechercheeById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         nom: e.nom,
         adresse: e.adresse ?? "",

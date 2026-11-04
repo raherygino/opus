@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getPerquisitionById,
   createPerquisition,
@@ -31,6 +32,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Perquisition, PerquisitionInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -45,6 +47,7 @@ export function PerquisitionForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<PerquisitionInput>({
     numero_ttr: "",
@@ -81,6 +84,11 @@ export function PerquisitionForm() {
     setLoading(true);
     try {
       const e: Perquisition = await getPerquisitionById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         numero_ttr: e.numero_ttr ?? "",
         substitut: e.substitut ?? "",

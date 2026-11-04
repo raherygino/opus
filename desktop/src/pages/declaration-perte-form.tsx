@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import type { DeclarationPerteAttachment } from "@/types";
 import type { DeclarationPertePayload } from "@/lib/api/declaration-perte";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -98,6 +99,11 @@ export function DeclarationPerteForm() {
     setLoading(true);
     try {
       const d = await getDeclarationPerteById(Number(id));
+      if (!canEditWithinWindow(user, d.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_declaration: d.date_declaration.slice(0, 10),
         heure_declaration: d.heure_declaration.slice(0, 5),

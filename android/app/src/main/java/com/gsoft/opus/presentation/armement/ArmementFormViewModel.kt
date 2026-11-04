@@ -9,10 +9,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.LocationCapture
 import com.gsoft.opus.core.LocationResult
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Arme
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.ArmementFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.ArmementRepository
 import com.gsoft.opus.domain.repository.ArmeRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
@@ -63,7 +65,8 @@ data class ArmementFormUiState(
     val locationError: String? = null,
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
@@ -72,7 +75,8 @@ class ArmementFormViewModel @Inject constructor(
     private val armementRepository: ArmementRepository,
     private val personnelRepository: PersonnelRepository,
     private val armeRepository: ArmeRepository,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val armementId: Int = savedStateHandle.get<Int>("armementId") ?: 0
@@ -119,6 +123,12 @@ class ArmementFormViewModel @Inject constructor(
             when (val result = armementRepository.getArmement(armementId)) {
                 is Resource.Success -> {
                     val a = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, a.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

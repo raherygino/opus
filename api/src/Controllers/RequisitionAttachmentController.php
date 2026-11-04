@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Requisition;
 use App\Models\RequisitionAttachment;
 
@@ -59,6 +60,8 @@ class RequisitionAttachmentController
             Response::notFound('Réquisition introuvable');
         }
 
+        EditWindow::assertEditable('requisition', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -111,6 +114,8 @@ class RequisitionAttachmentController
             Response::notFound('Réquisition introuvable');
         }
 
+        EditWindow::assertEditable('requisition', (int) $params['id'], $authUser);
+
         $attachment = RequisitionAttachment::find($attachId);
         if (!$attachment || !RequisitionAttachment::belongsToRequisition($attachId, $requisitionId)) {
             Response::notFound('Attachment not found');
@@ -145,6 +150,8 @@ class RequisitionAttachmentController
         if (!$requisition) {
             Response::notFound('Réquisition introuvable');
         }
+
+        EditWindow::assertEditable('requisition', (int) $params['id'], $authUser);
 
         $attachment = RequisitionAttachment::find($attachId);
         if (!$attachment || !RequisitionAttachment::belongsToRequisition($attachId, $requisitionId)) {

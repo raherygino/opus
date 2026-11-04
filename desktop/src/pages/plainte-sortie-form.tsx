@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getPlainteSortieById,
   createPlainteSortie,
@@ -36,6 +37,7 @@ import {
   Eye,
   ArrowRightLeft,
 } from "lucide-react";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 import type {
   PlainteSortie,
   PlainteSortieInput,
@@ -70,6 +72,7 @@ export function PlainteSortieForm() {
   const preselectedEntreeId = Number(searchParams.get("entreeId") ?? 0);
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<PlainteSortieInput>({
     plainte_entree_id: preselectedEntreeId,
@@ -143,6 +146,11 @@ export function PlainteSortieForm() {
     setLoading(true);
     try {
       const s: PlainteSortie = await getPlainteSortieById(sortieId);
+      if (!canEditWithinWindow(user, s.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         plainte_entree_id: s.plainte_entree_id,
         nature: s.nature,

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getMaterielRoulantById,
   reintegrateMaterielRoulant,
@@ -68,7 +69,7 @@ export function MaterielRoulantDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, MATERIEL_ROULANT_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, MATERIEL_ROULANT_MODULE, "can_edit");
 
   const [item, setItem] = useState<MaterielRoulant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -190,6 +191,8 @@ export function MaterielRoulantDetail() {
   }
 
   if (!item) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, item.created_at);
 
   const isReintegre = item.statut === "Réintégré";
   const hasDefaillances = !!(item.defaillances ?? "").trim();

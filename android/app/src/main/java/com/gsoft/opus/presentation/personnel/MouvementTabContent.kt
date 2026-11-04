@@ -94,6 +94,7 @@ fun MouvementListTab(
                 items(state.filtered, key = { it.id }) { mvt ->
                     MouvementListItem(
                         mouvement = mvt,
+                        canEdit = state.canEditRecord(mvt.createdAt),
                         onClick = { onOpenDetail(mvt) },
                         onRetour = { onOpenRetour(mvt) },
                         onDelete = { onRequestDelete(mvt) }
@@ -107,6 +108,7 @@ fun MouvementListTab(
 @Composable
 private fun MouvementListItem(
     mouvement: Mouvement,
+    canEdit: Boolean,
     onClick: () -> Unit,
     onRetour: () -> Unit,
     onDelete: () -> Unit
@@ -160,7 +162,7 @@ private fun MouvementListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)
                 )
-                if (!mouvement.isReturned) {
+                if (!mouvement.isReturned && canEdit) {
                     TextButton(onClick = onRetour) {
                         Icon(Icons.Outlined.Undo, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -271,13 +273,15 @@ fun MouvementDetailDialog(
                         }) {
                             Icon(Icons.Outlined.Download, contentDescription = "Télécharger", modifier = Modifier.size(18.dp))
                         }
-                        IconButton(onClick = { onDeleteAttachment(att.id) }) {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                contentDescription = "Supprimer",
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                        if (state.canEditRecord(mvt.createdAt)) {
+                            IconButton(onClick = { onDeleteAttachment(att.id) }) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    contentDescription = "Supprimer",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }

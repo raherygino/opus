@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\PlainteEntree;
 use App\Models\PlainteEntreeAttachment;
 
@@ -58,6 +59,8 @@ class PlainteEntreeAttachmentController
             Response::notFound('Plainte introuvable');
         }
 
+        EditWindow::assertEditable('plainte_entree', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class PlainteEntreeAttachmentController
             Response::notFound('Plainte introuvable');
         }
 
+        EditWindow::assertEditable('plainte_entree', (int) $params['id'], $authUser);
+
         $attachment = PlainteEntreeAttachment::getById($attachId);
         if (!$attachment || !PlainteEntreeAttachment::belongsToPlainteEntree($attachId, $plainteEntreeId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class PlainteEntreeAttachmentController
         if (!$plainte) {
             Response::notFound('Plainte introuvable');
         }
+
+        EditWindow::assertEditable('plainte_entree', (int) $params['id'], $authUser);
 
         $attachment = PlainteEntreeAttachment::getById($attachId);
         if (!$attachment || !PlainteEntreeAttachment::belongsToPlainteEntree($attachId, $plainteEntreeId)) {

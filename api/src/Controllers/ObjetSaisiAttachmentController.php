@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\ObjetSaisi;
 use App\Models\ObjetSaisiAttachment;
 
@@ -56,6 +57,8 @@ class ObjetSaisiAttachmentController
             Response::notFound('Objet saisi introuvable');
         }
 
+        EditWindow::assertEditable('objet_saisi', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -105,6 +108,8 @@ class ObjetSaisiAttachmentController
             Response::notFound('Objet saisi introuvable');
         }
 
+        EditWindow::assertEditable('objet_saisi', (int) $params['id'], $authUser);
+
         $attachment = ObjetSaisiAttachment::find($attachId);
         if (!$attachment || !ObjetSaisiAttachment::belongsToObjet($attachId, $objetId)) {
             Response::notFound('Attachment not found');
@@ -135,6 +140,8 @@ class ObjetSaisiAttachmentController
         if (!ObjetSaisi::find($objetId)) {
             Response::notFound('Objet saisi introuvable');
         }
+
+        EditWindow::assertEditable('objet_saisi', (int) $params['id'], $authUser);
 
         $attachment = ObjetSaisiAttachment::find($attachId);
         if (!$attachment || !ObjetSaisiAttachment::belongsToObjet($attachId, $objetId)) {

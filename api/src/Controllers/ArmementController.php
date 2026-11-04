@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Armement;
 use App\Models\ArmementAttachment;
 use App\Models\Arme;
@@ -273,6 +274,8 @@ class ArmementController
             Response::notFound('Armement not found');
         }
 
+        EditWindow::assertEditable('armement', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // The reintegration fields are NOT editable after the fact — ignore
@@ -340,6 +343,8 @@ class ArmementController
         if (!$armement) {
             Response::notFound('Armement not found');
         }
+
+        EditWindow::assertEditable('armement', $id, $authUser);
 
         if ($armement['heure_reintegration'] !== null) {
             Response::error('Cette arme a déjà été réintégrée', 409);

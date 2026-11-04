@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getActiviteById,
   deleteActivite,
@@ -50,7 +51,7 @@ export function ActiviteDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, SG_ACTIVITE_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, SG_ACTIVITE_MODULE, "can_edit");
   const canDelete = hasPermission(user, SG_ACTIVITE_MODULE, "can_delete");
 
   const [entry, setEntry] = useState<Activite | null>(null);
@@ -101,6 +102,8 @@ export function ActiviteDetail() {
   }
 
   if (!entry) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, entry.created_at);
 
   const agentName =
     [entry.agent_prenoms, entry.agent_nom].filter(Boolean).join(" ") ||

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\AffectationMateriel;
 use App\Models\TypeMateriel;
 use App\Models\Personnel;
@@ -307,6 +308,8 @@ class AffectationMaterielController
             Response::notFound('Affectation de matériel introuvable');
         }
 
+        EditWindow::assertEditable('affectation_materiel', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // Reintegration fields are NOT editable through update.
@@ -394,6 +397,8 @@ class AffectationMaterielController
         if (!$affectation) {
             Response::notFound('Affectation de matériel introuvable');
         }
+
+        EditWindow::assertEditable('affectation_materiel', $id, $authUser);
 
         if ($affectation['heure_reintegration'] !== null) {
             Response::error('Ce matériel a déjà été réintégré', 409);

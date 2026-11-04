@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getObjetSaisiById,
   createObjetSaisi,
@@ -31,6 +32,7 @@ import {
   Eye,
 } from "lucide-react";
 import { OBJET_SAISI_TYPE_LABELS, type ObjetSaisi, type ObjetSaisiInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -45,6 +47,7 @@ export function ObjetSaisiForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<ObjetSaisiInput>({
     numero_dossier: "",
@@ -69,6 +72,11 @@ export function ObjetSaisiForm() {
     setLoading(true);
     try {
       const e: ObjetSaisi = await getObjetSaisiById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         numero_dossier: e.numero_dossier ?? "",
         motif: e.motif,

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\MaterielRoulant;
 use App\Models\MaterielRoulantAttachment;
 
@@ -58,6 +59,8 @@ class MaterielRoulantAttachmentController
             Response::notFound('Matériel roulant introuvable');
         }
 
+        EditWindow::assertEditable('materiel_roulant', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class MaterielRoulantAttachmentController
             Response::notFound('Matériel roulant introuvable');
         }
 
+        EditWindow::assertEditable('materiel_roulant', (int) $params['id'], $authUser);
+
         $attachment = MaterielRoulantAttachment::getById($attachId);
         if (!$attachment || !MaterielRoulantAttachment::belongsToMaterielRoulant($attachId, $materielRoulantId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class MaterielRoulantAttachmentController
         if (!$materiel) {
             Response::notFound('Matériel roulant introuvable');
         }
+
+        EditWindow::assertEditable('materiel_roulant', (int) $params['id'], $authUser);
 
         $attachment = MaterielRoulantAttachment::getById($attachId);
         if (!$attachment || !MaterielRoulantAttachment::belongsToMaterielRoulant($attachId, $materielRoulantId)) {

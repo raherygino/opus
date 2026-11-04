@@ -248,6 +248,8 @@ class PlainteSortieController
             Response::notFound('Sortie introuvable');
         }
 
+        EditWindow::assertEditable('plainte_sortie', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // numero is never regenerated on update — drop it.

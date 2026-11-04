@@ -74,6 +74,13 @@ fun MainCouranteFormScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showCategorieDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(state.editLocked) {
+
+        if (state.editLocked) onBack()
+
+    }
+
+
     LaunchedEffect(state.saved) {
         if (state.saved) {
             onSaved()

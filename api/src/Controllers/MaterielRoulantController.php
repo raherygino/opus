@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\MaterielRoulant;
 use App\Models\MaterielRoulantAttachment;
 use App\Models\Personnel;
@@ -363,6 +364,8 @@ class MaterielRoulantController
             Response::notFound('Matériel roulant introuvable');
         }
 
+        EditWindow::assertEditable('materiel_roulant', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // Reintegration fields, technical observations/defaillances, and the
@@ -460,6 +463,8 @@ class MaterielRoulantController
         if (!$materiel) {
             Response::notFound('Matériel roulant introuvable');
         }
+
+        EditWindow::assertEditable('materiel_roulant', $id, $authUser);
 
         if ($materiel['heure_reintegration'] !== null) {
             Response::error('Ce matériel roulant a déjà été réintégré', 409);

@@ -22,6 +22,7 @@ import { SignaturePadDialog } from "@/components/signature/signature-pad-dialog"
 import { strokesToSvg, type Stroke } from "@/stores/signature-pad-store";
 import { ArrowLeft, Loader2, Save, Plus, Trash2, Package, UserCheck, Calendar, KeyRound, CheckCircle2, PenLine } from "lucide-react";
 import type { TypeMateriel, Personnel } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 const LIST_PATH = "/sedentaire/poste/materiels";
 
@@ -97,6 +98,11 @@ export function MaterielForm() {
     setLoading(true);
     try {
       const data = await getAffectationMaterielById(Number(id));
+      if (!canEditWithinWindow(user, data.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         agent_personnel_id: data.agent_personnel_id,
         date_perception: data.date_perception,

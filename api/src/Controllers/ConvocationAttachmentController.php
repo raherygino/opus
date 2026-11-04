@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Convocation;
 use App\Models\ConvocationAttachment;
 
@@ -58,6 +59,8 @@ class ConvocationAttachmentController
             Response::notFound('Convocation introuvable');
         }
 
+        EditWindow::assertEditable('convocation', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class ConvocationAttachmentController
             Response::notFound('Convocation introuvable');
         }
 
+        EditWindow::assertEditable('convocation', (int) $params['id'], $authUser);
+
         $attachment = ConvocationAttachment::getById($attachId);
         if (!$attachment || !ConvocationAttachment::belongsToConvocation($attachId, $convocationId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class ConvocationAttachmentController
         if (!$convocation) {
             Response::notFound('Convocation introuvable');
         }
+
+        EditWindow::assertEditable('convocation', (int) $params['id'], $authUser);
 
         $attachment = ConvocationAttachment::getById($attachId);
         if (!$attachment || !ConvocationAttachment::belongsToConvocation($attachId, $convocationId)) {

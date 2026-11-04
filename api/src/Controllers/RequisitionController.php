@@ -201,6 +201,8 @@ class RequisitionController
             Response::notFound('Réquisition introuvable');
         }
 
+        EditWindow::assertEditable('requisition', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // numero is never regenerated on update — drop it.

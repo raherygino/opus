@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.domain.model.AffectationMateriel
 import com.gsoft.opus.domain.model.TypeMateriel
 import com.gsoft.opus.presentation.personnel.EmptyState
@@ -149,7 +150,7 @@ fun MaterielScreen(
                         items(state.filteredAffectations, key = { it.id }) { aff ->
                             AffectationListItem(
                                 affectation = aff,
-                                canEdit = state.canEdit,
+                                canEdit = state.canEdit && (state.isAdmin || EditWindow.isWithinWindow(aff.createdAt)),
                                 canDelete = state.canDelete,
                                 onClick = { onAffectationClick(aff.id) },
                                 onReintegrate = { onReintegrate(aff.id) },

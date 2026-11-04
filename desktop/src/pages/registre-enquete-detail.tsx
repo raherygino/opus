@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getRegistreEnqueteById,
   getRegistreEnqueteAttachments,
@@ -54,7 +55,7 @@ export function RegistreEnqueteDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, PJ_ENQUETE_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, PJ_ENQUETE_MODULE, "can_edit");
 
   const [entry, setEntry] = useState<RegistreEnquete | null>(null);
   const [attachments, setAttachments] = useState<RegistreEnqueteAttachment[]>([]);
@@ -94,6 +95,8 @@ export function RegistreEnqueteDetail() {
   }
 
   if (!entry) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, entry.created_at);
 
   const enqueteurName = [entry.enqueteur_prenoms, entry.enqueteur_nom].filter(Boolean).join(" ");
   const enqueteurLabel = enqueteurName

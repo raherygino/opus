@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\MainCourante;
 use App\Models\MainCouranteAttachment;
 
@@ -58,6 +59,8 @@ class MainCouranteAttachmentController
             Response::notFound('Main courante introuvable');
         }
 
+        EditWindow::assertEditable('main_courante', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class MainCouranteAttachmentController
             Response::notFound('Main courante introuvable');
         }
 
+        EditWindow::assertEditable('main_courante', (int) $params['id'], $authUser);
+
         $attachment = MainCouranteAttachment::getById($attachId);
         if (!$attachment || !MainCouranteAttachment::belongsToMainCourante($attachId, $mainCouranteId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class MainCouranteAttachmentController
         if (!$mainCourante) {
             Response::notFound('Main courante introuvable');
         }
+
+        EditWindow::assertEditable('main_courante', (int) $params['id'], $authUser);
 
         $attachment = MainCouranteAttachment::getById($attachId);
         if (!$attachment || !MainCouranteAttachment::belongsToMainCourante($attachId, $mainCouranteId)) {

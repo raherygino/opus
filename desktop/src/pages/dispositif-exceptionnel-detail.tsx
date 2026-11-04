@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getDispositifExceptionnelById,
   deleteDispositifExceptionnel,
@@ -27,7 +28,7 @@ export function DispositifExceptionnelDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, SG_DISPOSITIF_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, SG_DISPOSITIF_MODULE, "can_edit");
   const canDelete = hasPermission(user, SG_DISPOSITIF_MODULE, "can_delete");
 
   const [item, setItem] = useState<DispositifExceptionnel | null>(null);
@@ -73,6 +74,8 @@ export function DispositifExceptionnelDetail() {
     );
   }
   if (!item) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, item.created_at);
 
   const agentName =
     [item.agent_prenoms, item.agent_nom].filter(Boolean).join(" ") ||

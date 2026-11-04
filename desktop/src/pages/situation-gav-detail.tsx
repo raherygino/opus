@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getSituationGavById,
   getSituationGavAttachments,
@@ -52,7 +53,7 @@ export function SituationGavDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, MODULE, "can_edit");
+  const canEditBase = hasPermission(user, MODULE, "can_edit");
 
   const [entry, setEntry] = useState<SituationGav | null>(null);
   const [attachments, setAttachments] = useState<SituationGavAttachment[]>([]);
@@ -92,6 +93,8 @@ export function SituationGavDetail() {
   }
 
   if (!entry) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, entry.created_at);
 
   const personneName = [entry.personne_nom, entry.personne_prenoms]
     .filter(Boolean)

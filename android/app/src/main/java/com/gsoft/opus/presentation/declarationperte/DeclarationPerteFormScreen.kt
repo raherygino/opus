@@ -75,6 +75,13 @@ fun DeclarationPerteFormScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showDatePertePicker by remember { mutableStateOf(false) }
 
+    LaunchedEffect(state.editLocked) {
+
+        if (state.editLocked) onBack()
+
+    }
+
+
     LaunchedEffect(state.saved) {
         if (state.saved) {
             onSaved()

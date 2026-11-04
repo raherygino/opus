@@ -2,6 +2,7 @@ package com.gsoft.opus.presentation.materiel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -27,6 +28,7 @@ data class MaterielUiState(
     val searchQuery: String = "",
     val canCreate: Boolean = false,
     val canEdit: Boolean = false,
+    val isAdmin: Boolean = false,
     val canDelete: Boolean = false,
     val deleteTarget: AffectationMateriel? = null,
     val isDeleting: Boolean = false,
@@ -75,6 +77,7 @@ class MaterielViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     canCreate = hasPermission(user, MATERIEL_MODULE, PermissionAction.CREATE),
+                    isAdmin = EditWindow.isAdmin(user),
                     canEdit = hasPermission(user, MATERIEL_MODULE, PermissionAction.EDIT),
                     canDelete = hasPermission(user, MATERIEL_MODULE, PermissionAction.DELETE)
                 )

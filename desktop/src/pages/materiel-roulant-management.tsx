@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getMaterielRoulantList,
   deleteMaterielRoulant,
@@ -150,7 +151,7 @@ export function MaterielRoulantManagement() {
           >
             <Eye className="h-3.5 w-3.5" />
           </Button>
-          {canEdit && (
+          {canEdit && canEditWithinWindow(user, m.created_at) && (
             <Button
               variant="ghost"
               size="icon"

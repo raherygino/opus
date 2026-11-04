@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.domain.model.MaterielRoulant
 import com.gsoft.opus.presentation.personnel.EmptyState
 import com.gsoft.opus.presentation.personnel.SearchBar
@@ -128,7 +129,7 @@ fun MaterielRoulantScreen(
                     items(state.filteredItems, key = { it.id }) { item ->
                         MaterielRoulantListItem(
                             item = item,
-                            canEdit = state.canEdit,
+                            canEdit = state.canEdit && (state.isAdmin || EditWindow.isWithinWindow(item.createdAt)),
                             canDelete = state.canDelete,
                             onClick = { onItemClick(item.id) },
                             onReintegrate = { onReintegrate(item.id) },

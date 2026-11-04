@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getConvocationById,
   getConvocationAttachments,
@@ -49,7 +50,7 @@ export function ConvocationDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, PJ_CONVOCATION_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, PJ_CONVOCATION_MODULE, "can_edit");
 
   const [entry, setEntry] = useState<Convocation | null>(null);
   const [attachments, setAttachments] = useState<ConvocationAttachment[]>([]);
@@ -89,6 +90,8 @@ export function ConvocationDetail() {
   }
 
   if (!entry) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, entry.created_at);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">

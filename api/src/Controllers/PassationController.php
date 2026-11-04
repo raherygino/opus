@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Passation;
 use App\Models\PassationAttachment;
 use App\Models\User;
@@ -176,6 +177,8 @@ class PassationController
         if (!$passation) {
             Response::notFound('Passation not found');
         }
+
+        EditWindow::assertEditable('passation', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

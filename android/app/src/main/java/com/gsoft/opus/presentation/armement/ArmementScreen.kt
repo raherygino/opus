@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.domain.model.Armement
 import com.gsoft.opus.presentation.personnel.EmptyState
 import com.gsoft.opus.presentation.personnel.SearchBar
@@ -128,7 +129,7 @@ fun ArmementScreen(
                     items(state.filtered, key = { it.id }) { armement ->
                         ArmementListItem(
                             armement = armement,
-                            canEdit = state.canEdit,
+                            canEdit = state.canEdit && (state.isAdmin || EditWindow.isWithinWindow(armement.createdAt)),
                             canDelete = state.canDelete,
                             onClick = { onArmementClick(armement.id) },
                             onReintegrate = { onReintegrate(armement.id) },

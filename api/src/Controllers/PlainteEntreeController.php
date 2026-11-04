@@ -312,6 +312,8 @@ class PlainteEntreeController
             Response::notFound('Plainte introuvable');
         }
 
+        EditWindow::assertEditable('plainte_entree', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // numero_dossier is never regenerated on update — drop it.

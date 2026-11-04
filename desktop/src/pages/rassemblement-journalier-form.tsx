@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getRassemblementById,
   createRassemblement,
@@ -20,6 +21,7 @@ import {
   type EditableRepartitionRow,
 } from "@/components/rassemblement-journalier/repartition-secteur-table";
 import type { RassemblementJournalierInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 export function RassemblementJournalierForm() {
   const { id } = useParams();
@@ -27,6 +29,7 @@ export function RassemblementJournalierForm() {
   const isEdit = editId > 0;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -81,6 +84,11 @@ export function RassemblementJournalierForm() {
   async function load() {
     try {
       const data = await getRassemblementById(editId);
+      if (!canEditWithinWindow(user, data.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setDateRassemblement(data.date_rassemblement);
       setHeureRassemblement(data.heure_rassemblement);
       setBrigadeService(data.brigade_service);

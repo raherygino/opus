@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getMandatById,
   createMandat,
@@ -33,6 +34,7 @@ import {
 } from "lucide-react";
 import { MANDAT_TYPES } from "@/types";
 import type { Mandat, MandatInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -47,6 +49,7 @@ export function MandatForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<MandatInput>({
     type: "",
@@ -89,6 +92,11 @@ export function MandatForm() {
     setLoading(true);
     try {
       const e: Mandat = await getMandatById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         type: (e.type as MandatInput["type"]) || "",
         autorite: e.autorite ?? "",

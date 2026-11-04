@@ -137,6 +137,8 @@ class RenseignementPjController
             Response::notFound('Renseignement introuvable');
         }
 
+        EditWindow::assertEditable('renseignement_pj', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = self::validate($data, false);

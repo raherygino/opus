@@ -223,6 +223,8 @@ class ConvocationController
             Response::notFound('Convocation introuvable');
         }
 
+        EditWindow::assertEditable('convocation', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // numero is never regenerated on update — drop it.

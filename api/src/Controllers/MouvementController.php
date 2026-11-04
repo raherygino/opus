@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\MouvementAttachment;
 use App\Models\MouvementPersonnel;
 use App\Models\Personnel;
@@ -123,6 +124,13 @@ class MouvementController
             Response::notFound('Mouvement not found');
         }
 
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        EditWindow::assertEditable('mouvement_personnel', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // Recompute date_retour if date_depart or days changed and date_retour not explicitly set
@@ -188,6 +196,13 @@ class MouvementController
         if (!$mouvement) {
             Response::notFound('Mouvement not found');
         }
+
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        EditWindow::assertEditable('mouvement_personnel', $id, $authUser);
 
         MouvementPersonnel::update($id, ['retour' => 'Oui']);
         $mouvement = MouvementPersonnel::getById($id);

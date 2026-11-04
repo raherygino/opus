@@ -2,6 +2,7 @@ package com.gsoft.opus.presentation.armement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -23,6 +24,7 @@ data class ArmementUiState(
     val searchQuery: String = "",
     val canCreate: Boolean = false,
     val canEdit: Boolean = false,
+    val isAdmin: Boolean = false,
     val canDelete: Boolean = false,
     val deleteTarget: Armement? = null,
     val isDeleting: Boolean = false,
@@ -62,6 +64,7 @@ class ArmementViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     canCreate = hasPermission(user, ARMEMENT_MODULE, PermissionAction.CREATE),
+                    isAdmin = EditWindow.isAdmin(user),
                     canEdit = hasPermission(user, ARMEMENT_MODULE, PermissionAction.EDIT),
                     canDelete = hasPermission(user, ARMEMENT_MODULE, PermissionAction.DELETE)
                 )

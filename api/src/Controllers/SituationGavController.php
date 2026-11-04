@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\SituationGav;
 use App\Models\SituationGavAttachment;
 use App\Models\GardeAVue;
@@ -209,6 +210,8 @@ class SituationGavController
         if (!$situation) {
             Response::notFound('Situation GAV introuvable');
         }
+
+        EditWindow::assertEditable('situation_gav', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

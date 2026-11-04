@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getObjetTrouveById,
   createObjetTrouve,
@@ -31,6 +32,7 @@ import {
   Eye,
 } from "lucide-react";
 import { OBJET_TROUVE_MOTIF_LABELS, type ObjetTrouve, type ObjetTrouveInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -45,6 +47,7 @@ export function ObjetTrouveForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<ObjetTrouveInput>({
     affaire: "",
@@ -68,6 +71,11 @@ export function ObjetTrouveForm() {
     setLoading(true);
     try {
       const e: ObjetTrouve = await getObjetTrouveById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         affaire: e.affaire,
         motif_decouverte: e.motif_decouverte,

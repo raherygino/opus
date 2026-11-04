@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getDeclarationPerteById,
   getDeclarationPerteAttachmentDownloadUrl,
@@ -50,7 +51,7 @@ export function DeclarationPerteDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, DECLARATION_PERTE_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, DECLARATION_PERTE_MODULE, "can_edit");
 
   const [declaration, setDeclaration] = useState<DeclarationPerte | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,8 @@ export function DeclarationPerteDetail() {
   }
 
   if (!declaration) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, declaration.created_at);
 
   const agent =
     [declaration.agent_prenoms, declaration.agent_nom]

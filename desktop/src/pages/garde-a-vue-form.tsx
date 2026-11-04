@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getGardeAVueById,
   createGardeAVue,
@@ -30,6 +31,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { GardeAVue, GardeAVueInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -56,6 +58,7 @@ export function GardeAVueForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<GardeAVueInput>({
     nom: "",
@@ -92,6 +95,11 @@ export function GardeAVueForm() {
     setLoading(true);
     try {
       const e: GardeAVue = await getGardeAVueById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         nom: e.nom,
         prenoms: e.prenoms ?? "",

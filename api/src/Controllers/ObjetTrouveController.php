@@ -132,6 +132,8 @@ class ObjetTrouveController
             Response::notFound('Objet trouvé introuvable');
         }
 
+        EditWindow::assertEditable('objet_trouve', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $errors = self::validate($data, false);
         if (!empty($errors)) {

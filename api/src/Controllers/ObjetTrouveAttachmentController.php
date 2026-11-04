@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\ObjetTrouve;
 use App\Models\ObjetTrouveAttachment;
 
@@ -56,6 +57,8 @@ class ObjetTrouveAttachmentController
             Response::notFound('Objet trouvé introuvable');
         }
 
+        EditWindow::assertEditable('objet_trouve', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -105,6 +108,8 @@ class ObjetTrouveAttachmentController
             Response::notFound('Objet trouvé introuvable');
         }
 
+        EditWindow::assertEditable('objet_trouve', (int) $params['id'], $authUser);
+
         $attachment = ObjetTrouveAttachment::find($attachId);
         if (!$attachment || !ObjetTrouveAttachment::belongsToObjet($attachId, $objetId)) {
             Response::notFound('Attachment not found');
@@ -135,6 +140,8 @@ class ObjetTrouveAttachmentController
         if (!ObjetTrouve::find($objetId)) {
             Response::notFound('Objet trouvé introuvable');
         }
+
+        EditWindow::assertEditable('objet_trouve', (int) $params['id'], $authUser);
 
         $attachment = ObjetTrouveAttachment::find($attachId);
         if (!$attachment || !ObjetTrouveAttachment::belongsToObjet($attachId, $objetId)) {

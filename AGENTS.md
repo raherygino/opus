@@ -9,6 +9,7 @@ Multi-client app: `api/` (pure PHP REST API, no framework), `android/` (Kotlin +
   - Permission module codes look like `sedentaire_secretariat_correspondance` (checked via `hasPermission(user, module, action)` on both clients; server-side only requires auth + ownership-style flows).
   - Notifications: controllers call `Notification::notifyFeatureChange($module, $adminData, $userData, $actorId)` on create/update; push delivery is isolated inside `Notification::create()` and never fails the request.
   - Audit: `AuditLog::create(...)` on every mutation.
+- 24h edit window: business records become read-only 24h after `created_at`. Server-side `EditWindow::assertEditable($table, $id, $authUser)` (api/src/Helpers/EditWindow.php) must run before any update/workflow/attachment mutation; `SUPER_ADMIN`/`STATION_ADMIN` bypass. Clients mirror it via `canEditWithinWindow` (desktop `src/lib/edit-window.ts`, Android `core/EditWindow.kt`). Catalog/admin data (types, armes, personnel, users, roles, notifications) is exempt.
 - Tests are plain PHP scripts (no PHPUnit): `php api/tests/<Name>Test.php` — they build a scratch MySQL DB and drop it.
 
 ## Verification commands (Windows)

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\ComportementPersonnel;
 use App\Models\Personnel;
 use App\Models\AuditLog;
@@ -180,6 +181,13 @@ class ComportementController
         if (!$comportement) {
             Response::notFound('Comportement not found');
         }
+
+        $authUser = AuthController::getAuthenticatedUser();
+        if (!$authUser) {
+            Response::unauthorized('Authentication required');
+        }
+
+        EditWindow::assertEditable('comportement_personnel', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

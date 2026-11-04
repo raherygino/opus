@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getPersonneRechercheeList,
   deletePersonneRecherchee,
@@ -97,6 +98,7 @@ export function PersonneRechercheeList() {
       className: "w-[100px]",
       render: (r) => (
         <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+          {canEditWithinWindow(user, r.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -105,6 +107,7 @@ export function PersonneRechercheeList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

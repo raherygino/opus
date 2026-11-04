@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.materielroulant
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -20,9 +21,13 @@ import javax.inject.Inject
 data class MaterielRoulantDetailUiState(
     val item: MaterielRoulant? = null,
     val isLoading: Boolean = true,
-    val canEdit: Boolean = false,
+    val canEditPermission: Boolean = false,
+    val isAdmin: Boolean = false,
     val errorMessage: String? = null
-)
+) {
+    val canEdit: Boolean
+        get() = canEditPermission && (isAdmin || EditWindow.isWithinWindow(item?.createdAt))
+}
 
 @HiltViewModel
 class MaterielRoulantDetailViewModel @Inject constructor(
@@ -45,7 +50,8 @@ class MaterielRoulantDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val user = getCurrentUserUseCase().getOrNull()
             _state.update {
-                it.copy(canEdit = hasPermission(user, MATERIEL_ROULANT_MODULE, PermissionAction.EDIT))
+                it.copy(canEditPermission = hasPermission(user, MATERIEL_ROULANT_MODULE, PermissionAction.EDIT),
+                    isAdmin = EditWindow.isAdmin(user))
             }
         }
     }

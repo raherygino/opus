@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\DeclarationPerte;
 use App\Models\DeclarationPerteAttachment;
 use App\Models\AuditLog;
@@ -186,6 +187,8 @@ class DeclarationPerteController
         if (!$declaration) {
             Response::notFound('Declaration de perte not found');
         }
+
+        EditWindow::assertEditable('declaration_perte', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

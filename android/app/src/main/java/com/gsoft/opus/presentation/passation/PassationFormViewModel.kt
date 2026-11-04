@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.passation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Passation
 import com.gsoft.opus.domain.model.VerifiedIdentity
@@ -37,6 +38,7 @@ data class PassationFormUiState(
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
     val saved: Boolean = false,
+    val editLocked: Boolean = false,
     val chefDescendantDisplay: String = ""
 )
 
@@ -85,6 +87,12 @@ class PassationFormViewModel @Inject constructor(
             when (val result = passationRepository.getPassation(passationId)) {
                 is Resource.Success -> {
                     val p = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, p.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

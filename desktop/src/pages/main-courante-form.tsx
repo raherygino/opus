@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getMainCouranteById,
   createMainCourante,
@@ -38,6 +39,7 @@ import {
 import type { MainCourante, MainCouranteAttachment, MainCouranteCategorieItem, MainCouranteOrigine } from "@/types";
 import type { MainCourantePayload } from "@/lib/api/main-courante";
 import { listPathForOrigine } from "@/pages/main-courante-list";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -72,6 +74,7 @@ export function MainCouranteForm() {
   const listPath = listPathForOrigine(origine);
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<MainCourantePayload>({
     date_evenement: todayIso(),
@@ -116,6 +119,11 @@ export function MainCouranteForm() {
     setLoading(true);
     try {
       const e = await getMainCouranteById(Number(id));
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_evenement: e.date_evenement.slice(0, 10),
         heure_evenement: e.heure_evenement.slice(0, 5),

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getEvenementSurvenuById,
   deleteEvenementSurvenu,
@@ -26,7 +27,7 @@ export function EvenementSurvenuDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, SG_EVENEMENT_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, SG_EVENEMENT_MODULE, "can_edit");
   const canDelete = hasPermission(user, SG_EVENEMENT_MODULE, "can_delete");
 
   const [item, setItem] = useState<EvenementSurvenu | null>(null);
@@ -70,6 +71,8 @@ export function EvenementSurvenuDetail() {
     return <div className="text-center py-8 text-muted-foreground">Chargement...</div>;
   }
   if (!item) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, item.created_at);
 
   const agentName =
     [item.agent_prenoms, item.agent_nom].filter(Boolean).join(" ") ||

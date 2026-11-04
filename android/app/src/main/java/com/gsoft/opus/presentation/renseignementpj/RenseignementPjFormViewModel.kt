@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.renseignementpj
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.RenseignementPjFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.RenseignementPjRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -26,13 +28,15 @@ data class RenseignementPjFormUiState(
     val prejudices: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class RenseignementPjFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: RenseignementPjRepository
+    private val repository: RenseignementPjRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val entryId: Int = savedStateHandle.get<Int>("renseignementId") ?: 0
@@ -51,6 +55,12 @@ class RenseignementPjFormViewModel @Inject constructor(
             when (val result = repository.getRenseignementPj(entryId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

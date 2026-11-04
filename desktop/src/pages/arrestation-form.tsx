@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getArrestationById,
   createArrestation,
@@ -31,6 +32,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Arrestation, ArrestationInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -51,6 +53,7 @@ export function ArrestationForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<ArrestationInput>({
     date_heure_arrestation: nowLocalDateTime(),
@@ -90,6 +93,11 @@ export function ArrestationForm() {
     setLoading(true);
     try {
       const e: Arrestation = await getArrestationById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_heure_arrestation: e.date_heure_arrestation?.slice(0, 16) ?? "",
         personne_nom: e.personne_nom,

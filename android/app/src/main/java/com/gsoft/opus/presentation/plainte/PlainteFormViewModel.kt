@@ -3,9 +3,11 @@ package com.gsoft.opus.presentation.plainte
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.repository.PlainteEntreeFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.PlainteRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.UploadFile
@@ -42,14 +44,16 @@ data class PlainteFormUiState(
     val observation: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class PlainteFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val plainteRepository: PlainteRepository,
-    private val personnelRepository: PersonnelRepository
+    private val personnelRepository: PersonnelRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val plainteEntreeId: Int = savedStateHandle.get<Int>("plainteEntreeId") ?: 0
@@ -97,6 +101,12 @@ class PlainteFormViewModel @Inject constructor(
             when (val result = plainteRepository.getPlainteEntree(plainteEntreeId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

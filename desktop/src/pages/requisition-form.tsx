@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getRequisitionById,
   createRequisition,
@@ -34,6 +35,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Requisition, RequisitionInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -55,6 +57,7 @@ export function RequisitionForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<RequisitionInput>({
     type: "TPH",
@@ -99,6 +102,11 @@ export function RequisitionForm() {
     setLoading(true);
     try {
       const e: Requisition = await getRequisitionById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         type: e.type,
         date_requisition: e.date_requisition.slice(0, 10),

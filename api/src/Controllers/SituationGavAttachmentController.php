@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\SituationGav;
 use App\Models\SituationGavAttachment;
 
@@ -58,6 +59,8 @@ class SituationGavAttachmentController
             Response::notFound('Situation GAV introuvable');
         }
 
+        EditWindow::assertEditable('situation_gav', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class SituationGavAttachmentController
             Response::notFound('Situation GAV introuvable');
         }
 
+        EditWindow::assertEditable('situation_gav', (int) $params['id'], $authUser);
+
         $attachment = SituationGavAttachment::getById($attachId);
         if (!$attachment || !SituationGavAttachment::belongsToSituationGav($attachId, $situationGavId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class SituationGavAttachmentController
         if (!$situation) {
             Response::notFound('Situation GAV introuvable');
         }
+
+        EditWindow::assertEditable('situation_gav', (int) $params['id'], $authUser);
 
         $attachment = SituationGavAttachment::getById($attachId);
         if (!$attachment || !SituationGavAttachment::belongsToSituationGav($attachId, $situationGavId)) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Arrestation;
 use App\Models\ArrestationAttachment;
 
@@ -56,6 +57,8 @@ class ArrestationAttachmentController
             Response::notFound('Arrestation introuvable');
         }
 
+        EditWindow::assertEditable('arrestation', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -105,6 +108,8 @@ class ArrestationAttachmentController
             Response::notFound('Arrestation introuvable');
         }
 
+        EditWindow::assertEditable('arrestation', (int) $params['id'], $authUser);
+
         $attachment = ArrestationAttachment::find($attachId);
         if (!$attachment || !ArrestationAttachment::belongsToArrestation($attachId, $arrestationId)) {
             Response::notFound('Attachment not found');
@@ -135,6 +140,8 @@ class ArrestationAttachmentController
         if (!Arrestation::find($arrestationId)) {
             Response::notFound('Arrestation introuvable');
         }
+
+        EditWindow::assertEditable('arrestation', (int) $params['id'], $authUser);
 
         $attachment = ArrestationAttachment::find($attachId);
         if (!$attachment || !ArrestationAttachment::belongsToArrestation($attachId, $arrestationId)) {

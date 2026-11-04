@@ -21,6 +21,7 @@ import {
   type EditableEffectifRow,
 } from "@/components/dispositif-exceptionnel/effectif-engage-table";
 import type { DispositifExceptionnelInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 const SG_DISPOSITIF_MODULE = "sg_dispositif_exceptionnel";
 
@@ -50,6 +51,11 @@ export function DispositifExceptionnelForm() {
     (async () => {
       try {
         const e = await getDispositifExceptionnelById(Number(id));
+        if (!canEditWithinWindow(user, e.created_at)) {
+          addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+          navigate(-1);
+          return;
+        }
         setNatureEvenement(e.nature_evenement ?? "");
         setDateDebut(e.date_debut?.substring(0, 10) ?? "");
         setDateFin(e.date_fin?.substring(0, 10) ?? "");

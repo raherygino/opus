@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.declarationperte
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.DeclarationPerteFormData
 import com.gsoft.opus.domain.repository.DeclarationPerteRepository
@@ -35,7 +36,8 @@ data class DeclarationPerteFormUiState(
     val nomAgent: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
@@ -83,6 +85,12 @@ class DeclarationPerteFormViewModel @Inject constructor(
             when (val result = declarationPerteRepository.getDeclarationPerte(declarationId)) {
                 is Resource.Success -> {
                     val d = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, d.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

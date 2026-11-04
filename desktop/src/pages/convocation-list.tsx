@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getConvocationList,
   deleteConvocation,
@@ -120,6 +121,7 @@ export function ConvocationList() {
       className: "w-[100px]",
       render: (c) => (
         <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+          {canEditWithinWindow(user, c.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -128,6 +130,7 @@ export function ConvocationList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

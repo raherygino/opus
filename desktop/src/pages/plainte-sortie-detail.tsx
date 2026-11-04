@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getPlainteSortieById,
   getPlainteSortieAttachments,
@@ -50,7 +51,7 @@ export function PlainteSortieDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, PJ_PLAINTE_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, PJ_PLAINTE_MODULE, "can_edit");
 
   const [sortie, setSortie] = useState<PlainteSortie | null>(null);
   const [attachments, setAttachments] = useState<PlainteSortieAttachment[]>([]);
@@ -90,6 +91,8 @@ export function PlainteSortieDetail() {
   }
 
   if (!sortie) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, sortie.created_at);
 
   const entreeOpjName = [sortie.entree_opj_prenoms, sortie.entree_opj_nom]
     .filter(Boolean)

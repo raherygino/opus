@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Correspondance;
 use App\Models\CorrespondanceAttachment;
 use App\Models\AuditLog;
@@ -183,6 +184,8 @@ class CorrespondanceController
         if (!$correspondance) {
             Response::notFound('Correspondance not found');
         }
+
+        EditWindow::assertEditable('correspondance', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

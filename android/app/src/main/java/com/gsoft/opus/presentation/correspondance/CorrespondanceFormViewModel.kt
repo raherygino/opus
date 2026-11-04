@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.correspondance
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.CorrespondanceFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.CorrespondanceRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -32,13 +34,15 @@ data class CorrespondanceFormUiState(
     val statut: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class CorrespondanceFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val correspondanceRepository: CorrespondanceRepository
+    private val correspondanceRepository: CorrespondanceRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val correspondanceId: Int = savedStateHandle.get<Int>("correspondanceId") ?: 0
@@ -65,6 +69,12 @@ class CorrespondanceFormViewModel @Inject constructor(
             when (val result = correspondanceRepository.getCorrespondance(correspondanceId)) {
                 is Resource.Success -> {
                     val c = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, c.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

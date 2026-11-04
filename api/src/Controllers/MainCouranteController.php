@@ -176,6 +176,8 @@ class MainCouranteController
             Response::notFound('Main courante introuvable');
         }
 
+        EditWindow::assertEditable('main_courante', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         // origine is not editable through update — it is fixed at creation.

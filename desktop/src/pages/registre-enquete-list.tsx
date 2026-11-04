@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import { getRegistreEnqueteList, deleteRegistreEnquete } from "@/lib/api/registre-enquete";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -125,6 +126,7 @@ export function RegistreEnqueteList() {
       className: "w-[100px]",
       render: (r) => (
         <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+          {canEditWithinWindow(user, r.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -133,6 +135,7 @@ export function RegistreEnqueteList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

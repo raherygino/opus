@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\DeclarationPerte;
 use App\Models\DeclarationPerteAttachment;
 
@@ -58,6 +59,8 @@ class DeclarationPerteAttachmentController
             Response::notFound('Declaration de perte not found');
         }
 
+        EditWindow::assertEditable('declaration_perte', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class DeclarationPerteAttachmentController
             Response::notFound('Declaration de perte not found');
         }
 
+        EditWindow::assertEditable('declaration_perte', (int) $params['id'], $authUser);
+
         $attachment = DeclarationPerteAttachment::getById($attachId);
         if (!$attachment || !DeclarationPerteAttachment::belongsToDeclaration($attachId, $declarationId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class DeclarationPerteAttachmentController
         if (!$declaration) {
             Response::notFound('Declaration de perte not found');
         }
+
+        EditWindow::assertEditable('declaration_perte', (int) $params['id'], $authUser);
 
         $attachment = DeclarationPerteAttachment::getById($attachId);
         if (!$attachment || !DeclarationPerteAttachment::belongsToDeclaration($attachId, $declarationId)) {

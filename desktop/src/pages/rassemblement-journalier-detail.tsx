@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import { getRassemblementById, deleteRassemblement } from "@/lib/api/rassemblement-journalier";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +24,7 @@ export function RassemblementJournalierDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, SG_RASSEMBLEMENT_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, SG_RASSEMBLEMENT_MODULE, "can_edit");
   const canDelete = hasPermission(user, SG_RASSEMBLEMENT_MODULE, "can_delete");
 
   const [item, setItem] = useState<RassemblementJournalier | null>(null);
@@ -65,6 +66,8 @@ export function RassemblementJournalierDetail() {
     return <div className="text-center py-8 text-muted-foreground">Chargement...</div>;
   }
   if (!item) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, item.created_at);
 
   // Répartition par secteur — Diurne / Nocturne share the same structure.
   const repartitionRows: EditableRepartitionRow[] = (item.repartitions ?? []).map((r) => ({

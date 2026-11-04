@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.dispositif
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.DispositifEffectifInput
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.DispositifExceptionnelFormData
 import com.gsoft.opus.domain.repository.DispositifExceptionnelRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,13 +32,15 @@ data class DispositifFormUiState(
     /** Row keys whose secteur failed validation (partially filled rows). */
     val invalidSecteurKeys: Set<Long> = emptySet(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class DispositifFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: DispositifExceptionnelRepository
+    private val repository: DispositifExceptionnelRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val dispositifId: Int = savedStateHandle.get<Int>("dispositifId") ?: 0
@@ -71,6 +75,12 @@ class DispositifFormViewModel @Inject constructor(
             when (val result = repository.getDispositif(dispositifId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

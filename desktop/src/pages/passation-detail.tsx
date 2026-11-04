@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getPassationById,
   getPassationAttachmentDownloadUrl,
@@ -49,7 +50,7 @@ export function PassationDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, PASSATION_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, PASSATION_MODULE, "can_edit");
 
   const [passation, setPassation] = useState<Passation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,8 @@ export function PassationDetail() {
   }
 
   if (!passation) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, passation.created_at);
 
   const descendant =
     [passation.chef_descendant_grade, passation.chef_descendant_lastname]

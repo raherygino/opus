@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.declarationperte
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -24,10 +25,14 @@ data class DeclarationPerteDetailUiState(
     val attachments: List<DeclarationPerteAttachment> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val canEdit: Boolean = false,
+    val canEditPermission: Boolean = false,
+    val isAdmin: Boolean = false,
     val userMessage: String? = null,
     val notFound: Boolean = false
-)
+) {
+    val canEdit: Boolean
+        get() = canEditPermission && (isAdmin || EditWindow.isWithinWindow(declaration?.createdAt))
+}
 
 @HiltViewModel
 class DeclarationPerteDetailViewModel @Inject constructor(
@@ -51,7 +56,8 @@ class DeclarationPerteDetailViewModel @Inject constructor(
             val user = getCurrentUserUseCase().getOrNull()
             _state.update {
                 it.copy(
-                    canEdit = hasPermission(user, DECLARATION_PERTE_MODULE, PermissionAction.EDIT)
+                    canEditPermission = hasPermission(user, DECLARATION_PERTE_MODULE, PermissionAction.EDIT),
+                    isAdmin = EditWindow.isAdmin(user)
                 )
             }
         }

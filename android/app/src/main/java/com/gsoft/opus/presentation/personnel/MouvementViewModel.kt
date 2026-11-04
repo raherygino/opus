@@ -2,6 +2,7 @@ package com.gsoft.opus.presentation.personnel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Mouvement
 import com.gsoft.opus.domain.model.MouvementAttachment
@@ -10,6 +11,7 @@ import com.gsoft.opus.domain.repository.MouvementFormData
 import com.gsoft.opus.domain.repository.MouvementRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
 import com.gsoft.opus.domain.repository.UploadFile
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,8 +68,13 @@ data class MouvementUiState(
     val deleteTarget: Mouvement? = null,
     val isDeleting: Boolean = false,
 
+    val isAdmin: Boolean = false,
     val userMessage: String? = null
 ) {
+    /** 24h edit window: admins bypass, everyone else only within 24h of creation. */
+    fun canEditRecord(createdAt: String?): Boolean =
+        isAdmin || EditWindow.isWithinWindow(createdAt)
+
     val filtered: List<Mouvement>
         get() {
             val query = searchQuery.trim().lowercase()
@@ -84,7 +91,8 @@ data class MouvementUiState(
 @HiltViewModel
 class MouvementViewModel @Inject constructor(
     private val mouvementRepository: MouvementRepository,
-    private val personnelRepository: PersonnelRepository
+    private val personnelRepository: PersonnelRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MouvementUiState())
@@ -94,7 +102,15 @@ class MouvementViewModel @Inject constructor(
     private var personnelCache: List<Personnel> = emptyList()
 
     init {
+        loadUser()
         refresh()
+    }
+
+    private fun loadUser() {
+        viewModelScope.launch {
+            val user = getCurrentUserUseCase().getOrNull()
+            _state.update { it.copy(isAdmin = EditWindow.isAdmin(user)) }
+        }
     }
 
     fun refresh() {

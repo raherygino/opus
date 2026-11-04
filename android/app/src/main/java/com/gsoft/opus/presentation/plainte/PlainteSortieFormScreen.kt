@@ -74,6 +74,13 @@ fun PlainteSortieFormScreen(
     var showDateSortiePicker by remember { mutableStateOf(false) }
     var showDateDeferrementPicker by remember { mutableStateOf(false) }
 
+    LaunchedEffect(state.editLocked) {
+
+        if (state.editLocked) onBack()
+
+    }
+
+
     LaunchedEffect(state.saved) {
         if (state.saved) {
             onSaved()

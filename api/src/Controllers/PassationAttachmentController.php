@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Passation;
 use App\Models\PassationAttachment;
 
@@ -58,6 +59,8 @@ class PassationAttachmentController
             Response::notFound('Passation not found');
         }
 
+        EditWindow::assertEditable('passation', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class PassationAttachmentController
             Response::notFound('Passation not found');
         }
 
+        EditWindow::assertEditable('passation', (int) $params['id'], $authUser);
+
         $attachment = PassationAttachment::getById($attachId);
         if (!$attachment || !PassationAttachment::belongsToPassation($attachId, $passationId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class PassationAttachmentController
         if (!$passation) {
             Response::notFound('Passation not found');
         }
+
+        EditWindow::assertEditable('passation', (int) $params['id'], $authUser);
 
         $attachment = PassationAttachment::getById($attachId);
         if (!$attachment || !PassationAttachment::belongsToPassation($attachId, $passationId)) {

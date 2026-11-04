@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.PermissionAction
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
 import com.gsoft.opus.domain.model.Personnel
@@ -51,7 +52,8 @@ data class MaterielRoulantFormUiState(
     // Attachments (files associated with the perception).
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
@@ -111,6 +113,12 @@ class MaterielRoulantFormViewModel @Inject constructor(
             when (val result = materielRoulantRepository.getMaterielRoulant(materielId)) {
                 is Resource.Success -> {
                     val m = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, m.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     val atts = m.attachments.map {
                         AttachmentItem(
                             id = it.id,

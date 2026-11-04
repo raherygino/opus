@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Correspondance;
 use App\Models\CorrespondanceAttachment;
 
@@ -58,6 +59,8 @@ class CorrespondanceAttachmentController
             Response::notFound('Correspondance not found');
         }
 
+        EditWindow::assertEditable('correspondance', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class CorrespondanceAttachmentController
             Response::notFound('Correspondance not found');
         }
 
+        EditWindow::assertEditable('correspondance', (int) $params['id'], $authUser);
+
         $attachment = CorrespondanceAttachment::getById($attachId);
         if (!$attachment || !CorrespondanceAttachment::belongsToCorrespondance($attachId, $correspondanceId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class CorrespondanceAttachmentController
         if (!$correspondance) {
             Response::notFound('Correspondance not found');
         }
+
+        EditWindow::assertEditable('correspondance', (int) $params['id'], $authUser);
 
         $attachment = CorrespondanceAttachment::getById($attachId);
         if (!$attachment || !CorrespondanceAttachment::belongsToCorrespondance($attachId, $correspondanceId)) {

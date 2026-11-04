@@ -3,10 +3,12 @@ package com.gsoft.opus.presentation.materiel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Personnel
 import com.gsoft.opus.domain.model.TypeMateriel
 import com.gsoft.opus.domain.repository.AffectationMaterielFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.AffectationMaterielLigneFormData
 import com.gsoft.opus.domain.repository.MaterielRepository
 import com.gsoft.opus.domain.repository.PersonnelRepository
@@ -47,14 +49,16 @@ data class MaterielFormUiState(
     // Whether the current signature came from the personnel's data (vs drawn).
     val signatureFromPersonnel: Boolean = false,
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class MaterielFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val materielRepository: MaterielRepository,
-    private val personnelRepository: PersonnelRepository
+    private val personnelRepository: PersonnelRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val affectationId: Int = savedStateHandle.get<Int>("affectationId") ?: 0
@@ -98,6 +102,12 @@ class MaterielFormViewModel @Inject constructor(
             when (val result = materielRepository.getAffectationMateriel(affectationId)) {
                 is Resource.Success -> {
                     val aff = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, aff.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isEdit = true,

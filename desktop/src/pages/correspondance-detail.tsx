@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getCorrespondanceById,
   getCorrespondanceAttachmentDownloadUrl,
@@ -49,7 +50,7 @@ export function CorrespondanceDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, CORRESPONDANCE_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, CORRESPONDANCE_MODULE, "can_edit");
 
   const [correspondance, setCorrespondance] = useState<Correspondance | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,8 @@ export function CorrespondanceDetail() {
   }
 
   if (!correspondance) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, correspondance.created_at);
 
   const agent =
     [correspondance.agent_prenoms, correspondance.agent_nom]

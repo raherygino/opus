@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import type { PassationAttachment, VerifiedIdentity } from "@/types";
 import type { PassationPayload } from "@/lib/api/passation";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -98,6 +99,11 @@ export function PassationForm() {
     setLoading(true);
     try {
       const p = await getPassationById(Number(id));
+      if (!canEditWithinWindow(user, p.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_passation: p.date_passation.slice(0, 10),
         heure_passation: p.heure_passation.slice(0, 5),

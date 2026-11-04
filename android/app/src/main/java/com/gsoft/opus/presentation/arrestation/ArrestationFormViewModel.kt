@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.arrestation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.ArrestationFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.ArrestationRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -30,13 +32,15 @@ data class ArrestationFormUiState(
     val observations: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class ArrestationFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: ArrestationRepository
+    private val repository: ArrestationRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val entryId: Int = savedStateHandle.get<Int>("arrestationId") ?: 0
@@ -68,6 +72,12 @@ class ArrestationFormViewModel @Inject constructor(
             when (val result = repository.getArrestation(entryId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

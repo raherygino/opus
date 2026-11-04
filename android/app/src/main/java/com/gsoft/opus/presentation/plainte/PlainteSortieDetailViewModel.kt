@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.plainte
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -24,11 +25,15 @@ data class PlainteSortieDetailUiState(
     val attachments: List<PlainteSortieAttachment> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val canEdit: Boolean = false,
+    val canEditPermission: Boolean = false,
+    val isAdmin: Boolean = false,
     val canDelete: Boolean = false,
     val userMessage: String? = null,
     val notFound: Boolean = false
-)
+) {
+    val canEdit: Boolean
+        get() = canEditPermission && (isAdmin || EditWindow.isWithinWindow(sortie?.createdAt))
+}
 
 @HiltViewModel
 class PlainteSortieDetailViewModel @Inject constructor(
@@ -52,7 +57,8 @@ class PlainteSortieDetailViewModel @Inject constructor(
             val user = getCurrentUserUseCase().getOrNull()
             _state.update {
                 it.copy(
-                    canEdit = hasPermission(user, PJ_PLAINTE_MODULE, PermissionAction.EDIT),
+                    canEditPermission = hasPermission(user, PJ_PLAINTE_MODULE, PermissionAction.EDIT),
+                    isAdmin = EditWindow.isAdmin(user),
                     canDelete = hasPermission(user, PJ_PLAINTE_MODULE, PermissionAction.DELETE)
                 )
             }

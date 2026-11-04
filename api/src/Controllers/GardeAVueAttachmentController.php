@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\GardeAVue;
 use App\Models\GardeAVueAttachment;
 
@@ -58,6 +59,8 @@ class GardeAVueAttachmentController
             Response::notFound('Garde à vue introuvable');
         }
 
+        EditWindow::assertEditable('garde_a_vue', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class GardeAVueAttachmentController
             Response::notFound('Garde à vue introuvable');
         }
 
+        EditWindow::assertEditable('garde_a_vue', (int) $params['id'], $authUser);
+
         $attachment = GardeAVueAttachment::getById($attachId);
         if (!$attachment || !GardeAVueAttachment::belongsToGardeAVue($attachId, $gardeAVueId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class GardeAVueAttachmentController
         if (!$gav) {
             Response::notFound('Garde à vue introuvable');
         }
+
+        EditWindow::assertEditable('garde_a_vue', (int) $params['id'], $authUser);
 
         $attachment = GardeAVueAttachment::getById($attachId);
         if (!$attachment || !GardeAVueAttachment::belongsToGardeAVue($attachId, $gardeAVueId)) {

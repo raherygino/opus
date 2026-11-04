@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getPlainteEntreeList,
   getPlainteSortieList,
@@ -154,6 +155,7 @@ export function PlainteList() {
               <ArrowRightLeft className="h-3.5 w-3.5" />
             </Button>
           )}
+          {canEditWithinWindow(user, e.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -162,6 +164,7 @@ export function PlainteList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"
@@ -221,6 +224,7 @@ export function PlainteList() {
       className: "w-[100px]",
       render: (s) => (
         <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+          {canEditWithinWindow(user, s.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -229,6 +233,7 @@ export function PlainteList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

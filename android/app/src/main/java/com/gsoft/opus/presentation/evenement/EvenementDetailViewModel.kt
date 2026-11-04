@@ -3,6 +3,7 @@ package com.gsoft.opus.presentation.evenement
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.PermissionAction
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.core.hasPermission
@@ -24,9 +25,13 @@ data class EvenementDetailUiState(
     val attachments: List<EvenementSurvenuAttachment> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val canEdit: Boolean = false,
+    val canEditPermission: Boolean = false,
+    val isAdmin: Boolean = false,
     val userMessage: String? = null
-)
+) {
+    val canEdit: Boolean
+        get() = canEditPermission && (isAdmin || EditWindow.isWithinWindow(entry?.createdAt))
+}
 
 @HiltViewModel
 class EvenementDetailViewModel @Inject constructor(
@@ -50,7 +55,8 @@ class EvenementDetailViewModel @Inject constructor(
             val user = getCurrentUserUseCase().getOrNull()
             _state.update {
                 it.copy(
-                    canEdit = hasPermission(user, EVENEMENT_MODULE, PermissionAction.EDIT)
+                    canEditPermission = hasPermission(user, EVENEMENT_MODULE, PermissionAction.EDIT),
+                    isAdmin = EditWindow.isAdmin(user)
                 )
             }
         }

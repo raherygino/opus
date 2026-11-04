@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getCorrespondanceById,
   createCorrespondance,
@@ -34,6 +35,7 @@ import {
 } from "lucide-react";
 import type { Correspondance, CorrespondanceAttachment } from "@/types";
 import type { CorrespondancePayload } from "@/lib/api/correspondance";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 const SENS_OPTIONS = [
   { value: "Entrant", label: "Entrant" },
@@ -67,6 +69,7 @@ export function CorrespondanceForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<Required<CorrespondancePayload>>({
     date_correspondance: todayIso(),
@@ -95,6 +98,11 @@ export function CorrespondanceForm() {
     setLoading(true);
     try {
       const c = await getCorrespondanceById(Number(id));
+      if (!canEditWithinWindow(user, c.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         date_correspondance: c.date_correspondance.slice(0, 10),
         heure_enregistrement: c.heure_enregistrement.slice(0, 5),

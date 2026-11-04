@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\RegistreDeferrement;
 use App\Models\RegistreDeferrementAttachment;
 use App\Models\PlainteSequence;
@@ -185,6 +186,8 @@ class RegistreDeferrementController
         if (!$deferrement) {
             Response::notFound('Déferrement introuvable');
         }
+
+        EditWindow::assertEditable('registre_deferrement', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

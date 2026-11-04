@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\PlainteSortie;
 use App\Models\PlainteSortieAttachment;
 
@@ -58,6 +59,8 @@ class PlainteSortieAttachmentController
             Response::notFound('Sortie introuvable');
         }
 
+        EditWindow::assertEditable('plainte_sortie', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class PlainteSortieAttachmentController
             Response::notFound('Sortie introuvable');
         }
 
+        EditWindow::assertEditable('plainte_sortie', (int) $params['id'], $authUser);
+
         $attachment = PlainteSortieAttachment::getById($attachId);
         if (!$attachment || !PlainteSortieAttachment::belongsToPlainteSortie($attachId, $plainteSortieId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class PlainteSortieAttachmentController
         if (!$sortie) {
             Response::notFound('Sortie introuvable');
         }
+
+        EditWindow::assertEditable('plainte_sortie', (int) $params['id'], $authUser);
 
         $attachment = PlainteSortieAttachment::getById($attachId);
         if (!$attachment || !PlainteSortieAttachment::belongsToPlainteSortie($attachId, $plainteSortieId)) {

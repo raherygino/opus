@@ -3,9 +3,11 @@ package com.gsoft.opus.presentation.personnerecherchee
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.PersonneRechercheePhoto
 import com.gsoft.opus.domain.repository.PersonneRechercheeFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.PersonneRechercheeRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,13 +38,15 @@ data class PersonneRechercheeFormUiState(
     val motif: String = "",
     val photos: List<PhotoItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class PersonneRechercheeFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: PersonneRechercheeRepository
+    private val repository: PersonneRechercheeRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val entryId: Int = savedStateHandle.get<Int>("personneRechercheeId") ?: 0
@@ -65,6 +69,12 @@ class PersonneRechercheeFormViewModel @Inject constructor(
             when (val result = repository.getPersonneRecherchee(entryId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

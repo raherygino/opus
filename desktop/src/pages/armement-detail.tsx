@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getArmementById,
   getArmementAttachmentDownloadUrl,
@@ -59,7 +60,7 @@ export function ArmementDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, ARMEMENT_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, ARMEMENT_MODULE, "can_edit");
 
   const [armement, setArmement] = useState<Armement | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,6 +121,8 @@ export function ArmementDetail() {
   }
 
   if (!armement) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, armement.created_at);
 
   const reintegree = isReintegree(armement);
   const munitionsRestantes =

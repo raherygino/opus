@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Armement;
 use App\Models\ArmementAttachment;
 
@@ -58,6 +59,8 @@ class ArmementAttachmentController
             Response::notFound('Armement not found');
         }
 
+        EditWindow::assertEditable('armement', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -110,6 +113,8 @@ class ArmementAttachmentController
             Response::notFound('Armement not found');
         }
 
+        EditWindow::assertEditable('armement', (int) $params['id'], $authUser);
+
         $attachment = ArmementAttachment::getById($attachId);
         if (!$attachment || !ArmementAttachment::belongsToArmement($attachId, $armementId)) {
             Response::notFound('Attachment not found');
@@ -144,6 +149,8 @@ class ArmementAttachmentController
         if (!$armement) {
             Response::notFound('Armement not found');
         }
+
+        EditWindow::assertEditable('armement', (int) $params['id'], $authUser);
 
         $attachment = ArmementAttachment::getById($attachId);
         if (!$attachment || !ArmementAttachment::belongsToArmement($attachId, $armementId)) {

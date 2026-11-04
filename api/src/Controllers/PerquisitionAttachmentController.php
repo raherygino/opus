@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Perquisition;
 use App\Models\PerquisitionAttachment;
 
@@ -56,6 +57,8 @@ class PerquisitionAttachmentController
             Response::notFound('Perquisition introuvable');
         }
 
+        EditWindow::assertEditable('perquisition', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -105,6 +108,8 @@ class PerquisitionAttachmentController
             Response::notFound('Perquisition introuvable');
         }
 
+        EditWindow::assertEditable('perquisition', (int) $params['id'], $authUser);
+
         $attachment = PerquisitionAttachment::find($attachId);
         if (!$attachment || !PerquisitionAttachment::belongsToPerquisition($attachId, $perquisitionId)) {
             Response::notFound('Attachment not found');
@@ -135,6 +140,8 @@ class PerquisitionAttachmentController
         if (!Perquisition::find($perquisitionId)) {
             Response::notFound('Perquisition introuvable');
         }
+
+        EditWindow::assertEditable('perquisition', (int) $params['id'], $authUser);
 
         $attachment = PerquisitionAttachment::find($attachId);
         if (!$attachment || !PerquisitionAttachment::belongsToPerquisition($attachId, $perquisitionId)) {

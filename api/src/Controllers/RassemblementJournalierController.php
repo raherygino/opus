@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\RassemblementJournalier;
 use App\Models\AuditLog;
 use App\Models\Notification;
@@ -184,6 +185,8 @@ class RassemblementJournalierController
         if (!$entry) {
             Response::notFound('Rassemblement journalier introuvable');
         }
+
+        EditWindow::assertEditable('rassemblement_journalier', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

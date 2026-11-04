@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\PersonneRecherchee;
 use App\Models\PersonneRechercheePhoto;
 use App\Models\AuditLog;
@@ -153,6 +154,8 @@ class PersonneRechercheeController
             Response::notFound('Personne recherchée introuvable');
         }
 
+        EditWindow::assertEditable('personne_recherchee', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $errors = self::validate($data, false);
         if (!empty($errors)) {
@@ -267,6 +270,8 @@ class PersonneRechercheeController
             Response::notFound('Personne recherchée introuvable');
         }
 
+        EditWindow::assertEditable('personne_recherchee', $personneId, $authUser);
+
         if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             Response::error('File is required', 422, ['file' => 'Le fichier image est requis']);
         }
@@ -344,6 +349,8 @@ class PersonneRechercheeController
             Response::notFound('Personne recherchée introuvable');
         }
 
+        EditWindow::assertEditable('personne_recherchee', $personneId, $authUser);
+
         $photo = PersonneRechercheePhoto::find($photoId);
         if (!$photo || !PersonneRechercheePhoto::belongsToPersonne($photoId, $personneId)) {
             Response::notFound('Photo not found');
@@ -375,6 +382,8 @@ class PersonneRechercheeController
         if (!$entry) {
             Response::notFound('Personne recherchée introuvable');
         }
+
+        EditWindow::assertEditable('personne_recherchee', $personneId, $authUser);
 
         $photo = PersonneRechercheePhoto::find($photoId);
         if (!$photo || !PersonneRechercheePhoto::belongsToPersonne($photoId, $personneId)) {

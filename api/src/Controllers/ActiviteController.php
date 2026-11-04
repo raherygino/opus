@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\Activite;
 use App\Models\ActiviteAttachment;
 use App\Models\AuditLog;
@@ -165,6 +166,8 @@ class ActiviteController
         if (!$entry) {
             Response::notFound('Activité introuvable');
         }
+
+        EditWindow::assertEditable('activite', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

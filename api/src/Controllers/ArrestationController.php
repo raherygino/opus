@@ -186,6 +186,8 @@ class ArrestationController
             Response::notFound('Arrestation introuvable');
         }
 
+        EditWindow::assertEditable('arrestation', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = self::validate($data, false, $id);

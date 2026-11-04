@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\RenseignementPj;
 use App\Models\RenseignementPjAttachment;
 
@@ -56,6 +57,8 @@ class RenseignementPjAttachmentController
             Response::notFound('Renseignement introuvable');
         }
 
+        EditWindow::assertEditable('renseignement_pj', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -105,6 +108,8 @@ class RenseignementPjAttachmentController
             Response::notFound('Renseignement introuvable');
         }
 
+        EditWindow::assertEditable('renseignement_pj', (int) $params['id'], $authUser);
+
         $attachment = RenseignementPjAttachment::find($attachId);
         if (!$attachment || !RenseignementPjAttachment::belongsToRenseignement($attachId, $renseignementId)) {
             Response::notFound('Attachment not found');
@@ -135,6 +140,8 @@ class RenseignementPjAttachmentController
         if (!RenseignementPj::find($renseignementId)) {
             Response::notFound('Renseignement introuvable');
         }
+
+        EditWindow::assertEditable('renseignement_pj', (int) $params['id'], $authUser);
 
         $attachment = RenseignementPjAttachment::find($attachId);
         if (!$attachment || !RenseignementPjAttachment::belongsToRenseignement($attachId, $renseignementId)) {

@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.requisition
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.RequisitionFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.RequisitionRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -30,13 +32,15 @@ data class RequisitionFormUiState(
     val opj: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class RequisitionFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val requisitionRepository: RequisitionRepository
+    private val requisitionRepository: RequisitionRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val requisitionId: Int = savedStateHandle.get<Int>("requisitionId") ?: 0
@@ -77,6 +81,12 @@ class RequisitionFormViewModel @Inject constructor(
             when (val result = requisitionRepository.getRequisition(requisitionId)) {
                 is Resource.Success -> {
                     val r = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, r.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

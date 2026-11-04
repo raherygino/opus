@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\RegistreEnquete;
 use App\Models\RegistreEnqueteAttachment;
 use App\Models\Personnel;
@@ -213,6 +214,8 @@ class RegistreEnqueteController
         if (!$enquete) {
             Response::notFound('Enquête introuvable');
         }
+
+        EditWindow::assertEditable('registre_enquete', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

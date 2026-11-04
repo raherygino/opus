@@ -198,6 +198,8 @@ class MandatController
             Response::notFound('Mandat introuvable');
         }
 
+        EditWindow::assertEditable('mandat', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = self::validate($data, false, $id);

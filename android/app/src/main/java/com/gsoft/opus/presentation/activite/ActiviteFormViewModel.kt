@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gsoft.opus.core.LocationCapture
 import com.gsoft.opus.core.LocationResult
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.model.Activite
 import com.gsoft.opus.domain.repository.ActiviteFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.ActiviteRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -53,14 +55,16 @@ data class ActiviteFormUiState(
     val locationError: String? = null,
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class ActiviteFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: ActiviteRepository,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val activiteId: Int = savedStateHandle.get<Int>("activiteId") ?: 0
@@ -89,6 +93,12 @@ class ActiviteFormViewModel @Inject constructor(
             when (val result = repository.getActivite(activiteId)) {
                 is Resource.Success -> {
                     val e = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, e.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

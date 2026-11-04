@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getAffectationMaterielById,
   reintegrateAffectationMateriel,
@@ -59,7 +60,7 @@ export function MaterielDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { addNotification } = useNotificationStore();
-  const canEdit = hasPermission(user, MATERIELS_MODULE, "can_edit");
+  const canEditBase = hasPermission(user, MATERIELS_MODULE, "can_edit");
 
   const [affectation, setAffectation] = useState<AffectationMateriel | null>(null);
   const [loading, setLoading] = useState(true);
@@ -161,6 +162,8 @@ export function MaterielDetail() {
   }
 
   if (!affectation) return null;
+
+  const canEdit = canEditBase && canEditWithinWindow(user, affectation.created_at);
 
   const isReintegre = affectation.statut === "Réintégré";
   const lignes = affectation.lignes ?? [];

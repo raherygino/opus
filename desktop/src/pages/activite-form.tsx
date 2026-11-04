@@ -26,6 +26,7 @@ import { ArrowLeft, Save, Loader2, Plus, Trash2, Paperclip, Camera, Image as Ima
 import type { ActiviteInput } from "@/types";
 import { PhotoCaptureDialog } from "@/components/photo/photo-capture-dialog";
 import { ImageViewerDialog } from "@/components/ui/image-viewer-dialog";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 const SG_ACTIVITE_MODULE = "sg_activite";
 
@@ -87,6 +88,11 @@ export function ActiviteForm() {
     (async () => {
       try {
         const e = await getActiviteById(Number(id));
+        if (!canEditWithinWindow(user, e.created_at)) {
+          addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+          navigate(-1);
+          return;
+        }
         setForm({
           date_activite: e.date_activite?.substring(0, 10) ?? "",
           heure_activite: e.heure_activite ?? "",

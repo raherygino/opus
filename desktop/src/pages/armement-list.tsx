@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getArmementList,
   deleteArmement,
@@ -190,7 +191,7 @@ export function ArmementList() {
       className: "w-[130px]",
       render: (a) => (
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          {canEdit && !isReintegree(a) && (
+          {canEdit && !isReintegree(a) && canEditWithinWindow(user, a.created_at) && (
             <Button
               variant="ghost"
               size="icon"
@@ -201,6 +202,7 @@ export function ArmementList() {
               <ShieldCheck className="h-3.5 w-3.5" />
             </Button>
           )}
+          {canEditWithinWindow(user, a.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -210,6 +212,7 @@ export function ArmementList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

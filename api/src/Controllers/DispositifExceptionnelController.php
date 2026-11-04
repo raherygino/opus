@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\DispositifExceptionnel;
 use App\Models\AuditLog;
 use App\Models\Notification;
@@ -185,6 +186,8 @@ class DispositifExceptionnelController
         if (!$entry) {
             Response::notFound('Dispositif exceptionnel introuvable');
         }
+
+        EditWindow::assertEditable('dispositif_exceptionnel', $id, $authUser);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 

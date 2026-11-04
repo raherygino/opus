@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\EvenementSurvenu;
 use App\Models\EvenementSurvenuAttachment;
 
@@ -59,6 +60,8 @@ class EvenementSurvenuAttachmentController
             Response::notFound('Événement introuvable');
         }
 
+        EditWindow::assertEditable('evenement_survenu', (int) $params['id'], $authUser);
+
         $title = $_POST['title'] ?? '';
         if (empty($title)) {
             Response::error('Title is required', 422, ['title' => 'Le titre est requis']);
@@ -111,6 +114,8 @@ class EvenementSurvenuAttachmentController
             Response::notFound('Événement introuvable');
         }
 
+        EditWindow::assertEditable('evenement_survenu', (int) $params['id'], $authUser);
+
         $attachment = EvenementSurvenuAttachment::getById($attachId);
         if (!$attachment || !EvenementSurvenuAttachment::belongsToEvenement($attachId, $evenementId)) {
             Response::notFound('Pièce jointe introuvable');
@@ -145,6 +150,8 @@ class EvenementSurvenuAttachmentController
         if (!$evenement) {
             Response::notFound('Événement introuvable');
         }
+
+        EditWindow::assertEditable('evenement_survenu', (int) $params['id'], $authUser);
 
         $attachment = EvenementSurvenuAttachment::getById($attachId);
         if (!$attachment || !EvenementSurvenuAttachment::belongsToEvenement($attachId, $evenementId)) {

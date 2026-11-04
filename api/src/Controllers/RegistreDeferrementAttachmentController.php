@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Helpers\Response;
+use App\Helpers\EditWindow;
 use App\Models\RegistreDeferrement;
 use App\Models\RegistreDeferrementAttachment;
 use App\Models\AuditLog;
@@ -96,6 +97,8 @@ class RegistreDeferrementAttachmentController
             Response::notFound('Déferrement introuvable');
         }
 
+        EditWindow::assertEditable('registre_deferrement', (int) $params['id'], $authUser);
+
         $title = trim((string) ($_POST['title'] ?? ''));
         if ($title === '') {
             Response::error('Validation failed', 422, ['title' => 'Le titre est requis']);
@@ -177,6 +180,8 @@ class RegistreDeferrementAttachmentController
             Response::notFound('Pièce jointe introuvable');
         }
 
+        EditWindow::assertEditable('registre_deferrement', (int) $params['id'], $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $title = trim((string) ($data['title'] ?? ''));
         if ($title === '') {
@@ -216,6 +221,8 @@ class RegistreDeferrementAttachmentController
         if (!$attachment) {
             Response::notFound('Pièce jointe introuvable');
         }
+
+        EditWindow::assertEditable('registre_deferrement', (int) $params['id'], $authUser);
 
         $filePath = self::uploadDir() . '/' . $attachment['filename'];
         if (file_exists($filePath)) {

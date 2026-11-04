@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { hasPermission } from "@/lib/permissions";
+import { canEditWithinWindow } from "@/lib/edit-window";
 import {
   getPassationList,
   deletePassation,
@@ -108,6 +109,7 @@ export function PassationList() {
       className: "w-[100px]",
       render: (p) => (
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {canEditWithinWindow(user, p.created_at) && (
           <Button
             variant="ghost"
             size="icon"
@@ -116,6 +118,7 @@ export function PassationList() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
+          )}
           {canDelete && (
             <Button
               variant="ghost"

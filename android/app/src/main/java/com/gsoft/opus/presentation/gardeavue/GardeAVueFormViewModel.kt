@@ -3,8 +3,10 @@ package com.gsoft.opus.presentation.gardeavue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gsoft.opus.core.EditWindow
 import com.gsoft.opus.core.Resource
 import com.gsoft.opus.domain.repository.GardeAVueFormData
+import com.gsoft.opus.domain.usecase.GetCurrentUserUseCase
 import com.gsoft.opus.domain.repository.GardeAVueRepository
 import com.gsoft.opus.domain.repository.UploadFile
 import com.gsoft.opus.presentation.personnel.AttachmentItem
@@ -35,13 +37,15 @@ data class GardeAVueFormUiState(
     val prolongationGav: String = "",
     val attachments: List<AttachmentItem> = emptyList(),
     val errorMessage: String? = null,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val editLocked: Boolean = false
 )
 
 @HiltViewModel
 class GardeAVueFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val gardeAVueRepository: GardeAVueRepository
+    private val gardeAVueRepository: GardeAVueRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase
 ) : ViewModel() {
 
     private val gardeAVueId: Int = savedStateHandle.get<Int>("gardeAVueId") ?: 0
@@ -62,6 +66,12 @@ class GardeAVueFormViewModel @Inject constructor(
             when (val result = gardeAVueRepository.getGardeAVue(gardeAVueId)) {
                 is Resource.Success -> {
                     val g = result.data
+                    val currentUser = getCurrentUserUseCase().getOrNull()
+                    if (!EditWindow.canEdit(currentUser, g.createdAt)) {
+                        _state.update { it.copy(isLoading = false, errorMessage = EditWindow.CLOSED_MESSAGE, editLocked = true) }
+                        return@launch
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,

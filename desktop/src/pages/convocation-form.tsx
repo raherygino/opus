@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   getConvocationById,
   createConvocation,
@@ -34,6 +35,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Convocation, ConvocationInput } from "@/types";
+import { canEditWithinWindow, EDIT_WINDOW_CLOSED_MESSAGE } from "@/lib/edit-window";
 
 interface AttachmentItem {
   id?: number;
@@ -55,6 +57,7 @@ export function ConvocationForm() {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
 
   const [form, setForm] = useState<ConvocationInput>({
     type: "ST_PARQUET",
@@ -105,6 +108,11 @@ export function ConvocationForm() {
     setLoading(true);
     try {
       const e: Convocation = await getConvocationById(entryId);
+      if (!canEditWithinWindow(user, e.created_at)) {
+        addNotification("error", "Lecture seule", EDIT_WINDOW_CLOSED_MESSAGE);
+        navigate(-1);
+        return;
+      }
       setForm({
         type: e.type,
         date_convocation: e.date_convocation.slice(0, 10),

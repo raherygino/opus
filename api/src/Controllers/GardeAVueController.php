@@ -208,6 +208,8 @@ class GardeAVueController
             Response::notFound('Garde à vue introuvable');
         }
 
+        EditWindow::assertEditable('garde_a_vue', $id, $authUser);
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $errors = self::validate($data, false);
